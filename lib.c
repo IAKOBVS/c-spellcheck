@@ -4,6 +4,11 @@
 #include <stdio.h>
 #include <sys/stat.h>
 
+typedef struct fns_ty {
+	char *data;
+	struct fns_ty *next;
+} fns_ty;
+
 static void *
 xmalloc(size_t n)
 {
@@ -95,11 +100,6 @@ cs_fn_free(char *s)
 {
 	free(s);
 }
-
-typedef struct fns_ty {
-	char *data;
-	struct fns_ty *next;
-} fns_ty;
 
 fns_ty *
 cs_fns_alloc()
