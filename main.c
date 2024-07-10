@@ -1,7 +1,7 @@
 #include "lib.c"
 #include <stdio.h>
 #include <sys/stat.h>
-#define FNAME "/tmp/lib.c"
+#define FNAME "_example.h"
 int
 main()
 {
