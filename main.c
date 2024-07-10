@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #define FNAME "_example.h"
+
 int
 main()
 {
