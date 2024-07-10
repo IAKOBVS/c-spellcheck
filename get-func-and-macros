@@ -1,0 +1,2 @@
+#!/bin/sh
+cpp -fdirectives-only "$1"
