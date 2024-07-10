@@ -1,5 +1,5 @@
 typedef struct fns_ty {
-	char *data;
+	char *value;
 	struct fns_ty *next;
 } fns_ty;
 

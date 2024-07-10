@@ -12,13 +12,13 @@ main()
 	const char *next;
 	fns_ty *head = cs_fns_alloc();
 	fns_ty *f = head;
-	for (; (f->data = cs_fn_alloc(p, &next)); p = next) {
+	for (; (f->value = cs_fn_alloc(p, &next)); p = next) {
 		f->next = cs_fns_alloc();
 		f = f->next;
 	}
 	f = head;
-	for (; f->data; f = f->next) {
-		puts(f->data);
+	for (; f->value; f = f->next) {
+		puts(f->value);
 		if (!f->next)
 			break;
 	}

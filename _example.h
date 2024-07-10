@@ -5,7 +5,7 @@
 #include <sys/stat.h>
 
 typedef struct fns_ty {
-	char *data;
+	char *value;
 	struct fns_ty *next;
 } fns_ty;
 
@@ -117,7 +117,7 @@ void
 cs_fns_freeall(fns_ty *p)
 {
 	if (p) {
-		cs_fn_free(p->data);
+		cs_fn_free(p->value);
 		cs_fns_freeall(p->next);
 		cs_fns_free(p);
 	}
