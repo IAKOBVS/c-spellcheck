@@ -1,6 +1,7 @@
-#include "lib.c"
 #include <stdio.h>
 #include <sys/stat.h>
+#include "lib.c"
+
 #define FNAME "_example.h"
 
 int
