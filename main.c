@@ -5,13 +5,7 @@
 int
 main()
 {
-	FILE *fp = fopen(FNAME, "r");
-	struct stat st;
-	stat(FNAME, &st);
-	char *s = xmalloc((size_t)(st.st_size + 1));
-	fread(s, (size_t)st.st_size, 1, fp);
-	fclose(fp);
-	s[st.st_size] = '\0';
+	char *s = cs_read_file_alloc(FNAME);
 	const char *p = s;
 	const char *next;
 	fns_ty *head = cs_fns_alloc();
@@ -26,6 +20,7 @@ main()
 		if (!f->next)
 			break;
 	}
+	cs_read_file_free(s);
 	cs_fns_freeall(head);
 	return 0;
 }

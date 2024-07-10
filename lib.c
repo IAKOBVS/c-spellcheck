@@ -1,6 +1,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <stdio.h>
+#include <sys/stat.h>
 
 static void *
 xmalloc(size_t n)
@@ -27,6 +29,25 @@ xmemdupz(const char *s, size_t n)
 	return p;
 }
 
+char *
+cs_read_file_alloc(const char *fname)
+{
+	FILE *fp = fopen(fname, "r");
+	assert(fp);
+	struct stat st;
+	assert(!stat(fname, &st));
+	char *p = xmalloc((size_t)(st.st_size + 1));
+	assert(fread(p, 1, (size_t)st.st_size, fp) == (size_t)st.st_size);
+	assert(!fclose(fp));
+	return p;
+}
+
+void
+cs_read_file_free(char *s)
+{
+	free(s);
+}
+
 static int
 cs__starts_with(const char *s, const char *with)
 {
@@ -42,7 +63,8 @@ cs__is_valid_fn_char(int c)
 static char *
 cs__fn_start(const char *start, const char *curr)
 {
-	while (--curr >= start && cs__is_valid_fn_char(*curr)) {}
+	while (--curr >= start && (*curr == ' ' || *curr == '\t' || *curr == '\n')) {}
+	for (; curr >= start && cs__is_valid_fn_char(*curr); --curr) {}
 	++curr;
 	if (!cs__is_valid_fn_char(*curr)
 	    || cs__starts_with(curr, "if")
