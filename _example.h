@@ -35,7 +35,7 @@ xmemdupz(const char *s, size_t n)
 }
 
 char *
-cs_read_file_alloc(const char *fname)
+cs_file_read_alloc(const char *fname)
 {
 	FILE *fp = fopen(fname, "r");
 	assert(fp);
@@ -48,7 +48,7 @@ cs_read_file_alloc(const char *fname)
 }
 
 void
-cs_read_file_free(char *s)
+cs_file_read_free(char *s)
 {
 	free(s);
 }

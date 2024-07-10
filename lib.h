@@ -3,8 +3,8 @@ typedef struct fns_ty {
 	struct fns_ty *next;
 } fns_ty;
 
-char *cs_read_file_alloc(const char *fname);
-void cs_read_file_free(char *s);
+char *cs_file_read_alloc(const char *fname);
+void cs_file_read_free(char *s);
 
 char *cs_fn_alloc(const char *s);
 void cs_fn_free(char *s);

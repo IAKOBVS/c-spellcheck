@@ -6,7 +6,7 @@
 int
 main()
 {
-	char *s = cs_read_file_alloc(FNAME);
+	char *s = cs_file_read_alloc(FNAME);
 	const char *p = s;
 	const char *next;
 	fns_ty *head = cs_fns_alloc();
@@ -21,7 +21,7 @@ main()
 		if (!f->next)
 			break;
 	}
-	cs_read_file_free(s);
+	cs_file_read_free(s);
 	cs_fns_freeall(head);
 	return 0;
 }
