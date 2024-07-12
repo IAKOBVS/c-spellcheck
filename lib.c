@@ -9,6 +9,28 @@ typedef struct fns_ty {
 	struct fns_ty *next;
 } fns_ty;
 
+static void
+cs__remove_literal_strings(char *s)
+{
+	char *dst = s;
+	const char *src = s;
+	for (; *src; ++src) {
+		if (*src == '"' && (src - 1 < s || (*(src - 1) != '\\' && *(src - 1) != '\''))) {
+			++src;
+			for (;; ++src)
+				if (*src == '"' && (*(src - 1) != '\\')) {
+					break;
+				} else if (*src == '\0') {
+					fputs("Syntax error: unmatched quotation mark.\n", stderr);
+					exit(EXIT_FAILURE);
+				}
+		} else {
+			*dst++ = *src;
+		}
+	}
+	*dst = '\0';
+}
+
 static void *
 xmalloc(size_t n)
 {
@@ -30,7 +52,7 @@ xmemdupz(const char *s, size_t n)
 {
 	char *p = xmalloc(n + 1);
 	memcpy(p, s, n);
-	p[n] = '\0';
+	*(p + n) = '\0';
 	return p;
 }
 
@@ -44,6 +66,7 @@ cs_file_read_alloc(const char *fname)
 	char *p = xmalloc((size_t)(st.st_size + 1));
 	assert(fread(p, 1, (size_t)st.st_size, fp) == (size_t)st.st_size);
 	assert(!fclose(fp));
+	cs__remove_literal_strings(p);
 	return p;
 }
 
@@ -60,36 +83,38 @@ cs__starts_with(const char *s, const char *with)
 }
 
 static int
-cs__is_valid_fn_char(int c)
+cs__is_fn_char(int c)
 {
 	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_';
 }
 
 static char *
-cs__fn_start(const char *start, const char *curr)
+cs__fn_start(const char *start, const char *paren)
 {
-	while (--curr >= start && (*curr == ' ' || *curr == '\t' || *curr == '\n')) {}
-	for (; curr >= start && cs__is_valid_fn_char(*curr); --curr) {}
-	++curr;
-	if (!cs__is_valid_fn_char(*curr)
-	    || cs__starts_with(curr, "if")
-	    || cs__starts_with(curr, "for")
-	    || cs__starts_with(curr, "while")
-	    || cs__starts_with(curr, "switch"))
+	const char *p = paren;
+	while (--p >= start && (*p == ' ' || *p == '\t' || *p == '\n')) {}
+	for (; p >= start && cs__is_fn_char(*p); --p) {}
+	++p;
+	if (!cs__is_fn_char(*p)
+	    || *p == '_'
+	    || cs__starts_with(p, "if")
+	    || cs__starts_with(p, "for")
+	    || cs__starts_with(p, "while")
+	    || cs__starts_with(p, "return")
+	    || cs__starts_with(p, "switch"))
 		return NULL;
-	return (char *)curr;
+	return (char *)p;
 }
 
 char *
 cs_fn_alloc(const char *s, const char **next)
 {
-	const char *fn_s, *fn_e, *p;
-	p = s;
-	for (; (fn_e = strchr(p, '(')); p = fn_e + 1) {
-		fn_s = cs__fn_start(s, fn_e);
-		if (fn_s) {
-			*next = fn_e + 1;
-			return xmemdupz(fn_s, (size_t)(fn_e - fn_s));
+	const char *fn, *paren, *p;
+	for (p = s; (paren = strchr(p, '(')); p = paren + 1) {
+		fn = cs__fn_start(s, paren);
+		if (fn) {
+			*next = paren + 1;
+			return xmemdupz(fn, (size_t)(paren - fn));
 		}
 	}
 	return NULL;
