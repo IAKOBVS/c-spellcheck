@@ -214,6 +214,23 @@ void cs_fns_read_from_buffer(fns_ty *decl_head, fns_ty *cal_head, jtrie_node_ty 
 	}
 }
 
+#define MAX(x, y) ((x > y) ? x : y)
+#define MIN(x, y) ((x < y) ? x : y)
+
+int
+cs_char_freq_diff(const char *s, const char *t)
+{
+	int t1[JTRIE_ASCII_SIZE] = {0}, t2[JTRIE_ASCII_SIZE] = {0};
+	int diff = 0;
+	for (; *s; ++s)
+		++t1[JTRIE_ASCII_IDX_GET(*s)];
+	for (; *t; ++t)
+		++t2[JTRIE_ASCII_IDX_GET(*t)];
+	for (int i = 0; i < JTRIE_ASCII_SIZE; ++i)
+		diff += MAX(t1[i], t2[i]) - MIN(t1[i], t2[i]);
+	return diff;
+}
+
 #define MIN3(x, y, z) (((x) < (y)) ? ((x) < (z) ? (x) : (z)) : ((y) < (z) ? (y) : (z)))
 
 int
@@ -238,6 +255,7 @@ cs_lev(const char *s, int m, const char *t, int n)
 }
 
 #define LEV_MAX(n) (0.6 * n) 
+#define CHAR_FREQ_DIFF_MAX(n) (n / 2)
 
 #undef MIN3
 
@@ -248,10 +266,17 @@ cs_fns_get_most_similar_string(fns_ty *decl_head, const char *s, int max_lev, in
 	int min_lev = INT_MAX;
 	int s_len = strlen(s);
 	int lev;
+	int len;
 	for (node = decl_head, min_node = decl_head; node; node = node->next)
-		if (node->value && (lev = cs_lev(node->value, strlen(node->value), s, s_len)) < min_lev) {
-			min_lev = lev;
-			min_node = node;
+		if (node->value) {
+			len = (int)strlen(node->value);
+			/* If the character frequency difference is too large, don't calculate LD. */
+			if (cs_char_freq_diff(node->value, s) <= CHAR_FREQ_DIFF_MAX(len)) {
+				if ((lev = cs_lev(node->value, len, s, s_len)) < min_lev) {
+					min_lev = lev;
+					min_node = node;
+				}
+			}
 		}
 	*dist = min_lev;
 	return (min_lev > max_lev) ? NULL : min_node;
