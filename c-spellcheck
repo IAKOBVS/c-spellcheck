@@ -1,5 +1,5 @@
 #!/bin/sh
 [ -z "$1" ] && echo "Usage: $0 <file>." && exit 1
-cpp "$1" > c-spellcheck-tmp
+./preprocess "$1" > c-spellcheck-tmp
 ./main c-spellcheck-tmp
 rm c-spellcheck-tmp

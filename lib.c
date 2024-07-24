@@ -157,7 +157,7 @@ cs_fn_alloc(const char *s, const char **next, fn_ty *fn_type)
 	for (p = s; (paren = strchr(p, '(')); p = paren + 1) {
 		fn = cs__fn_start(s, paren, &end);
 		if (fn) {
-			*fn_type = cs__fn_get_type(s, end);
+			*fn_type = cs__fn_get_type(s, fn);
 			*next = paren + 1;
 			return xmemdupz(fn, (size_t)(end - fn));
 		}
@@ -280,4 +280,37 @@ cs_fns_get_most_similar_string(fns_ty *decl_head, const char *s, int max_lev, in
 		}
 	*dist = min_lev;
 	return (min_lev > max_lev) ? NULL : min_node;
+}
+
+#include <ftw.h>
+#include <unistd.h>
+
+#define TMP_NAME "./c-spellcheck-tmp2"
+
+int
+cs__decl_exists_in_file(const char *fname, const char *fn, int fn_len)
+{
+	char *cmd = xmalloc(strlen("./preprocess ") + strlen(fname) + strlen(" > " TMP_NAME) + 1);
+	strcpy(cmd, "./preprocess ");
+	strcat(cmd, fname);
+	strcat(cmd, " > " TMP_NAME);
+	system(cmd);
+	free(cmd);
+	char *s = cs_file_read_alloc(TMP_NAME);
+	const char *p = s;
+	const char *q;
+	while ((p = strstr(p, fn))) {
+		if ((p == s || !cs__is_fn_char(*(p - 1))) && !cs__is_fn_char(*(p + fn_len))) {
+			q = p + fn_len;
+			for (; *q == ' ' || *q == '\t' || *q == '\n'; ++q) {}
+			if (*q == '(' && cs__fn_get_type(s, p) == FN_DECLARED) {
+				cs_file_read_free(s);
+				return 1;
+			}
+		}
+		p += fn_len;
+	}
+	cs_file_read_free(s);
+	remove(TMP_NAME);
+	return 0;
 }
