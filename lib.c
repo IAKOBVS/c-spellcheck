@@ -3,6 +3,12 @@
 #include <assert.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include <limits.h>
+
+typedef enum fn_ty {
+	FN_DECLARED,
+	FN_CALLED
+} fn_ty;
 
 typedef struct fns_ty {
 	char *value;
@@ -29,6 +35,16 @@ cs__remove_literal_strings(char *s)
 		}
 	}
 	*dst = '\0';
+}
+
+static void *
+xmemrchr(const void *s, int c, size_t n)
+{
+	const unsigned char *p = (const unsigned char *)s + n;
+	while (n--)
+		if (*--p == (unsigned char)c)
+			return (void *)p;
+	return NULL;
 }
 
 static void *
@@ -97,6 +113,7 @@ cs__fn_start(const char *start, const char *paren)
 	++p;
 	if (!cs__is_fn_char(*p)
 	    || *p == '_'
+	    || (*p >= '0' && *p <= '9')
 	    || cs__starts_with(p, "if")
 	    || cs__starts_with(p, "for")
 	    || cs__starts_with(p, "while")
@@ -106,13 +123,22 @@ cs__fn_start(const char *start, const char *paren)
 	return (char *)p;
 }
 
+fn_ty
+cs__fn_get_type(const char *s, const char *end)
+{
+	const char *line = xmemrchr(s, '\n', (size_t)(end - s));
+	line = (line != NULL) ? line + 1 : s;
+	return (*line == '\t' || *line == ' ') ? FN_CALLED : FN_DECLARED;
+}
+
 char *
-cs_fn_alloc(const char *s, const char **next)
+cs_fn_alloc(const char *s, const char **next, fn_ty *fn_type)
 {
 	const char *fn, *paren, *p;
 	for (p = s; (paren = strchr(p, '(')); p = paren + 1) {
 		fn = cs__fn_start(s, paren);
 		if (fn) {
+			*fn_type = cs__fn_get_type(s, fn);
 			*next = paren + 1;
 			return xmemdupz(fn, (size_t)(paren - fn));
 		}
@@ -146,4 +172,63 @@ cs_fns_freeall(fns_ty *p)
 		cs_fns_freeall(p->next);
 		cs_fns_free(p);
 	}
+}
+
+void cs_fns_read_from_file(fns_ty *decl_head, fns_ty *cal_head, const char *file)
+{
+	const char *p = file;
+	const char *next;
+	fns_ty *decl_node = decl_head, *cal_node = cal_head;
+	fn_ty fn_type;
+	for (char *val; (val = cs_fn_alloc(p, &next, &fn_type));) {
+		if (fn_type == FN_DECLARED) {
+			decl_node->value = val;
+			decl_node->next = cs_fns_alloc();
+			decl_node = decl_node->next;
+		} else /* if (fn_type == FN_CALLED) */ {
+			cal_node->value = val;
+			cal_node->next = cs_fns_alloc();
+			cal_node = cal_node->next;
+		}
+		p = next;
+	}
+}
+
+#define MIN3(x, y, z) (((x) < (y)) ? ((x) < (z) ? (x) : (z)) : ((y) < (z) ? (y) : (z)))
+
+int
+cs_lev(const char *s, int m, const char *t, int n)
+{
+	int tbl[m + 1][n + 1];
+	int i, j;
+	for (i = 0; i <= m; ++i)
+		tbl[i][0] = i;
+	for (i = 0; i <= n; ++i)
+		tbl[0][i] = i;
+	int sub_cost;
+	for (i = 1; i <= m; ++i)
+		for (j = 1; j <= n; ++j) {
+			sub_cost = (s[i - 1] == t[j - 1]) ? 0 : 1;
+			tbl[i][j] = MIN3(tbl[i - 1][j] + 1,
+					 tbl[i][j - 1] + 1,
+					 tbl[i - 1][j - 1] + sub_cost);
+		}
+	return tbl[m][n];
+}
+
+#undef MIN3
+
+fns_ty *
+cs_fns_get_most_similar_string(fns_ty *head, const char *s, int max_lev)
+{
+	fns_ty *node, *min_node;
+	int min_lev = INT_MAX;
+	int s_len = strlen(s);
+	int lev;
+	for (node = head, min_node = head; node; node = node->next)
+		if (node->value && (lev = cs_lev(node->value, strlen(node->value), s, s_len) < min_lev)) {
+			min_lev = lev;
+			min_node = node;
+		}
+	return min_node;
 }
