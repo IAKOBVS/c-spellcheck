@@ -33,7 +33,7 @@ jtrie__free_recur(jtrie_node_ty *node)
 	if (node == NULL)
 		return;
 	int i;
-	for (i = 0; i != JTRIE_ASCII_SIZE - 1; ++i)
+	for (i = 0; i < JTRIE_ASCII_SIZE; ++i)
 		jtrie__free_recur(node->child[i]);
 	free(node);
 	node = NULL;
