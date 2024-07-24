@@ -5,6 +5,24 @@
 #include <sys/stat.h>
 #include <limits.h>
 
+#define JTRIE_ASCII_SIZE (('Z' - 'A') + ('z' - 'a') + ('9' - '0') + '1')
+#define JTRIE_ASCII_IDX_GET jtrie__ascii_idx_get
+
+static int
+jtrie__ascii_idx_get(char c)
+{
+	if (c >= 'A' && c <= 'Z')
+		return c - 'A';
+	if (c >= 'a' && c <= 'z')
+		return c - 'a' + ('Z' - 'A');
+	if (c >= '0' && c <= '9')
+		return c - '0' + ('Z' - 'A') + ('z' - 'a');
+	/* else if (c == '_') */
+	return ('Z' - 'A') + ('z' - 'a') + ('9' - '0');
+}
+
+#include "trie.h"
+
 typedef enum fn_ty {
 	FN_DECLARED,
 	FN_CALLED
@@ -174,7 +192,7 @@ cs_fns_freeall(fns_ty *p)
 	}
 }
 
-void cs_fns_read_from_file(fns_ty *decl_head, fns_ty *cal_head, const char *file)
+void cs_fns_read_from_buffer(fns_ty *decl_head, fns_ty *cal_head, jtrie_node_ty *trie_head, const char *file)
 {
 	const char *p = file;
 	const char *next;
@@ -182,6 +200,7 @@ void cs_fns_read_from_file(fns_ty *decl_head, fns_ty *cal_head, const char *file
 	fn_ty fn_type;
 	for (char *val; (val = cs_fn_alloc(p, &next, &fn_type));) {
 		if (fn_type == FN_DECLARED) {
+			jtrie_add(trie_head, val);
 			decl_node->value = val;
 			decl_node->next = cs_fns_alloc();
 			decl_node = decl_node->next;
@@ -199,6 +218,7 @@ void cs_fns_read_from_file(fns_ty *decl_head, fns_ty *cal_head, const char *file
 int
 cs_lev(const char *s, int m, const char *t, int n)
 {
+	for (; *s == *t && m; ++s, ++t, --m, --n) {}
 	int tbl[m + 1][n + 1];
 	int i, j;
 	for (i = 0; i <= m; ++i)
@@ -216,20 +236,22 @@ cs_lev(const char *s, int m, const char *t, int n)
 	return tbl[m][n];
 }
 
+#define LEV_MAX(n) (0.6 * n) 
+
 #undef MIN3
 
 fns_ty *
-cs_fns_get_most_similar_string(fns_ty *head, const char *s, int max_lev, int *dist)
+cs_fns_get_most_similar_string(fns_ty *decl_head, const char *s, int max_lev, int *dist)
 {
 	fns_ty *node, *min_node;
 	int min_lev = INT_MAX;
 	int s_len = strlen(s);
 	int lev;
-	for (node = head, min_node = head; node; node = node->next)
+	for (node = decl_head, min_node = decl_head; node; node = node->next)
 		if (node->value && (lev = cs_lev(node->value, strlen(node->value), s, s_len)) < min_lev) {
 			min_lev = lev;
 			min_node = node;
 		}
 	*dist = min_lev;
-	return min_node;
+	return (min_lev > max_lev) ? NULL : min_node;
 }
