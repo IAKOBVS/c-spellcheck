@@ -24,9 +24,14 @@ main(int argc, char **argv)
 				fns_ty *similar = cs_fns_get_most_similar_string(decl_head, cal_node->value, LEV_MAX(strlen(cal_node->value)), &lev);
 				if (similar) {
 					if (lev > 0)
-						printf("%s is an undeclared function. Did you mean %s?\n", cal_node->value, similar->value);
+						printf("\"%s\" is an undeclared function. Did you mean \"%s\"?\n", cal_node->value, similar->value);
 				} else {
-					printf("%s is an undeclared function.\n", cal_node->value);
+					const char *header = cs_suggest_header_to_include(cal_node->value, strlen(cal_node->value), "");
+					if (header) {
+						printf("\"%s\" is an undeclared function. Did you mean to include \"%s\"?\n", cal_node->value, header);
+					} else {
+						printf("\"%s\" is an undeclared function.\n", cal_node->value);
+					}
 				}
 				/* Add called function to trie so multiple occurences of
 				 * the same called functions will only be checked once. */

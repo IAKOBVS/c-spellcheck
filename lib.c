@@ -5,7 +5,7 @@
 #include <sys/stat.h>
 #include <limits.h>
 
-#define JTRIE_ASCII_SIZE (('Z' - 'A') + ('z' - 'a') + ('9' - '0') + '1')
+#define JTRIE_ASCII_SIZE    (('Z' - 'A') + ('z' - 'a') + ('9' - '0') + '1')
 #define JTRIE_ASCII_IDX_GET jtrie__ascii_idx_get
 
 static int
@@ -193,7 +193,8 @@ cs_fns_freeall(fns_ty *p)
 	}
 }
 
-void cs_fns_read_from_buffer(fns_ty *decl_head, fns_ty *cal_head, jtrie_node_ty *trie_head, const char *file)
+void
+cs_fns_read_from_buffer(fns_ty *decl_head, fns_ty *cal_head, jtrie_node_ty *trie_head, const char *file)
 {
 	const char *p = file;
 	const char *next;
@@ -220,7 +221,7 @@ void cs_fns_read_from_buffer(fns_ty *decl_head, fns_ty *cal_head, jtrie_node_ty 
 int
 cs_char_freq_diff(const char *s, const char *t)
 {
-	int t1[JTRIE_ASCII_SIZE] = {0}, t2[JTRIE_ASCII_SIZE] = {0};
+	int t1[JTRIE_ASCII_SIZE] = { 0 }, t2[JTRIE_ASCII_SIZE] = { 0 };
 	int diff = 0;
 	for (; *s; ++s)
 		++t1[JTRIE_ASCII_IDX_GET(*s)];
@@ -248,13 +249,13 @@ cs_lev(const char *s, int m, const char *t, int n)
 		for (j = 1; j <= n; ++j) {
 			sub_cost = (s[i - 1] == t[j - 1]) ? 0 : 1;
 			tbl[i][j] = MIN3(tbl[i - 1][j] + 1,
-					 tbl[i][j - 1] + 1,
-					 tbl[i - 1][j - 1] + sub_cost);
+			                 tbl[i][j - 1] + 1,
+			                 tbl[i - 1][j - 1] + sub_cost);
 		}
 	return tbl[m][n];
 }
 
-#define LEV_MAX(n) (0.6 * n) 
+#define LEV_MAX(n)            (0.6 * n)
 #define CHAR_FREQ_DIFF_MAX(n) (n / 2)
 
 #undef MIN3
@@ -285,6 +286,38 @@ cs_fns_get_most_similar_string(fns_ty *decl_head, const char *s, int max_lev, in
 #include <ftw.h>
 #include <unistd.h>
 
+const char *standard_headers[] = {
+	"/usr/include/assert.h",
+	"/usr/include/complex.h",
+	"/usr/include/ctype.h",
+	"/usr/include/errno.h",
+	"/usr/include/fenv.h",
+	"/usr/include/float.h",
+	"/usr/include/inttypes.h",
+	"/usr/include/iso646.h",
+	"/usr/include/limits.h",
+	"/usr/include/locale.h",
+	"/usr/include/math.h",
+	"/usr/include/setjmp.h",
+	"/usr/include/signal.h",
+	"/usr/include/stdalign.h",
+	"/usr/include/stdarg.h",
+	"/usr/include/stdatomic.h",
+	"/usr/include/stdbool.h",
+	"/usr/include/stddef.h",
+	"/usr/include/stdint.h",
+	"/usr/include/stdio.h",
+	"/usr/include/stdlib.h",
+	"/usr/include/stdnoreturn.h",
+	"/usr/include/string.h",
+	"/usr/include/tgmath.h",
+	"/usr/include/threads.h",
+	"/usr/include/time.h",
+	"/usr/include/uchar.h",
+	"/usr/include/wchar.h",
+	"/usr/include/wctype.h"
+};
+
 #define TMP_NAME "./c-spellcheck-tmp2"
 
 int
@@ -313,4 +346,14 @@ cs__decl_exists_in_file(const char *fname, const char *fn, int fn_len)
 	cs_file_read_free(s);
 	remove(TMP_NAME);
 	return 0;
+}
+
+char *
+cs_suggest_header_to_include(const char *fn, int fn_len, const char *dir)
+{
+	for (int i = 0; i < sizeof(standard_headers) / sizeof(standard_headers[0]); ++i)
+		if (cs__decl_exists_in_file(standard_headers[i], fn, fn_len))
+			return (char *)standard_headers[i];
+	(void)dir;
+	return NULL;
 }
