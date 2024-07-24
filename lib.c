@@ -219,16 +219,17 @@ cs_lev(const char *s, int m, const char *t, int n)
 #undef MIN3
 
 fns_ty *
-cs_fns_get_most_similar_string(fns_ty *head, const char *s, int max_lev)
+cs_fns_get_most_similar_string(fns_ty *head, const char *s, int max_lev, int *dist)
 {
 	fns_ty *node, *min_node;
 	int min_lev = INT_MAX;
 	int s_len = strlen(s);
 	int lev;
 	for (node = head, min_node = head; node; node = node->next)
-		if (node->value && (lev = cs_lev(node->value, strlen(node->value), s, s_len) < min_lev)) {
+		if (node->value && (lev = cs_lev(node->value, strlen(node->value), s, s_len)) < min_lev) {
 			min_lev = lev;
 			min_node = node;
 		}
+	*dist = min_lev;
 	return min_node;
 }

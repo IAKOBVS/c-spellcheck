@@ -23,14 +23,18 @@ main()
 		if (cal_node->value)
 			puts(cal_node->value);
 
-/* 	for (cal_node = cal_head; cal_node; cal_node = cal_node->next) */
-/* 		if (cal_node->value) { */
-/* 			puts(cal_node->value); */
-/* 			fns_ty *similar = cs_fns_get_most_similar_string(decl_head, cal_node->value, 0); */
-/* 			if (similar) */
-/* 				puts(similar->value); */
-/* 			puts("==="); */
-/* 		} */
+	puts("\n");
+	for (cal_node = cal_head; cal_node; cal_node = cal_node->next)
+		if (cal_node->value) {
+			puts(cal_node->value);
+			int lev;
+			fns_ty *similar = cs_fns_get_most_similar_string(decl_head, cal_node->value, 0, &lev);
+			if (similar) {
+				puts(similar->value);
+				printf("%d\n", lev);
+			}
+			puts("===");
+		}
 
 	cs_file_read_free(s);
 	cs_fns_freeall(decl_head);
