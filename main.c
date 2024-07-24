@@ -2,13 +2,11 @@
 #include <sys/stat.h>
 #include "lib.c"
 
-/* #define FNAME "_example.h" */
-#define FNAME "lib.c"
-
 int
-main()
+main(int argc, char **argv)
 {
-	char *s = cs_file_read_alloc(FNAME);
+	assert(!argv[1] || argv[1][0]);
+	char *s = cs_file_read_alloc(argv[1]);
 	jtrie_node_ty *trie_head = jtrie_init();
 	fns_ty *decl_head = cs_fns_alloc(), *cal_head = cs_fns_alloc();
 	fns_ty *decl_node, *cal_node;

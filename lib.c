@@ -123,10 +123,11 @@ cs__is_fn_char(int c)
 }
 
 static char *
-cs__fn_start(const char *start, const char *paren)
+cs__fn_start(const char *start, const char *paren, const char **fn_end)
 {
 	const char *p = paren;
 	while (--p >= start && (*p == ' ' || *p == '\t' || *p == '\n')) {}
+	*fn_end = p + 1;
 	for (; p >= start && cs__is_fn_char(*p); --p) {}
 	++p;
 	if (!cs__is_fn_char(*p)
@@ -152,13 +153,13 @@ cs__fn_get_type(const char *s, const char *end)
 char *
 cs_fn_alloc(const char *s, const char **next, fn_ty *fn_type)
 {
-	const char *fn, *paren, *p;
+	const char *fn, *paren, *p, *end;
 	for (p = s; (paren = strchr(p, '(')); p = paren + 1) {
-		fn = cs__fn_start(s, paren);
+		fn = cs__fn_start(s, paren, &end);
 		if (fn) {
-			*fn_type = cs__fn_get_type(s, fn);
+			*fn_type = cs__fn_get_type(s, end);
 			*next = paren + 1;
-			return xmemdupz(fn, (size_t)(paren - fn));
+			return xmemdupz(fn, (size_t)(end - fn));
 		}
 	}
 	return NULL;
