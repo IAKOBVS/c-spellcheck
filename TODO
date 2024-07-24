@@ -1,3 +1,2 @@
-use a trie for checking exact match
-sort declared functions based on length (max: 256)
-filter dissimilar strings with character frequency
+sort declared functions based on length
+suggest headers to include for undeclared functions
