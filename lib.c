@@ -382,9 +382,10 @@ do_autosuggest(ll_ty **cal_head, ll_ty *decl_head, ll_ty *unfound_head, jtrie_no
 		cal_prev = cal_node;
 		cal_node = cal_node->next;
 	}
+	if (!first_pass)
+		unfound_head = *cal_head;
 	int cnt = 0;
 	/* Remove unfound words from the trie so they will not be skipped in the second pass. */
-	/* FIXME: something's wrong here. */
 	for (unfound_node = unfound_head; unfound_node; unfound_node = unfound_node->next, ++cnt)
 		if (unfound_node->value)
 			jtrie_remove(trie_head, unfound_node->value);
@@ -401,9 +402,13 @@ autosuggest(const char *fname)
 		for (unsigned int i = 0; i < sizeof(standard_headers) / sizeof(standard_headers[0]); ++i)
 			if (access(standard_headers[i], F_OK) == 0) {
 				char *s = file_preprocess_alloc(standard_headers[i]);
-				if (!do_autosuggest(&unfound_head, decl_head, unfound_head, trie_head, s, standard_headers[i], 0))
-					break;
+				/* We don't need the declarations from the previous file, so free the linked list. */
+				ll_free(decl_head);
+				decl_head = ll_alloc();
+				int ret = do_autosuggest(&unfound_head, decl_head, NULL, trie_head, s, standard_headers[i], 0);
 				file_preprocess_free(standard_headers[i], s);
+				if (!ret)
+					break;
 			}
 	file_free(file);
 	ll_free(decl_head);
