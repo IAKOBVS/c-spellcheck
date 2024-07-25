@@ -403,7 +403,9 @@ autosuggest(const char *fname)
 	char *file = file_alloc(fname);
 	jtrie_node_ty *trie_head = jtrie_init();
 	ll_ty *decl_head = ll_alloc(), *cal_head = ll_alloc(), *unfound_head = ll_alloc();
-	if (do_autosuggest(&cal_head, decl_head, unfound_head, trie_head, file, fname, 1))
+	int ret = do_autosuggest(&cal_head, decl_head, unfound_head, trie_head, file, fname, 1);
+	file_free(file);
+	if (ret)
 		/* If we have unfound called functions which do not have similar matches in the input file,
 		 * search for them in system headers. */
 		for (unsigned int i = 0; i < sizeof(standard_headers) / sizeof(standard_headers[0]); ++i)
@@ -414,12 +416,11 @@ autosuggest(const char *fname)
 				 * and initialize a new head. */
 				ll_free(decl_head);
 				decl_head = ll_alloc();
-				int ret = do_autosuggest(&unfound_head, decl_head, NULL, trie_head, s, standard_headers[i], 0);
+				ret = do_autosuggest(&unfound_head, decl_head, NULL, trie_head, s, standard_headers[i], 0);
 				file_preprocess_free(standard_headers[i], s);
 				if (!ret)
 					break;
 			}
-	file_free(file);
 	ll_free(decl_head);
 	ll_free(cal_head);
 	ll_free(unfound_head);
