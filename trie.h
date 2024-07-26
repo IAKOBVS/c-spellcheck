@@ -46,7 +46,7 @@ jtrie_free(jtrie_node_ty **node)
 }
 
 static jtrie_ret_ty
-jtrie_add(jtrie_node_ty *root,
+jtrie_insert(jtrie_node_ty *root,
           const char *word)
 {
 	if (*word == '\0')
@@ -67,10 +67,10 @@ jtrie_add(jtrie_node_ty *root,
 typedef enum {
 	PJTRIE_FLAG_REMOVE_NOT_PREFIXES = 0,
 	PJTRIE_FLAG_REMOVE_PREFIXES
-} jtrie__flag_remove_prefixes_ty;
+} jtrie__flag_delete_prefixes_ty;
 
 static void
-jtrie__remove(jtrie__flag_remove_prefixes_ty flag,
+jtrie__delete(jtrie__flag_delete_prefixes_ty flag,
               jtrie_node_ty *root,
               const char *word)
 {
@@ -89,17 +89,17 @@ jtrie__remove(jtrie__flag_remove_prefixes_ty flag,
 }
 
 static void
-jtrie_remove(jtrie_node_ty *root,
+jtrie_delete(jtrie_node_ty *root,
              const char *word)
 {
-	jtrie__remove(PJTRIE_FLAG_REMOVE_NOT_PREFIXES, root, word);
+	jtrie__delete(PJTRIE_FLAG_REMOVE_NOT_PREFIXES, root, word);
 }
 
 static void
-jtrie_removeprefixes(jtrie_node_ty *root,
+jtrie_deleteprefixes(jtrie_node_ty *root,
                      const char *word)
 {
-	jtrie__remove(PJTRIE_FLAG_REMOVE_PREFIXES, root, word);
+	jtrie__delete(PJTRIE_FLAG_REMOVE_PREFIXES, root, word);
 }
 
 /*
@@ -117,8 +117,7 @@ jtrie_starts(const jtrie_node_ty *root,
 	const jtrie_node_ty *curr = root->child[JTRIE_ASCII_IDX_GET(*w)];
 	if (curr == NULL)
 		return NULL;
-	for (; *++w && curr->child[JTRIE_ASCII_IDX_GET(*w)]; curr = curr->child[JTRIE_ASCII_IDX_GET(*w)])
-		;
+	for (; *++w && curr->child[JTRIE_ASCII_IDX_GET(*w)]; curr = curr->child[JTRIE_ASCII_IDX_GET(*w)]) {}
 	return (jtrie_node_ty *)curr;
 }
 

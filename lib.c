@@ -234,7 +234,7 @@ ll_insert_tail(ll_ty **tail, char *value)
 }
 
 void
-ll_remove_curr(ll_ty **head, ll_ty *node, ll_ty *prev)
+ll_delete_curr(ll_ty **head, ll_ty *node, ll_ty *prev)
 {
 	if (prev)
 		prev->next = node->next;
@@ -244,12 +244,12 @@ ll_remove_curr(ll_ty **head, ll_ty *node, ll_ty *prev)
 }
 
 void
-ll_remove(ll_ty **head, ll_ty *target)
+ll_delete(ll_ty **head, ll_ty *target)
 {
 	ll_ty *node = *head, *prev = NULL;
 	for (; node != target; ll_next(node))
 		prev = node;
-	ll_remove_curr(head, node, prev);
+	ll_delete_curr(head, node, prev);
 }
 
 void
@@ -261,7 +261,7 @@ ll_cvt_buffer_to_nodes(ll_ty *decl_head, ll_ty *cal_head, jtrie_node_ty *trie_he
 	fn_ty fn_type;
 	for (char *val; (val = fn_alloc(p, &next, &fn_type));) {
 		if (fn_type == FN_DECLARED) {
-			assert(jtrie_add(trie_head, val) == JTRIE_RET_SUCC);
+			assert(jtrie_insert(trie_head, val) == JTRIE_RET_SUCC);
 			ll_insert_tail(&decl_node, val);
 		} else if (first_pass /* && fn_type == FN_CALLED */) {
 			/* Add function declarations to the linked list. */
@@ -408,7 +408,7 @@ do_autosuggest(ll_ty **cal_head, ll_ty *decl_head, ll_ty *unfound_head, jtrie_no
 		if (!jtrie_match(trie_head, cal_node->value)) {
 			/* Add called functions to the trie so multiple occurences
 			 * of the same function will only be checked once. */
-			assert(jtrie_add(trie_head, cal_node->value) == JTRIE_RET_SUCC);
+			assert(jtrie_insert(trie_head, cal_node->value) == JTRIE_RET_SUCC);
 			int lev;
 			int val_len = strlen(cal_node->value);
 			ll_ty *similar = ll_get_most_similar_string(decl_head, cal_node->value, LEV_MAX(val_len), &lev);
@@ -417,7 +417,7 @@ do_autosuggest(ll_ty **cal_head, ll_ty *decl_head, ll_ty *unfound_head, jtrie_no
 					printf("\"%s\" is an undeclared function. Did you mean \"%s\" defined in \"%s\"?\n", cal_node->value, similar->value, fname);
 					/* Remove called functions we found from the linked list */
 					ll_ty *next = cal_node->next;
-					ll_remove_curr(cal_head, cal_node, cal_prev);
+					ll_delete_curr(cal_head, cal_node, cal_prev);
 					cal_node = next;
 					continue;
 				} else {
@@ -437,7 +437,7 @@ do_autosuggest(ll_ty **cal_head, ll_ty *decl_head, ll_ty *unfound_head, jtrie_no
 	int cnt = 0;
 	/* Remove unfound functions from the trie so they will not be skipped in the second pass. */
 	for (unfound_node = unfound_head; unfound_node->next; ll_next(unfound_node), ++cnt)
-		jtrie_remove(trie_head, unfound_node->value);
+		jtrie_delete(trie_head, unfound_node->value);
 	/* Check if the list of unfound functions is empty. */
 	return cnt;
 }
