@@ -317,27 +317,27 @@ const char *standard_headers[] = {
 	"/usr/include/wctype.h"
 };
 
-#define TMPFILE "./c-spellcheck-tmp2"
-
 char *
 file_preprocess_alloc(const char *fname)
 {
-	char *cmd = xmalloc(strlen("./preprocess ") + strlen(fname) + strlen(" > ") + strlen(TMPFILE) + 1);
+	char tmpfile[] = "/tmp/XXXXXX";
+	mktemp(tmpfile);
+	char *cmd = xmalloc(strlen("./preprocess ") + strlen(fname) + strlen(" > ") + strlen(tmpfile) + 1);
 	strcpy(cmd, "./preprocess ");
 	strcat(cmd, fname);
 	strcat(cmd, " > ");
-	strcat(cmd, TMPFILE);
+	strcat(cmd, tmpfile);
 	assert(system(cmd) == 0);
 	free(cmd);
-	return file_alloc(TMPFILE);
+	char *ret = file_alloc(tmpfile);
+	assert(remove(tmpfile) == 0);
+	return ret;
 }
 
 void
-file_preprocess_free(const char *fname, char *file)
+file_preprocess_free(char *file)
 {
-	assert(remove(TMPFILE) == 0);
 	file_free(file);
-	(void)fname;
 }
 
 #define LEV_MAX(n) (0.6 * n)
@@ -417,7 +417,7 @@ autosuggest(const char *fname)
 				ll_free(decl_head);
 				decl_head = ll_alloc();
 				ret = do_autosuggest(&unfound_head, decl_head, NULL, trie_head, s, standard_headers[i], 0);
-				file_preprocess_free(standard_headers[i], s);
+				file_preprocess_free(s);
 				if (!ret)
 					break;
 			}
