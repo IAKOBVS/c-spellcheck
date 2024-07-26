@@ -173,6 +173,8 @@ fn_start(const char *start, const char *paren, const char **fn_end)
 	return (char *)p;
 }
 
+/* TODO: have a more robust way of checking whether a function is declared or called. */
+
 fn_ty
 fn_get_type(const char *s, const char *end)
 {
@@ -182,18 +184,18 @@ fn_get_type(const char *s, const char *end)
 }
 
 char *
-fn_alloc(const char *s, const char **next, fn_ty *fn_type)
+fn_get(const char *s, const char **next, const char **fn_end, fn_ty *fn_type)
 {
-	const char *fn, *paren, *p, *end;
+	const char *fn, *paren, *p;
 	for (p = s;; p = paren + 1) {
 		paren = strchr(p, '(');
 		if (!paren)
 			break;
-		fn = fn_start(s, paren, &end);
+		fn = fn_start(s, paren, fn_end);
 		if (fn) {
 			*fn_type = fn_get_type(s, fn);
 			*next = paren + 1;
-			return xmemdupz(fn, (size_t)(end - fn));
+			return (char *)fn;
 		}
 	}
 	return NULL;
@@ -266,20 +268,22 @@ void
 cvt_buffer_to_nodes(ll_ty *decl_head, ll_ty *cal_head, jtrie_node_ty *trie_head, const char *file, int first_pass)
 {
 	const char *p = file;
-	const char *next;
+	const char *p_next, *fn_end;
 	ll_ty *decl_node = decl_head, *cal_node = cal_head;
 	fn_ty fn_type;
-	for (char *val; (val = fn_alloc(p, &next, &fn_type));) {
+	for (char *val; (val = fn_get(p, &p_next, &fn_end, &fn_type)); p = p_next) {
+		/* Ignore called functions on the second pass
+		 * since we only check for declarations. */
+		if (!first_pass && fn_type == FN_CALLED)
+			continue;
+		val = xmemdupz(val, (size_t)(fn_end - val));
 		if (fn_type == FN_DECLARED) {
 			assert(jtrie_insert(trie_head, val) == JTRIE_RET_SUCC);
 			ll_insert_tail(&decl_node, val);
 		} else if (first_pass /* && fn_type == FN_CALLED */) {
 			/* Add function declarations to the linked list. */
 			ll_insert_tail(&cal_node, val);
-		} else /* if (!first_pass && fn_type == FN_CALLED) */ {
-			free(val);
 		}
-		p = next;
 	}
 }
 
