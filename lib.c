@@ -37,7 +37,44 @@ typedef struct ll_ty {
 static void
 remove_literal_strings(char *s)
 {
-	(void)s;
+	char *dst, *src;
+	dst = src = s;
+	for (;;) {
+		switch (*src) {
+		default:
+			*dst++ = *src++;
+			break;
+		case '\0':
+			goto at_nul;
+		case '\\':
+			*dst++ = *src++;
+			if (*src == '\"')
+				*dst++ = *src++;
+			break;
+		case '"':
+			++src;
+			for (;;) {
+				switch (*src) {
+				default:
+					++src;
+					break;
+				case '\0':
+					goto at_nul;
+				case '\\':
+					++src;
+					if (*src == '\"')
+						++src;
+					break;
+				case '"':
+					++src;
+					goto close_quote;
+				}
+			}
+close_quote:;
+		}
+	}
+at_nul:
+	*dst = '\0';
 }
 
 static void *
@@ -425,8 +462,11 @@ autosuggest(const char *fname)
 				if (!ret)
 					break;
 			}
+	jtrie_free(&trie_head);
 	ll_free(decl_head);
 	ll_free(cal_head);
+	for (ll_ty *node = unfound_head; node; ll_next(node))
+		if (node->value)
+			fprintf(stderr, "\"%s\" is an undeclared function.\n", node->value);
 	ll_free(unfound_head);
-	jtrie_free(&trie_head);
 }
