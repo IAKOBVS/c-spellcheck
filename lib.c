@@ -446,9 +446,12 @@ do_autosuggest(ll_ty **cal_head, ll_ty *decl_head, ll_ty *unfound_head, jtrie_no
 				/* Add called functions whose declaration we can not find in the current file. */
 				int i = INT_MAX;
 				char *tmp = xmalloc(strlen(cal_node->value) + 1 + strlen("?") + 1 + strlen("?") + 1 + sizeof(int));
-				strcpy(tmp, cal_node->value);
-				memcpy(tmp + strlen(cal_node->value) + 1, "?\0?\0", 4);
-				memcpy(tmp + strlen(cal_node->value) + 1 + 4, &i, sizeof(i));
+				char *p = tmp;
+				strcpy(p, cal_node->value);
+				p += strlen(cal_node->value) + 1;
+				memcpy(p, "?\0?\0", 4);
+				p += 4;
+				memcpy(p, &i, sizeof(i));
 				ll_insert_tail(&unfound_node, tmp);
 			}
 		} else {
