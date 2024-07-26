@@ -195,7 +195,8 @@ fn_start(const char *start, const char *paren, const char **fn_end)
 	return (char *)p;
 }
 
-/* TODO: have a more robust way of checking whether a function is declared or called. */
+/* TODO: have a more robust way of checking whether a function is declared or called.
+ *       handle function pointers. */
 
 fn_ty
 fn_get_type(const char *s, const char *end)
