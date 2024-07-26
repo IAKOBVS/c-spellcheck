@@ -429,7 +429,7 @@ do_autosuggest(ll_ty **cal_head, ll_ty *decl_head, ll_ty *unfound_head, jtrie_no
 					curr_p += strlen(curr_p) + 1;
 					memcpy(&curr, curr_p, sizeof(int));
 					if (lev < curr) {
-						/* unfound_node->value = "function_name\0similar_function_name\0filename\0int" */
+						/* unfound_node->value = "function_name\0similar_function_name\0filename\edit_distance" */
 						cal_node->value = xrealloc(cal_node->value, strlen(cal_node->value) + 1 + strlen(similar->value) + 1 + strlen(fname) + 1 + sizeof(int));
 						char *p = cal_node->value + strlen(cal_node->value) + 1;
 						strcpy(p, similar->value);
@@ -504,7 +504,7 @@ autosuggest(const char *fname)
 	for (ll_ty *node = unfound_head; node->next; ll_next(node)) {
 		const char *similar = node->value + strlen(node->value) + 1;
 		const char *header = similar + strlen(similar) + 1;
-		/* unfound_node->value = "function_name\0similar_function_name\0filename\0int" */
+		/* unfound_node->value = "function_name\0similar_function_name\0filename\edit_distance" */
 		fprintf(stderr, "\"%s\" is an undeclared function. Did you mean to call \"%s\" defined in \"%s\"?\n", node->value, similar, header);
 	}
 	jtrie_free(&trie_head);
