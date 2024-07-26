@@ -259,6 +259,9 @@ ll_delete(ll_ty **head, ll_ty *target)
 	ll_delete_curr(head, node, prev);
 }
 
+/* TODO: sort linked list of declared functions based on the length of the function name
+ * so we can skip comparions with called functions that are too dissimilar. */
+
 void
 cvt_buffer_to_nodes(ll_ty *decl_head, ll_ty *cal_head, jtrie_node_ty *trie_head, const char *file, int first_pass)
 {
