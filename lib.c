@@ -351,6 +351,8 @@ get_most_similar_string(ll_ty *decl_head, const char *s, int max_lev, int *dist)
 	return (min_lev > max_lev) ? NULL : min_node;
 }
 
+#undef CHAR_FREQ_DIFF_MAX
+
 const char *standard_headers[] = {
 	"/usr/include/assert.h",
 	"/usr/include/complex.h",
