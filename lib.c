@@ -517,6 +517,21 @@ do_autosuggest(ll_ty **cal_head, ll_ty *decl_head, ll_ty *unfound_head, jtrie_no
 	return cnt;
 }
 
+int
+do_autosuggest2(ll_ty **decl_head, ll_ty **unfound_head, jtrie_node_ty *trie_head, const char *fname)
+{
+	char *s = file_preprocess_alloc(fname);
+	/* We don't need the declarations from the previous file, so free the linked list
+	 * and initialize a new head. */
+	ll_free(*decl_head);
+	*decl_head = ll_alloc();
+	int ret = do_autosuggest(unfound_head, *decl_head, NULL, trie_head, s, fname, 0);
+	file_preprocess_free(s);
+	return ret;
+}
+
+#include <dirent.h>
+
 void
 autosuggest(const char *fname)
 {
@@ -525,22 +540,49 @@ autosuggest(const char *fname)
 	ll_ty *decl_head = ll_alloc(), *cal_head = ll_alloc(), *unfound_head = ll_alloc();
 	int ret = do_autosuggest(&cal_head, decl_head, unfound_head, trie_head, file, fname, 1);
 	file_preprocess_free(file);
-	if (ret)
+	if (ret) {
 		/* If we have unfound called functions which do not have similar matches in the input file,
 		 * search for them in system headers. */
 		for (int i = 0; i < (int)(sizeof(standard_headers) / sizeof(standard_headers[0])); ++i)
 			/* Check if the system header exists. */
 			if (access(standard_headers[i], R_OK) == 0) {
-				char *s = file_preprocess_alloc(standard_headers[i]);
-				/* We don't need the declarations from the previous file, so free the linked list
-				 * and initialize a new head. */
-				ll_free(decl_head);
-				decl_head = ll_alloc();
-				ret = do_autosuggest(&unfound_head, decl_head, NULL, trie_head, s, standard_headers[i], 0);
-				file_preprocess_free(s);
+				do_autosuggest2(&decl_head, &unfound_head, trie_head, standard_headers[i]);
 				if (!ret)
 					break;
 			}
+		if (ret) {
+			/* If the unfound linked list is still not empty, search for similar matches
+			 * in the files in the directory of FNAME. */
+			char *dir = strrchr(fname, '/');
+			int use_heap = 0;
+			char *tmp;
+			if (dir)
+				tmp = xmemdupz(fname, (size_t)(dir - fname));
+			else
+				tmp = (char *)".";
+			DIR *dp = opendir(tmp);
+			assert(dp);
+			struct dirent *ep;
+			struct stat st;
+			while ((ep = readdir(dp))) {
+				const char *p = strrchr(ep->d_name, '.');
+				/* Ignore non *.c and *.h files.
+				 * Also ignore "." and "..". */
+				if (!p || (*(p + 1) != 'c' && *(p + 1) != 'h') || *(p + 2) != '\0')
+					continue;
+				assert(stat(ep->d_name, &st) == 0);
+				/* Ignore non-regular files. */
+				if (!S_ISREG(st.st_mode))
+					continue;
+				do_autosuggest2(&decl_head, &unfound_head, trie_head, ep->d_name);
+				if (!ret)
+					break;
+			}
+			closedir(dp);
+			if (use_heap)
+				free(tmp);
+		}
+	}
 	for (ll_ty *node = unfound_head; node->next; ll_next(node)) {
 		const char *similar = node->value + strlen(node->value) + 1;
 		const char *header = similar + strlen(similar) + 1;
