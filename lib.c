@@ -217,11 +217,25 @@ ll_free(ll_ty *p)
 }
 
 void
-ll_remove(ll_ty **head, ll_ty *target)
+ll_insert_head(ll_ty **head, char *value)
 {
-	ll_ty *node = *head, *prev = NULL;
-	for (; node != target; ll_next(node))
-		prev = node;
+	ll_ty *old_head = *head;
+	*head = xmalloc(sizeof(ll_ty));
+	(*head)->value = value;
+	(*head)->next = old_head;
+}
+
+void
+ll_insert_tail(ll_ty **tail, char *value)
+{
+	(*tail)->value = value;
+	(*tail)->next = ll_alloc();
+	ll_next(*tail);
+}
+
+void
+ll_remove_curr(ll_ty **head, ll_ty *node, ll_ty *prev)
+{
 	if (prev)
 		prev->next = node->next;
 	else
@@ -230,10 +244,12 @@ ll_remove(ll_ty **head, ll_ty *target)
 }
 
 void
-ll_insert(ll_ty *node, char *value)
+ll_remove(ll_ty **head, ll_ty *target)
 {
-	node->value = value;
-	node->next = ll_alloc();
+	ll_ty *node = *head, *prev = NULL;
+	for (; node != target; ll_next(node))
+		prev = node;
+	ll_remove_curr(head, node, prev);
 }
 
 void
@@ -246,12 +262,10 @@ ll_cvt_buffer_to_nodes(ll_ty *decl_head, ll_ty *cal_head, jtrie_node_ty *trie_he
 	for (char *val; (val = fn_alloc(p, &next, &fn_type));) {
 		if (fn_type == FN_DECLARED) {
 			assert(jtrie_add(trie_head, val) == JTRIE_RET_SUCC);
-			ll_insert(decl_node, val);
-			ll_next(decl_node);
+			ll_insert_tail(&decl_node, val);
 		} else if (first_pass /* && fn_type == FN_CALLED */) {
 			/* Add function declarations to the linked list. */
-			ll_insert(cal_node, val);
-			ll_next(cal_node);
+			ll_insert_tail(&cal_node, val);
 		} else /* if (!first_pass && fn_type == FN_CALLED) */ {
 			free(val);
 		}
@@ -305,19 +319,18 @@ ll_get_most_similar_string(ll_ty *decl_head, const char *s, int max_lev, int *di
 	ll_ty *node, *min_node;
 	int min_lev = INT_MAX;
 	int s_len = strlen(s);
-	for (node = decl_head, min_node = decl_head; node; ll_next(node))
-		if (node->value) {
-			int val_len = (int)strlen(node->value);
-			/* If the character frequency difference is too large, don't calculate LD. */
-			if (MAX(s_len, val_len) - MIN(s_len, val_len) <= CHAR_FREQ_DIFF_MAX(MIN(s_len, val_len))
-			    && cfreq_diff(s, node->value) <= CHAR_FREQ_DIFF_MAX(MIN(s_len, val_len))) {
-				int lev = ld(node->value, val_len, s, s_len);
-				if (lev < min_lev) {
-					min_lev = lev;
-					min_node = node;
-				}
+	for (node = decl_head, min_node = decl_head; node->next; ll_next(node)) {
+		int val_len = (int)strlen(node->value);
+		/* If the character frequency difference is too large, don't calculate LD. */
+		if (MAX(s_len, val_len) - MIN(s_len, val_len) <= CHAR_FREQ_DIFF_MAX(MIN(s_len, val_len))
+		    && cfreq_diff(s, node->value) <= CHAR_FREQ_DIFF_MAX(MIN(s_len, val_len))) {
+			int lev = ld(node->value, val_len, s, s_len);
+			if (lev < min_lev) {
+				min_lev = lev;
+				min_node = node;
 			}
 		}
+	}
 	*dist = min_lev;
 	return (min_lev > max_lev) ? NULL : min_node;
 }
@@ -388,40 +401,32 @@ do_autosuggest(ll_ty **cal_head, ll_ty *decl_head, ll_ty *unfound_head, jtrie_no
 {
 	ll_cvt_buffer_to_nodes(decl_head, *cal_head, trie_head, file, first_pass);
 	ll_ty *cal_node, *cal_prev = NULL, *unfound_node = unfound_head;
-	for (cal_node = *cal_head; cal_node;) {
-		if (cal_node->value) {
-			/* Check trie for exact match. If a match is found,
-			 * either the called function is declared or it has
-			 * been checked. */
-			if (!jtrie_match(trie_head, cal_node->value)) {
-				/* Add called functions to the trie so multiple occurences
-				 * of the same function will only be checked once. */
-				assert(jtrie_add(trie_head, cal_node->value) == JTRIE_RET_SUCC);
-				int lev;
-				int val_len = strlen(cal_node->value);
-				ll_ty *similar = ll_get_most_similar_string(decl_head, cal_node->value, LEV_MAX(val_len), &lev);
-				if (similar) {
-					if (!first_pass) {
-						printf("\"%s\" is an undeclared function. Did you mean \"%s\" defined in \"%s\"?\n", cal_node->value, similar->value, fname);
-						/* Remove called functions we found from the linked list */
-						if (cal_prev) {
-							cal_prev->next = cal_node->next;
-						} else {
-							*cal_head = cal_node->next;
-						}
-						ll_ty *next = cal_node->next;
-						ll_node_free(cal_node);
-						cal_node = next;
-						continue;
-					} else {
-						if (lev > 0)
-							printf("\"%s\" is an undeclared function. Did you mean \"%s\"?\n", cal_node->value, similar->value);
-					}
-				} else if (first_pass) {
-					/* Add called functions whose declaration we can not find in the current file. */
-					ll_insert(unfound_node, xmemdupz(cal_node->value, (size_t)val_len));
-					ll_next(unfound_node);
+	for (cal_node = *cal_head; cal_node->next;) {
+		/* Check trie for exact match. If a match is found,
+		 * either the called function is declared or it has
+		 * been checked. */
+		if (!jtrie_match(trie_head, cal_node->value)) {
+			/* Add called functions to the trie so multiple occurences
+			 * of the same function will only be checked once. */
+			assert(jtrie_add(trie_head, cal_node->value) == JTRIE_RET_SUCC);
+			int lev;
+			int val_len = strlen(cal_node->value);
+			ll_ty *similar = ll_get_most_similar_string(decl_head, cal_node->value, LEV_MAX(val_len), &lev);
+			if (similar) {
+				if (!first_pass) {
+					printf("\"%s\" is an undeclared function. Did you mean \"%s\" defined in \"%s\"?\n", cal_node->value, similar->value, fname);
+					/* Remove called functions we found from the linked list */
+					ll_ty *next = cal_node->next;
+					ll_remove_curr(cal_head, cal_node, cal_prev);
+					cal_node = next;
+					continue;
+				} else {
+					if (lev > 0)
+						printf("\"%s\" is an undeclared function. Did you mean \"%s\"?\n", cal_node->value, similar->value);
 				}
+			} else if (first_pass) {
+				/* Add called functions whose declaration we can not find in the current file. */
+				ll_insert_tail(&unfound_node, xmemdupz(cal_node->value, (size_t)val_len));
 			}
 		}
 		cal_prev = cal_node;
@@ -431,9 +436,8 @@ do_autosuggest(ll_ty **cal_head, ll_ty *decl_head, ll_ty *unfound_head, jtrie_no
 		unfound_head = *cal_head;
 	int cnt = 0;
 	/* Remove unfound functions from the trie so they will not be skipped in the second pass. */
-	for (unfound_node = unfound_head; unfound_node; unfound_node = unfound_node->next, ++cnt)
-		if (unfound_node->value)
-			jtrie_remove(trie_head, unfound_node->value);
+	for (unfound_node = unfound_head; unfound_node->next; ll_next(unfound_node), ++cnt)
+		jtrie_remove(trie_head, unfound_node->value);
 	/* Check if the list of unfound functions is empty. */
 	return cnt;
 }
@@ -442,7 +446,7 @@ void
 autosuggest(const char *fname)
 {
 	char *file = file_preprocess_alloc(fname);
-	jtrie_node_ty *trie_head = jtrie_init();
+	jtrie_node_ty *trie_head = jtrie_alloc();
 	ll_ty *decl_head = ll_alloc(), *cal_head = ll_alloc(), *unfound_head = ll_alloc();
 	int ret = do_autosuggest(&cal_head, decl_head, unfound_head, trie_head, file, fname, 1);
 	file_preprocess_free(file);
@@ -465,8 +469,7 @@ autosuggest(const char *fname)
 	jtrie_free(&trie_head);
 	ll_free(decl_head);
 	ll_free(cal_head);
-	for (ll_ty *node = unfound_head; node; ll_next(node))
-		if (node->value)
-			fprintf(stderr, "\"%s\" is an undeclared function.\n", node->value);
+	for (ll_ty *node = unfound_head; node->next; ll_next(node))
+		fprintf(stderr, "\"%s\" is an undeclared function.\n", node->value);
 	ll_free(unfound_head);
 }

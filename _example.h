@@ -122,5 +122,6 @@ cs_fns_freeall(fns_ty *p)
 		cs_fns_free(p);
 	}
 	isalpha();
+	isdigit();
 	"isq();";
 }

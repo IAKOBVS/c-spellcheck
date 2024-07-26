@@ -22,19 +22,19 @@ typedef struct jtrie_node_ty {
 } jtrie_node_ty;
 
 static jtrie_node_ty *
-jtrie_init(void)
+jtrie_alloc(void)
 {
 	return (jtrie_node_ty *)calloc(1, sizeof(jtrie_node_ty));
 }
 
 static void
-jtrie__free_recur(jtrie_node_ty *node)
+jtrie__free(jtrie_node_ty *node)
 {
 	if (node == NULL)
 		return;
 	int i;
 	for (i = 0; i < JTRIE_ASCII_SIZE; ++i)
-		jtrie__free_recur(node->child[i]);
+		jtrie__free(node->child[i]);
 	free(node);
 	node = NULL;
 }
@@ -42,7 +42,7 @@ jtrie__free_recur(jtrie_node_ty *node)
 static void
 jtrie_free(jtrie_node_ty **node)
 {
-	jtrie__free_recur(*node);
+	jtrie__free(*node);
 }
 
 static jtrie_ret_ty
@@ -55,7 +55,7 @@ jtrie_add(jtrie_node_ty *root,
 	jtrie_node_ty *curr = root;
 	for (; *w; ++w) {
 		if (curr->child[JTRIE_ASCII_IDX_GET(*w)] == NULL)
-			curr->child[JTRIE_ASCII_IDX_GET(*w)] = jtrie_init();
+			curr->child[JTRIE_ASCII_IDX_GET(*w)] = jtrie_alloc();
 		curr = curr->child[JTRIE_ASCII_IDX_GET(*w)];
 		if (curr == NULL)
 			return JTRIE_RET_ERR;
@@ -66,7 +66,7 @@ jtrie_add(jtrie_node_ty *root,
 
 typedef enum {
 	PJTRIE_FLAG_REMOVE_NOT_PREFIXES = 0,
-	PJTRIE_FLAG_REMOVE_PREFIXES = 1
+	PJTRIE_FLAG_REMOVE_PREFIXES
 } jtrie__flag_remove_prefixes_ty;
 
 static void
@@ -81,7 +81,7 @@ jtrie__remove(jtrie__flag_remove_prefixes_ty flag,
 	if (curr == NULL)
 		return;
 	while (*++w && curr->child[JTRIE_ASCII_IDX_GET(*w)]) {
-		if (flag & PJTRIE_FLAG_REMOVE_PREFIXES)
+		if (flag == PJTRIE_FLAG_REMOVE_PREFIXES)
 			curr->EOW = 0;
 		curr = curr->child[JTRIE_ASCII_IDX_GET(*w)];
 	}
