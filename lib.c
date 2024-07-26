@@ -434,19 +434,25 @@ do_autosuggest(ll_ty **cal_head, ll_ty *decl_head, ll_ty *unfound_head, jtrie_no
 			ll_ty *similar = get_most_similar_string(decl_head, cal_node->value, LEV_MAX(val_len), &lev);
 			if (similar) {
 				if (!first_pass) {
-					int curr;
-					char *curr_p = cal_node->value + strlen(cal_node->value) + 1;
-					curr_p += strlen(curr_p) + 1;
-					curr_p += strlen(curr_p) + 1;
-					memcpy(&curr, curr_p, sizeof(int));
-					if (lev < curr) {
-						/* unfound_node->value = "function_name\0similar_function_name\0filename\edit_distance" */
+					int min;
+					/* Point to the location of the integer in the string.
+					 * The format is
+					 * unfound_node->value = "function_name\0similar_function_name\0filename\edit_distance" */
+					char *min_p = cal_node->value + strlen(cal_node->value) + 1;
+					min_p += strlen(min_p) + 1;
+					min_p += strlen(min_p) + 1;
+					/* Read the integer from the string. */
+					memcpy(&min, min_p, sizeof(int));
+					if (lev < min) {
 						cal_node->value = xrealloc(cal_node->value, strlen(cal_node->value) + 1 + strlen(similar->value) + 1 + strlen(fname) + 1 + sizeof(int));
 						char *p = cal_node->value + strlen(cal_node->value) + 1;
 						strcpy(p, similar->value);
 						p += strlen(p) + 1;
 						strcpy(p, fname);
 						p += strlen(p) + 1;
+						/* Write the integer to the string.
+						 * Safe version of *(int *)p = i;
+						 * since p may be unaligned. */
 						memcpy(p, &lev, sizeof(lev));
 					}
 				} else {
