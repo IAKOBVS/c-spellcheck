@@ -417,12 +417,7 @@ do_autosuggest(ll_ty **cal_head, ll_ty *decl_head, ll_ty *unfound_head, jtrie_no
 			if (similar) {
 				if (!first_pass) {
 					printf("\"%s\" is an undeclared function. Did you mean \"%s\" defined in \"%s\"?\n", cal_node->value, similar->value, fname);
-					/* Remove called functions we found from the linked list */
-delete_node:;
-					ll_ty *next = cal_node->next;
-					ll_delete_curr(cal_head, cal_node, cal_prev);
-					cal_node = next;
-					continue;
+					goto delete_node;
 				} else {
 					if (lev > 0)
 						printf("\"%s\" is an undeclared function. Did you mean \"%s\"?\n", cal_node->value, similar->value);
@@ -430,11 +425,18 @@ delete_node:;
 			} else if (first_pass) {
 				/* Add called functions whose declaration we can not find in the current file. */
 				ll_insert_tail(&unfound_node, xmemdupz(cal_node->value, (size_t)val_len));
+			} else /* if (!first_pass) */ {
+
 			}
 		} else {
 			if (!first_pass) {
 				printf("\"%s\" is an undeclared function. Did you mean to include \"%s\"?\n", cal_node->value, fname);
-				goto delete_node;
+delete_node:;
+					/* Remove called functions we found from the linked list */
+					ll_ty *next = cal_node->next;
+					ll_delete_curr(cal_head, cal_node, cal_prev);
+					cal_node = next;
+					continue;
 			}
 		}
 		cal_prev = cal_node;
