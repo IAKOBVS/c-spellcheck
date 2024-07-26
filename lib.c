@@ -317,16 +317,20 @@ const char *standard_headers[] = {
 	"/usr/include/wctype.h"
 };
 
+#define PREPROCESS "cpp"
+
 char *
 file_preprocess_alloc(const char *fname)
 {
 	char tmpfile[] = "/tmp/XXXXXX";
 	mktemp(tmpfile);
-	char *cmd = xmalloc(strlen("./preprocess ") + strlen(fname) + strlen(" > ") + strlen(tmpfile) + 1);
-	strcpy(cmd, "./preprocess ");
+	char *cmd = xmalloc(strlen(PREPROCESS) + strlen(" ") + strlen(fname) + strlen(" > ") + strlen(tmpfile) + 1);
+	strcpy(cmd, PREPROCESS);
+	strcat(cmd, " ");
 	strcat(cmd, fname);
 	strcat(cmd, " > ");
 	strcat(cmd, tmpfile);
+	/* Execute "cpp fname > tmpfile" */
 	assert(system(cmd) == 0);
 	free(cmd);
 	char *ret = file_alloc(tmpfile);
@@ -400,17 +404,17 @@ do_autosuggest(ll_ty **cal_head, ll_ty *decl_head, ll_ty *unfound_head, jtrie_no
 void
 autosuggest(const char *fname)
 {
-	char *file = file_alloc(fname);
+	char *file = file_preprocess_alloc(fname);
 	jtrie_node_ty *trie_head = jtrie_init();
 	ll_ty *decl_head = ll_alloc(), *cal_head = ll_alloc(), *unfound_head = ll_alloc();
 	int ret = do_autosuggest(&cal_head, decl_head, unfound_head, trie_head, file, fname, 1);
-	file_free(file);
+	file_preprocess_free(file);
 	if (ret)
 		/* If we have unfound called functions which do not have similar matches in the input file,
 		 * search for them in system headers. */
 		for (unsigned int i = 0; i < sizeof(standard_headers) / sizeof(standard_headers[0]); ++i)
 			/* Check if the system header exists. */
-			if (access(standard_headers[i], F_OK) == 0) {
+			if (access(standard_headers[i], R_OK) == 0) {
 				char *s = file_preprocess_alloc(standard_headers[i]);
 				/* We don't need the declarations from the previous file, so free the linked list
 				 * and initialize a new head. */
