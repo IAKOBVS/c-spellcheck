@@ -8,8 +8,6 @@
 		exit(EXIT_FAILURE);           \
 	} while (0)
 
-#define ll_foreach(var, head) for (ll_ty *var = (head); (var)->next; ll_next(var))
-
 int
 main(int argc, char **argv)
 {
