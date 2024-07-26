@@ -96,6 +96,14 @@ xmalloc(size_t n)
 }
 
 static void *
+xrealloc(void *p, size_t n)
+{
+	p = realloc(p, n);
+	assert(p);
+	return p;
+}
+
+static void *
 xcalloc(size_t n)
 {
 	void *p = calloc(1, n);
@@ -200,19 +208,18 @@ ll_alloc()
 }
 
 void
-ll_node_free(ll_ty *p)
+ll_node_free(ll_ty *node)
 {
-	free(p->value);
-	free(p);
+	free(node->value);
+	free(node);
 }
 
 void
-ll_free(ll_ty *p)
+ll_free(ll_ty *node)
 {
-	if (p) {
-		free(p->value);
-		ll_free(p->next);
-		free(p);
+	if (node) {
+		ll_free(node->next);
+		ll_node_free(node);
 	}
 }
 
@@ -416,27 +423,42 @@ do_autosuggest(ll_ty **cal_head, ll_ty *decl_head, ll_ty *unfound_head, jtrie_no
 			ll_ty *similar = get_most_similar_string(decl_head, cal_node->value, LEV_MAX(val_len), &lev);
 			if (similar) {
 				if (!first_pass) {
-					printf("\"%s\" is an undeclared function. Did you mean \"%s\" defined in \"%s\"?\n", cal_node->value, similar->value, fname);
-					goto delete_node;
+					int curr;
+					char *curr_p = cal_node->value + strlen(cal_node->value) + 1;
+					curr_p += strlen(curr_p) + 1;
+					curr_p += strlen(curr_p) + 1;
+					memcpy(&curr, curr_p, sizeof(int));
+					if (lev < curr) {
+						/* unfound_node->value = "function_name\0similar_function_name\0filename\0int" */
+						cal_node->value = xrealloc(cal_node->value, strlen(cal_node->value) + 1 + strlen(similar->value) + 1 + strlen(fname) + 1 + sizeof(int));
+						char *p = cal_node->value + strlen(cal_node->value) + 1;
+						strcpy(p, similar->value);
+						p += strlen(p) + 1;
+						strcpy(p, fname);
+						p += strlen(p) + 1;
+						memcpy(p, &lev, sizeof(lev));
+					}
 				} else {
 					if (lev > 0)
 						printf("\"%s\" is an undeclared function. Did you mean \"%s\"?\n", cal_node->value, similar->value);
 				}
 			} else if (first_pass) {
 				/* Add called functions whose declaration we can not find in the current file. */
-				ll_insert_tail(&unfound_node, xmemdupz(cal_node->value, (size_t)val_len));
-			} else /* if (!first_pass) */ {
-
+				int i = INT_MAX;
+				char *tmp = xmalloc(strlen(cal_node->value) + 1 + strlen("?") + 1 + strlen("?") + 1 + sizeof(int));
+				strcpy(tmp, cal_node->value);
+				memcpy(tmp + strlen(cal_node->value) + 1, "?\0?\0", 4);
+				memcpy(tmp + strlen(cal_node->value) + 1 + 4, &i, sizeof(i));
+				ll_insert_tail(&unfound_node, tmp);
 			}
 		} else {
 			if (!first_pass) {
 				printf("\"%s\" is an undeclared function. Did you mean to include \"%s\"?\n", cal_node->value, fname);
-delete_node:;
-					/* Remove called functions we found from the linked list */
-					ll_ty *next = cal_node->next;
-					ll_delete_curr(cal_head, cal_node, cal_prev);
-					cal_node = next;
-					continue;
+				/* Remove called functions we found from the linked list */
+				ll_ty *next = cal_node->next;
+				ll_delete_curr(cal_head, cal_node, cal_prev);
+				cal_node = next;
+				continue;
 			}
 		}
 		cal_prev = cal_node;
@@ -463,7 +485,7 @@ autosuggest(const char *fname)
 	if (ret)
 		/* If we have unfound called functions which do not have similar matches in the input file,
 		 * search for them in system headers. */
-		for (unsigned int i = 0; i < sizeof(standard_headers) / sizeof(standard_headers[0]); ++i)
+		for (int i = 0; i < (int)(sizeof(standard_headers) / sizeof(standard_headers[0])); ++i)
 			/* Check if the system header exists. */
 			if (access(standard_headers[i], R_OK) == 0) {
 				char *s = file_preprocess_alloc(standard_headers[i]);
@@ -476,10 +498,14 @@ autosuggest(const char *fname)
 				if (!ret)
 					break;
 			}
+	for (ll_ty *node = unfound_head; node->next; ll_next(node)) {
+		const char *similar = node->value + strlen(node->value) + 1;
+		const char *header = similar + strlen(similar) + 1;
+		/* unfound_node->value = "function_name\0similar_function_name\0filename\0int" */
+		fprintf(stderr, "\"%s\" is an undeclared function. Did you mean to call \"%s\" defined in \"%s\"?\n", node->value, similar, header);
+	}
 	jtrie_free(&trie_head);
 	ll_free(decl_head);
 	ll_free(cal_head);
-	for (ll_ty *node = unfound_head; node->next; ll_next(node))
-		fprintf(stderr, "\"%s\" is an undeclared function.\n", node->value);
 	ll_free(unfound_head);
 }
