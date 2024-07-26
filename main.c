@@ -15,6 +15,9 @@ main(int argc, char **argv)
 {
 	if (!argv[1] || !argv[1][0])
 		die_print("Usage: %s <filename>\n", argv[0]);
+	const char *ext = strrchr(argv[1], '.');
+	if (!ext || ((*(ext + 1) != 'h' && *(ext + 1) != 'c')))
+		die_print("The first argument, %s, is not a C file.\n", argv[1]);
 	if (access(argv[1], R_OK) != 0)
 		die_print("%s can not be read.", argv[1]);
 	autosuggest(argv[1]);
