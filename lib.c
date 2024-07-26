@@ -306,6 +306,8 @@ cfreq_diff(const char *s, const char *t)
 
 #define MIN3(x, y, z) (((x) < (y)) ? ((x) < (z) ? (x) : (z)) : ((y) < (z) ? (y) : (z)))
 
+/* TODO: implement DLD. */
+
 int
 ld(const char *s, int m, const char *t, int n)
 {
