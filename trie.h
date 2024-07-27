@@ -74,15 +74,15 @@ jtrie_insert(jtrie_ty *root,
 	if (*word == '\0')
 		return JTRIE_RET_SUCC;
 	const unsigned char *w = (unsigned char *)word;
-	jtrie_ty *curr = root;
+	jtrie_ty *node = root;
 	for (; *w; ++w) {
-		if (curr->child[JTRIE_ASCII_IDX_GET(*w)] == NULL)
-			curr->child[JTRIE_ASCII_IDX_GET(*w)] = jtrie_alloc();
-		curr = curr->child[JTRIE_ASCII_IDX_GET(*w)];
-		if (curr == NULL)
+		if (node->child[JTRIE_ASCII_IDX_GET(*w)] == NULL)
+			node->child[JTRIE_ASCII_IDX_GET(*w)] = jtrie_alloc();
+		node = node->child[JTRIE_ASCII_IDX_GET(*w)];
+		if (node == NULL)
 			return JTRIE_RET_ERR;
 	}
-	curr->EOW = 1;
+	node->EOW = 1;
 	return JTRIE_RET_SUCC;
 }
 
@@ -99,15 +99,15 @@ jtrie__delete(jtrie__flag_delete_prefixes_ty flag,
 	if (*word == '\0')
 		return;
 	const unsigned char *w = (unsigned char *)word;
-	jtrie_ty *curr = root->child[JTRIE_ASCII_IDX_GET(*w)];
-	if (curr == NULL)
+	jtrie_ty *node = root->child[JTRIE_ASCII_IDX_GET(*w)];
+	if (node == NULL)
 		return;
-	while (*++w && curr->child[JTRIE_ASCII_IDX_GET(*w)]) {
+	while (*++w && node->child[JTRIE_ASCII_IDX_GET(*w)]) {
 		if (flag == PJTRIE_FLAG_REMOVE_PREFIXES)
-			curr->EOW = 0;
-		curr = curr->child[JTRIE_ASCII_IDX_GET(*w)];
+			node->EOW = 0;
+		node = node->child[JTRIE_ASCII_IDX_GET(*w)];
 	}
-	curr->EOW = 0;
+	node->EOW = 0;
 }
 
 static void
@@ -136,11 +136,11 @@ jtrie_starts(const jtrie_ty *root,
 	if (*word == '\0')
 		return NULL;
 	const unsigned char *w = (unsigned char *)word;
-	const jtrie_ty *curr = root->child[JTRIE_ASCII_IDX_GET(*w)];
-	if (curr == NULL)
+	const jtrie_ty *node = root->child[JTRIE_ASCII_IDX_GET(*w)];
+	if (node == NULL)
 		return NULL;
-	for (; *++w && curr->child[JTRIE_ASCII_IDX_GET(*w)]; curr = curr->child[JTRIE_ASCII_IDX_GET(*w)]) {}
-	return (jtrie_ty *)curr;
+	for (; *++w && node->child[JTRIE_ASCII_IDX_GET(*w)]; node = node->child[JTRIE_ASCII_IDX_GET(*w)]) {}
+	return (jtrie_ty *)node;
 }
 
 /*
