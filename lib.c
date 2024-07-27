@@ -288,7 +288,7 @@ ll_delete(ll_ty **head, ll_ty *target)
  * so we can skip comparions with called functions that are too dissimilar. */
 
 void
-cvt_buffer_to_nodes(ll_ty *decl_head, ll_ty *cal_head, jtrie_node_ty *trie_head, const char *file, int first_pass)
+cvt_buffer_to_nodes(ll_ty *decl_head, ll_ty *cal_head, jtrie_ty *trie_head, const char *file, int first_pass)
 {
 	const char *p = file;
 	const char *p_next, *fn_end;
@@ -440,7 +440,7 @@ file_preprocess_free(char *file)
 #define LEV_MAX(n) (0.6 * n)
 
 int
-do_autosuggest(ll_ty **cal_head, ll_ty *decl_head, ll_ty *unfound_head, jtrie_node_ty *trie_head, const char *file, const char *fname, int first_pass)
+do_autosuggest(ll_ty **cal_head, ll_ty *decl_head, ll_ty *unfound_head, jtrie_ty *trie_head, const char *file, const char *fname, int first_pass)
 {
 	cvt_buffer_to_nodes(decl_head, *cal_head, trie_head, file, first_pass);
 	ll_ty *cal_node, *cal_prev = NULL, *unfound_node = unfound_head;
@@ -518,7 +518,7 @@ do_autosuggest(ll_ty **cal_head, ll_ty *decl_head, ll_ty *unfound_head, jtrie_no
 }
 
 int
-do_autosuggest2(ll_ty **decl_head, ll_ty **unfound_head, jtrie_node_ty *trie_head, const char *fname)
+do_autosuggest2(ll_ty **decl_head, ll_ty **unfound_head, jtrie_ty *trie_head, const char *fname)
 {
 	char *s = file_preprocess_alloc(fname);
 	/* We don't need the declarations from the previous file, so free the linked list
@@ -536,7 +536,7 @@ void
 autosuggest(const char *fname)
 {
 	char *file = file_preprocess_alloc(fname);
-	jtrie_node_ty *trie_head = jtrie_alloc();
+	jtrie_ty *trie_head = jtrie_alloc();
 	ll_ty *decl_head = ll_alloc(), *cal_head = ll_alloc(), *unfound_head = ll_alloc();
 	int ret = do_autosuggest(&cal_head, decl_head, unfound_head, trie_head, file, fname, 1);
 	file_preprocess_free(file);

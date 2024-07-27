@@ -38,19 +38,19 @@ typedef enum {
 	JTRIE_RET_ERR = 1
 } jtrie_ret_ty;
 
-typedef struct jtrie_node_ty {
-	struct jtrie_node_ty *child[JTRIE_ASCII_SIZE];
+typedef struct jtrie_ty {
+	struct jtrie_ty *child[JTRIE_ASCII_SIZE];
 	int EOW;
-} jtrie_node_ty;
+} jtrie_ty;
 
-static jtrie_node_ty *
+static jtrie_ty *
 jtrie_alloc(void)
 {
-	return (jtrie_node_ty *)calloc(1, sizeof(jtrie_node_ty));
+	return (jtrie_ty *)calloc(1, sizeof(jtrie_ty));
 }
 
 static void
-jtrie__free(jtrie_node_ty *node)
+jtrie__free(jtrie_ty *node)
 {
 	if (node == NULL)
 		return;
@@ -62,19 +62,19 @@ jtrie__free(jtrie_node_ty *node)
 }
 
 static void
-jtrie_free(jtrie_node_ty **node)
+jtrie_free(jtrie_ty **node)
 {
 	jtrie__free(*node);
 }
 
 static jtrie_ret_ty
-jtrie_insert(jtrie_node_ty *root,
+jtrie_insert(jtrie_ty *root,
           const char *word)
 {
 	if (*word == '\0')
 		return JTRIE_RET_SUCC;
 	const unsigned char *w = (unsigned char *)word;
-	jtrie_node_ty *curr = root;
+	jtrie_ty *curr = root;
 	for (; *w; ++w) {
 		if (curr->child[JTRIE_ASCII_IDX_GET(*w)] == NULL)
 			curr->child[JTRIE_ASCII_IDX_GET(*w)] = jtrie_alloc();
@@ -93,13 +93,13 @@ typedef enum {
 
 static void
 jtrie__delete(jtrie__flag_delete_prefixes_ty flag,
-              jtrie_node_ty *root,
+              jtrie_ty *root,
               const char *word)
 {
 	if (*word == '\0')
 		return;
 	const unsigned char *w = (unsigned char *)word;
-	jtrie_node_ty *curr = root->child[JTRIE_ASCII_IDX_GET(*w)];
+	jtrie_ty *curr = root->child[JTRIE_ASCII_IDX_GET(*w)];
 	if (curr == NULL)
 		return;
 	while (*++w && curr->child[JTRIE_ASCII_IDX_GET(*w)]) {
@@ -111,14 +111,14 @@ jtrie__delete(jtrie__flag_delete_prefixes_ty flag,
 }
 
 static void
-jtrie_delete(jtrie_node_ty *root,
+jtrie_delete(jtrie_ty *root,
              const char *word)
 {
 	jtrie__delete(PJTRIE_FLAG_REMOVE_NOT_PREFIXES, root, word);
 }
 
 static void
-jtrie_deleteprefixes(jtrie_node_ty *root,
+jtrie_deleteprefixes(jtrie_ty *root,
                      const char *word)
 {
 	jtrie__delete(PJTRIE_FLAG_REMOVE_PREFIXES, root, word);
@@ -129,18 +129,18 @@ jtrie_deleteprefixes(jtrie_node_ty *root,
    Pointer to node with last letter of WORD.
    NULL if not found.
 */
-static jtrie_node_ty *
-jtrie_starts(const jtrie_node_ty *root,
+static jtrie_ty *
+jtrie_starts(const jtrie_ty *root,
              const char *word)
 {
 	if (*word == '\0')
 		return NULL;
 	const unsigned char *w = (unsigned char *)word;
-	const jtrie_node_ty *curr = root->child[JTRIE_ASCII_IDX_GET(*w)];
+	const jtrie_ty *curr = root->child[JTRIE_ASCII_IDX_GET(*w)];
 	if (curr == NULL)
 		return NULL;
 	for (; *++w && curr->child[JTRIE_ASCII_IDX_GET(*w)]; curr = curr->child[JTRIE_ASCII_IDX_GET(*w)]) {}
-	return (jtrie_node_ty *)curr;
+	return (jtrie_ty *)curr;
 }
 
 /*
@@ -149,10 +149,10 @@ jtrie_starts(const jtrie_node_ty *root,
    0 otherwise.
 */
 static int
-jtrie_match(const jtrie_node_ty *root,
+jtrie_match(const jtrie_ty *root,
             const char *word)
 {
-	const jtrie_node_ty *node = jtrie_starts(root, word);
+	const jtrie_ty *node = jtrie_starts(root, word);
 	return node ? node->EOW : 0;
 }
 
