@@ -554,13 +554,13 @@ autosuggest(const char *fname)
 			/* If the unfound linked list is still not empty, search for similar matches
 			 * in the files in the directory of FNAME. */
 			char *dir = strrchr(fname, '/');
-			int use_heap = 0;
-			char *tmp;
+			char *dirof_file_heap = NULL;
+			char *dirof_file;
 			if (dir)
-				tmp = xmemdupz(fname, (size_t)(dir - fname));
+				dirof_file = dirof_file_heap = xmemdupz(fname, (size_t)(dir - fname));
 			else
-				tmp = (char *)".";
-			DIR *dp = opendir(tmp);
+				dirof_file = (char *)".";
+			DIR *dp = opendir(dirof_file);
 			assert(dp);
 			struct dirent *ep;
 			struct stat st;
@@ -579,8 +579,7 @@ autosuggest(const char *fname)
 					break;
 			}
 			closedir(dp);
-			if (use_heap)
-				free(tmp);
+			free(dirof_file_heap);
 		}
 	}
 	for (ll_ty *node = unfound_head; node->next; ll_next(node)) {
