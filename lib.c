@@ -329,10 +329,8 @@ cfreq_diff(const char *s, const char *t)
 
 #define MIN3(x, y, z) (((x) < (y)) ? ((x) < (z) ? (x) : (z)) : ((y) < (z) ? (y) : (z)))
 
-/* TODO: implement DLD. */
-
 int
-ld(const char *s, int m, const char *t, int n)
+dld(const char *s, int m, const char *t, int n)
 {
 	int tbl[n + 1][m + 1];
 	tbl[0][0] = 0;
@@ -344,6 +342,8 @@ ld(const char *s, int m, const char *t, int n)
 		for (int j = 1; j <= m; ++j) {
 			int sub_cost = s[j - 1] == t[i - 1] ? 0 : 1;
 			tbl[i][j] = MIN3(tbl[i - 1][j] + 1, tbl[i][j - 1] + 1, tbl[i - 1][j - 1] + sub_cost);
+			if (i > 1 && j > 1 && s[i - 1] == t[i - 2] && s[i - 2] == t[i - 1])
+				tbl[i][j] = MIN(tbl[i][j], tbl[i - 2][j - 2] + sub_cost);
 		}
 	return tbl[n][m];
 }
@@ -363,7 +363,7 @@ get_most_similar_string(ll_ty *decl_head, const char *s, int max_lev, int *dist)
 		/* If the character frequency difference is too large, don't calculate LD. */
 		if (MAX(s_len, val_len) - MIN(s_len, val_len) <= CHAR_FREQ_DIFF_MAX(MIN(s_len, val_len))
 		    && cfreq_diff(s, node->value) <= CHAR_FREQ_DIFF_MAX(MIN(s_len, val_len))) {
-			int lev = ld(node->value, val_len, s, s_len);
+			int lev = dld(node->value, val_len, s, s_len);
 			if (lev < min_lev) {
 				min_lev = lev;
 				min_node = node;
