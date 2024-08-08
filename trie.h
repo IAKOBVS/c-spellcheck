@@ -140,7 +140,15 @@ jtrie_starts(const jtrie_ty *root,
 	if (node == NULL)
 		return NULL;
 	for (; *++w && node->child[JTRIE_ASCII_IDX_GET(*w)]; node = node->child[JTRIE_ASCII_IDX_GET(*w)]) {}
-	return (jtrie_ty *)node;
+	if (*w == '\0') {
+		if (node->EOW)
+			return (jtrie_ty *)node;
+		int i;
+		for (i = 0; i < JTRIE_ASCII_SIZE; ++i)
+			if (node->child[i])
+				return (jtrie_ty *)node;
+	}
+	return NULL;
 }
 
 /*
@@ -152,7 +160,13 @@ static int
 jtrie_match(const jtrie_ty *root,
             const char *word)
 {
-	const jtrie_ty *node = jtrie_starts(root, word);
+	if (*word == '\0')
+		return 0;
+	const unsigned char *w = (unsigned char *)word;
+	const jtrie_ty *node = root->child[JTRIE_ASCII_IDX_GET(*w)];
+	if (node == NULL)
+		return 0;
+	for (; *++w && node->child[JTRIE_ASCII_IDX_GET(*w)]; node = node->child[JTRIE_ASCII_IDX_GET(*w)]) {}
 	return node ? node->EOW : 0;
 }
 
