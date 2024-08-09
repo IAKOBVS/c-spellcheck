@@ -56,6 +56,12 @@ typedef struct ll_ty {
 	struct ll_ty *next;
 } ll_ty;
 
+int
+xiswhite(int c)
+{
+	return c == ' ' || c == '\t' || c == '\n';
+}
+
 static void
 remove_literal_strings(char *s)
 {
@@ -73,6 +79,12 @@ remove_literal_strings(char *s)
 			if (*src == '\"')
 				*dst++ = *src++;
 			break;
+		case '#':
+			for (; *src && *src != '\n'; ++src)
+				;
+			if (*src == '\n')
+				++src;
+			break;
 		case '"':
 			++src;
 			for (;;) {
@@ -81,7 +93,8 @@ remove_literal_strings(char *s)
 					++src;
 					break;
 				case '\0':
-					goto at_nul;
+					fprintf(stderr, "Unmatched quotes.\n");
+					exit(EXIT_FAILURE);
 				case '\\':
 					++src;
 					if (*src == '\"')
@@ -89,6 +102,8 @@ remove_literal_strings(char *s)
 					break;
 				case '"':
 					++src;
+					*dst++ = '"';
+					*dst++ = '"';
 					goto close_quote;
 				}
 			}
@@ -175,55 +190,6 @@ is_fn_char(int c)
 	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_';
 }
 
-static char *
-fn_start(const char *start, const char *paren, const char **fn_end)
-{
-	const char *p = paren;
-	while (--p >= start && (*p == ' ' || *p == '\t' || *p == '\n')) {}
-	*fn_end = p + 1;
-	for (; p >= start && is_fn_char(*p); --p) {}
-	++p;
-	if (!is_fn_char(*p)
-	    || *p == '_'
-	    || (*p >= '0' && *p <= '9')
-	    || starts_with(p, "if")
-	    || starts_with(p, "for")
-	    || starts_with(p, "while")
-	    || starts_with(p, "return")
-	    || starts_with(p, "switch"))
-		return NULL;
-	return (char *)p;
-}
-
-/* TODO: have a more robust way of checking whether a function is declared or called.
- *       handle function pointers. */
-
-fn_ty
-fn_get_type(const char *s, const char *end)
-{
-	const char *line = xmemrchr(s, '\n', (size_t)(end - s));
-	line = (line != NULL) ? line + 1 : s;
-	return (*line == '\t' || *line == ' ') ? FN_CALLED : FN_DECLARED;
-}
-
-char *
-fn_get(const char *s, const char **next, const char **fn_end, fn_ty *fn_type)
-{
-	const char *fn, *paren, *p;
-	for (p = s;; p = paren + 1) {
-		paren = strchr(p, '(');
-		if (!paren)
-			break;
-		fn = fn_start(s, paren, fn_end);
-		if (fn) {
-			*fn_type = fn_get_type(s, fn);
-			*next = paren + 1;
-			return (char *)fn;
-		}
-	}
-	return NULL;
-}
-
 #define ll_next(node) node = (node)->next
 
 ll_ty *
@@ -284,6 +250,122 @@ ll_delete(ll_ty **head, ll_ty *target)
 	ll_delete_curr(head, node, prev);
 }
 
+static char *
+fn_start(const char *start, const char *paren, const char **fn_end)
+{
+	const char *p = paren;
+	while (--p >= start && xiswhite(*p)) {}
+	*fn_end = p + 1;
+	for (; p >= start && is_fn_char(*p); --p) {}
+	++p;
+	if (!is_fn_char(*p)
+	    || *p == '_'
+	    || (*p >= '0' && *p <= '9')
+	    || starts_with(p, "if")
+	    || starts_with(p, "for")
+	    || starts_with(p, "while")
+	    || starts_with(p, "return")
+	    || starts_with(p, "switch"))
+		return NULL;
+	return (char *)p;
+}
+
+/* TODO: have a more robust way of checking whether a function is declared or called.
+ *       handle function pointers. */
+
+fn_ty
+fn_get_type(const char *s, const char *end)
+{
+	const char *line = xmemrchr(s, '\n', (size_t)(end - s));
+	line = (line != NULL) ? line + 1 : s;
+	return (*line == '\t' || *line == ' ') ? FN_CALLED : FN_DECLARED;
+}
+
+char *
+paren_skip(const char *s, const char *end)
+{
+	if (*s == '(')
+		while (++s < end && *s != ')')
+			;
+	return (char *)s;
+}
+
+ll_ty *
+fn_arg_get(const char *paren_s, const char *paren_e)
+{
+	const char *p = paren_s;
+	const char *arg_s = p + 1;
+	const char *arg_e;
+	ll_ty *arg_head = ll_alloc();
+	ll_ty *arg_node = arg_head;
+	while (++p <= paren_e) {
+		switch (*p) {
+		case '(':
+			p = paren_skip(p, paren_e);
+			break;
+		case '\0':
+			fprintf(stderr, "Unmatched parenthesis.\n");
+			exit(EXIT_FAILURE);
+		case ')':
+		case ',':
+			for (; xiswhite(*arg_s); ++arg_s)
+				;
+			arg_e = p;
+			if (arg_s < arg_e && xiswhite(*(arg_e - 1))) {
+				--arg_e;
+				for (; arg_s < arg_e && xiswhite(*arg_e); --arg_e)
+					;
+			}
+			ll_insert_tail(&arg_node, xmemdupz(arg_s, (size_t)(arg_e - arg_s)));
+			if (*p == ')')
+				goto ret;
+			arg_s = p + 1;
+			break;
+		}
+	}
+	if (arg_head->value == NULL) {
+		ll_free(arg_head);
+		arg_head = NULL;
+	}
+ret:
+	return arg_head;
+}
+
+char *
+fn_get(const char *s, const char **next, const char **fn_end, fn_ty *fn_type)
+{
+	const char *fn, *paren, *p;
+	for (p = s;; p = paren + 1) {
+		paren = strchr(p, '(');
+		if (!paren)
+			break;
+		fn = fn_start(s, paren, fn_end);
+		if (fn) {
+			*fn_type = fn_get_type(s, fn);
+			*next = paren + 1;
+			/**/
+			if (*fn_type == FN_CALLED) {
+				ll_ty *arg = fn_arg_get(*fn_end, strchr(*fn_end, ')'));
+				if (arg) {
+					fwrite(fn, 1, *fn_end - fn, stdout);
+					puts("\n(");
+					ll_ty *node = arg;
+					for (; node->next; ll_next(node)) {
+						puts(node->value);
+						if (node->next->value)
+							puts(",");
+					}
+					puts(")\n");
+				}
+				ll_free(arg);
+			}
+			/**/
+			return (char *)fn;
+		}
+	}
+	return NULL;
+}
+
 /* TODO: sort linked list of declared functions based on the length of the function name
  * so we can skip comparions with called functions that are too dissimilar. */
 
@@ -306,6 +388,8 @@ cvt_buffer_to_nodes(ll_ty *decl_head, ll_ty *cal_head, jtrie_ty *trie_head, cons
 		} else if (first_pass /* && fn_type == FN_CALLED */) {
 			/* Add function declarations to the linked list. */
 			ll_insert_tail(&cal_node, val);
+		} else {
+			free(val);
 		}
 	}
 }
