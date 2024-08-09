@@ -265,7 +265,8 @@ fn_start(const char *start, const char *paren, const char **fn_end)
 	    || starts_with(p, "for")
 	    || starts_with(p, "while")
 	    || starts_with(p, "return")
-	    || starts_with(p, "switch"))
+	    || starts_with(p, "switch")
+	    || starts_with(p, "sizeof"))
 		return NULL;
 	return (char *)p;
 }
@@ -315,6 +316,7 @@ fn_arg_get(const char *paren_s, const char *paren_e)
 				--arg_e;
 				for (; arg_s < arg_e && xiswhite(*arg_e); --arg_e)
 					;
+				++arg_e;
 			}
 			ll_insert_tail(&arg_node, xmemdupz(arg_s, (size_t)(arg_e - arg_s)));
 			if (*p == ')')
