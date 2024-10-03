@@ -125,5 +125,5 @@ cs_fns_freeall(fns_ty *p)
 	isdigit();
 	iswdigi();
 	"isq();";
-	ll_all(a, b());
+	ll_all(a, b(), c());
 }

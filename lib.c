@@ -27,6 +27,7 @@
 #include <sys/stat.h>
 #include <limits.h>
 #include <unistd.h>
+#include <ctype.h>
 
 #define JTRIE_ASCII_SIZE       (('Z' - 'A') + ('z' - 'a') + ('9' - '0') + '1')
 #define JTRIE_ASCII_IDX_GET(c) get_compressed_idx((unsigned char)c)
@@ -51,16 +52,40 @@ typedef enum fn_mode_ty {
 	FN_CALLED
 } fn_mode_ty;
 
-typedef struct ll_ty {
+typedef struct llist_ty {
 	char *value;
-	struct ll_ty *next;
-} ll_ty;
+	struct llist_ty *next;
+} llist_ty;
 
-typedef struct fnl_ty {
+typedef struct fnlist_ty {
 	char *fn_name;
-	ll_ty *fn_args;
-	struct fnl_ty *next;
-} fnl_ty;
+	int fn_id;
+	llist_ty *fn_args;
+	struct fnlist_ty *next;
+} fnlist_ty;
+
+void
+fn_args_print(llist_ty *fn_args)
+{
+	if (fn_args->value == NULL)
+		return;
+	for (llist_ty *curr = fn_args; curr->next; curr = curr->next) {
+		printf("%s", curr->value);
+		if (curr->next->next)
+			putchar(',');
+	}
+}
+
+int
+fn_args_count(llist_ty *fn_args)
+{
+	int i = 0;
+	if (fn_args->value == NULL)
+		return i;
+	for (llist_ty *curr = fn_args; curr->next; curr = curr->next)
+		++i;
+	return i;
+}
 
 int
 xiswhite(int c)
@@ -202,139 +227,141 @@ is_fn_char(int c)
 	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_';
 }
 
-#define ll_next(node) node = (node)->next
+#define llist_next(node) node = (node)->next
 
-ll_ty *
-ll_alloc()
+llist_ty *
+llist_alloc()
 {
-	return xcalloc(sizeof(ll_ty));
+	return xcalloc(sizeof(llist_ty));
 }
 
-ll_ty *
-ll_dup(ll_ty *node)
+llist_ty *
+llist_dup(llist_ty *node)
 {
-	ll_ty *ret_head = ll_alloc();
-	ll_ty *ret_node = ret_head;
-	for (; node->next; ll_next(node), ll_next(ret_node)) {
+	llist_ty *ret_head = llist_alloc();
+	llist_ty *ret_node = ret_head;
+	for (; node->next; llist_next(node), llist_next(ret_node)) {
 		ret_node->value = xstrdup(node->value);
-		ret_node->next = ll_alloc();
+		ret_node->next = llist_alloc();
 	}
 	return ret_head;
 }
 
 void
-ll_node_free(ll_ty *node)
+llist_node_free(llist_ty *node)
 {
 	free(node->value);
 	free(node);
 }
 
 void
-ll_free(ll_ty *node)
+llist_free(llist_ty *node)
 {
 	if (node) {
-		ll_free(node->next);
-		ll_node_free(node);
+		llist_free(node->next);
+		llist_node_free(node);
 	}
 }
 
 void
-ll_insert_head(ll_ty **head, char *value)
+llist_insert_head(llist_ty **head, char *value)
 {
-	ll_ty *old_head = *head;
-	*head = xmalloc(sizeof(ll_ty));
+	llist_ty *old_head = *head;
+	*head = xmalloc(sizeof(llist_ty));
 	(*head)->value = value;
 	(*head)->next = old_head;
 }
 
 void
-ll_insert_tail(ll_ty **tail, char *value)
+llist_insert_tail(llist_ty **tail, char *value)
 {
 	(*tail)->value = value;
-	(*tail)->next = ll_alloc();
-	ll_next(*tail);
+	(*tail)->next = llist_alloc();
+	llist_next(*tail);
 }
 
 void
-ll_delete_curr(ll_ty **head, ll_ty *node, ll_ty *prev)
+llist_delete_curr(llist_ty **head, llist_ty *node, llist_ty *prev)
 {
 	if (prev)
 		prev->next = node->next;
 	else
 		*head = node->next;
-	ll_node_free(node);
+	llist_node_free(node);
 }
 
 void
-ll_delete(ll_ty **head, ll_ty *target)
+llist_delete(llist_ty **head, llist_ty *target)
 {
-	ll_ty *node = *head, *prev = NULL;
-	for (; node != target; ll_next(node))
+	llist_ty *node = *head, *prev = NULL;
+	for (; node != target; llist_next(node))
 		prev = node;
-	ll_delete_curr(head, node, prev);
+	llist_delete_curr(head, node, prev);
 }
 
-#define fnl_next(node) ll_next(node)
+#define fnlist_next(node) llist_next(node)
 
-fnl_ty *
-fnl_alloc()
+fnlist_ty *
+fnlist_alloc()
 {
-	return xcalloc(sizeof(fnl_ty));
+	return xcalloc(sizeof(fnlist_ty));
 }
 
 void
-fnl_node_free(fnl_ty *node)
+fnlist_node_free(fnlist_ty *node)
 {
 	free(node->fn_name);
-	ll_free(node->fn_args);
+	llist_free(node->fn_args);
 	free(node);
 }
 
 void
-fnl_free(fnl_ty *node)
+fnlist_free(fnlist_ty *node)
 {
 	if (node) {
-		fnl_free(node->next);
-		fnl_node_free(node);
+		fnlist_free(node->next);
+		fnlist_node_free(node);
 	}
 }
 
 void
-fnl_insert_head(fnl_ty **head, char *fn_name, ll_ty *fn_args)
+fnlist_insert_head(fnlist_ty **head, char *fn_name, llist_ty *fn_args, int fn_id)
 {
-	fnl_ty *old_head = *head;
-	*head = xmalloc(sizeof(fnl_ty));
+	fnlist_ty *old_head = *head;
+	*head = xmalloc(sizeof(fnlist_ty));
 	(*head)->fn_name = fn_name;
 	(*head)->fn_args = fn_args;
 	(*head)->next = old_head;
+	(*head)->fn_id = fn_id;
 }
 
 void
-fnl_insert_tail(fnl_ty **tail, char *fn_name, ll_ty *fn_args)
+fnlist_insert_tail(fnlist_ty **tail, char *fn_name, llist_ty *fn_args, int fn_id)
 {
 	(*tail)->fn_name = fn_name;
 	(*tail)->fn_args = fn_args;
-	(*tail)->next = fnl_alloc();
-	fnl_next(*tail);
+	(*tail)->fn_id = fn_id;
+	(*tail)->next = fnlist_alloc();
+	fnlist_next(*tail);
 }
 
 void
-fnl_delete_curr(fnl_ty **head, fnl_ty *node, fnl_ty *prev)
+fnlist_delete_curr(fnlist_ty **head, fnlist_ty *node, fnlist_ty *prev)
 {
 	if (prev)
 		prev->next = node->next;
 	else
 		*head = node->next;
-	fnl_node_free(node);
+	fnlist_node_free(node);
 }
 
 void
-fnl_delete(fnl_ty **head, fnl_ty *target)
+fnlist_delete(fnlist_ty **head, fnlist_ty *target)
 {
-	fnl_ty *node = *head, *prev = NULL;
-	for (; node != target; fnl_next(node))
+	fnlist_ty *node = *head, *prev = NULL;
+	for (; node != target; fnlist_next(node))
 		prev = node;
-	fnl_delete_curr(head, node, prev);
+	fnlist_delete_curr(head, node, prev);
 }
 
 static char *
@@ -391,30 +418,28 @@ paren_end(const char *paren_s, const char *paren_e)
 	return (char *)p;
 }
 
-ll_ty *
+llist_ty *
 fn_args_get(const char *paren_s, const char *paren_e)
 {
 	const char *p = paren_s;
 	const char *arg_s = p + 1;
 	const char *arg_e;
-	ll_ty *arg_head = ll_alloc();
-	ll_ty *arg_node = arg_head;
+	llist_ty *arg_head = llist_alloc();
+	llist_ty *arg_node = arg_head;
 	for (; ++p <= paren_e; ) {
 		switch (*p) {
-		case '(':
-			p = paren_end(p, paren_e);
-			assert(p);
-			if (p == NULL)
-				goto paren_error;
-			--p;
-			break;
 		case '\0':
 paren_error:
 			fprintf(stderr, "Unmatched parenthesis.\n");
 			exit(EXIT_FAILURE);
 			goto ret;
 			break;
-		case ')':
+		case '(':
+			p = paren_end(p, paren_e);
+			assert(p);
+			if (p == NULL)
+				goto paren_error;
+			++p;
 		case ',':
 			for (; xiswhite(*arg_s); ++arg_s)
 				;
@@ -425,9 +450,7 @@ paren_error:
 					;
 				++arg_e;
 			}
-			ll_insert_tail(&arg_node, xmemdupz(arg_s, (size_t)(arg_e - arg_s)));
-			if (*p == ')')
-				goto ret;
+			llist_insert_tail(&arg_node, xmemdupz(arg_s, (size_t)(arg_e - arg_s)));
 			arg_s = p + 1;
 			break;
 		}
@@ -437,7 +460,7 @@ ret:
 }
 
 int
-fn_get(const char *s, const char **next, fn_mode_ty *fn_mode, fnl_ty *node_dst, const char *file)
+fn_get(const char *s, const char **next, fn_mode_ty *fn_mode, fnlist_ty *node_dst, const char *file)
 {
 	const char *fn, *fn_end, *paren, *p;
 	for (p = s;; p = paren + 1) {
@@ -449,7 +472,7 @@ fn_get(const char *s, const char **next, fn_mode_ty *fn_mode, fnl_ty *node_dst, 
 			*fn_mode = fn_get_type(file, fn);
 			*next = paren + 1;
 			node_dst->fn_name = xmemdupz(fn, (size_t)(fn_end - fn));
-			node_dst->fn_args = fn_args_get(paren, paren + strlen(paren));
+			node_dst->fn_args = fn_args_get(paren, paren_end(paren, paren + strlen(paren)));
 			return 1;
 		}
 	}
@@ -460,28 +483,29 @@ fn_get(const char *s, const char **next, fn_mode_ty *fn_mode, fnl_ty *node_dst, 
  * so we can skip comparions with called functions that are too dissimilar. */
 
 void
-cvt_buffer_to_nodes(fnl_ty *decl_head, fnl_ty *cal_head, jtrie_ty *trie_head, const char *file, int first_pass)
+cvt_buffer_to_nodes(fnlist_ty *decl_head, fnlist_ty *cal_head, jtrie_ty *trie_head, const char *file, int first_pass)
 {
 	const char *p = file;
 	const char *p_next;
-	fnl_ty *decl_node = decl_head, *cal_node = cal_head;
-	fnl_ty node_dst;
+	fnlist_ty *decl_node = decl_head, *cal_node = cal_head;
+	fnlist_ty node_dst;
 	fn_mode_ty fn_mode;
-	for (; (fn_get(p, &p_next, &fn_mode, &node_dst, file)); p = p_next) {
+	int fn_id = 1;
+	for (; (fn_get(p, &p_next, &fn_mode, &node_dst, file)); p = p_next, ++fn_id) {
 		/* Ignore called functions on the second pass
 		 * since we only check for declarations. */
 		if (!first_pass && fn_mode == FN_CALLED)
 			goto next;
 		if (fn_mode == FN_DECLARED) {
 			assert(jtrie_insert(trie_head, node_dst.fn_name) == JTRIE_RET_SUCC);
-			fnl_insert_tail(&decl_node, node_dst.fn_name, node_dst.fn_args);
+			fnlist_insert_tail(&decl_node, node_dst.fn_name, node_dst.fn_args, fn_id);
 		} else if (first_pass /* && fn_mode == FN_CALLED */) {
 			/* Add function declarations to the linked list. */
-			fnl_insert_tail(&cal_node, node_dst.fn_name, node_dst.fn_args);
+			fnlist_insert_tail(&cal_node, node_dst.fn_name, node_dst.fn_args, fn_id);
 		} else {
 next:
 			free(node_dst.fn_name);
-			ll_free(node_dst.fn_args);
+			llist_free(node_dst.fn_args);
 		}
 	}
 }
@@ -518,8 +542,8 @@ dld(const char *s, int m, const char *t, int n)
 		for (int j = 1; j <= m; ++j) {
 			int sub_cost = s[j - 1] == t[i - 1] ? 0 : 1;
 			tbl[i][j] = MIN3(tbl[i - 1][j] + 1, tbl[i][j - 1] + 1, tbl[i - 1][j - 1] + sub_cost);
-			if (i > 1 && j > 1 && s[i - 1] == t[i - 2] && s[i - 2] == t[i - 1])
-				tbl[i][j] = MIN(tbl[i][j], tbl[i - 2][j - 2] + sub_cost);
+			/* if (i > 1 && j > 1 && s[i - 1] == t[i - 2] && s[i - 2] == t[i - 1]) */
+			/* 	tbl[i][j] = MIN(tbl[i][j], tbl[i - 2][j - 2] + sub_cost); */
 		}
 	return tbl[n][m];
 }
@@ -528,13 +552,13 @@ dld(const char *s, int m, const char *t, int n)
 
 #define CHAR_FREQ_DIFF_MAX(n) (n / 2)
 
-fnl_ty *
-get_most_similar_string(fnl_ty *decl_head, const char *s, int max_lev, int *dist)
+fnlist_ty *
+get_most_similar_string(fnlist_ty *decl_head, const char *s, int max_lev, int *dist)
 {
-	fnl_ty *node, *min_node;
+	fnlist_ty *node, *min_node;
 	int min_lev = INT_MAX;
 	int s_len = strlen(s);
-	for (node = decl_head, min_node = decl_head; node->next; fnl_next(node)) {
+	for (node = decl_head, min_node = decl_head; node->next; fnlist_next(node)) {
 		int val_len = (int)strlen(node->fn_name);
 		/* If the character frequency difference is too large, don't calculate LD. */
 		if (MAX(s_len, val_len) - MIN(s_len, val_len) <= CHAR_FREQ_DIFF_MAX(MIN(s_len, val_len))
@@ -616,10 +640,10 @@ file_preprocess_free(char *file)
 #define LEV_MAX(n) (0.6 * n)
 
 int
-do_autosuggest(fnl_ty **cal_head, fnl_ty *decl_head, fnl_ty *unfound_head, jtrie_ty *trie_head, const char *file, const char *fname, int first_pass)
+do_autosuggest(fnlist_ty **cal_head, fnlist_ty *decl_head, fnlist_ty *unfound_head, jtrie_ty *trie_head, const char *file, const char *fname, int first_pass)
 {
 	cvt_buffer_to_nodes(decl_head, *cal_head, trie_head, file, first_pass);
-	fnl_ty *cal_node, *cal_prev = NULL, *unfound_node = unfound_head;
+	fnlist_ty *cal_node, *cal_prev = NULL, *unfound_node = unfound_head;
 	for (cal_node = *cal_head; cal_node->next;) {
 		/* Check trie for exact match. If a match is found,
 		 * either the called function is declared or it has
@@ -630,7 +654,7 @@ do_autosuggest(fnl_ty **cal_head, fnl_ty *decl_head, fnl_ty *unfound_head, jtrie
 			assert(jtrie_insert(trie_head, cal_node->fn_name) == JTRIE_RET_SUCC);
 			int lev;
 			int val_len = strlen(cal_node->fn_name);
-			fnl_ty *similar = get_most_similar_string(decl_head, cal_node->fn_name, LEV_MAX(val_len), &lev);
+			fnlist_ty *similar = get_most_similar_string(decl_head, cal_node->fn_name, LEV_MAX(val_len), &lev);
 			if (similar) {
 				if (!first_pass) {
 					int min;
@@ -668,39 +692,39 @@ do_autosuggest(fnl_ty **cal_head, fnl_ty *decl_head, fnl_ty *unfound_head, jtrie
 				memcpy(p, "?\0?\0", 4);
 				p += 4;
 				memcpy(p, &i, sizeof(i));
-				fnl_insert_tail(&unfound_node, tmp, ll_dup(cal_node->fn_args));
+				fnlist_insert_tail(&unfound_node, tmp, llist_dup(cal_node->fn_args), cal_node->fn_id);
 			}
 		} else {
 			if (!first_pass) {
 				printf("\"%s\" is an undeclared function. Did you mean to include \"%s\"?\n", cal_node->fn_name, fname);
 				/* Remove called functions we found from the linked list */
-				fnl_ty *next = cal_node->next;
-				fnl_delete_curr(cal_head, cal_node, cal_prev);
+				fnlist_ty *next = cal_node->next;
+				fnlist_delete_curr(cal_head, cal_node, cal_prev);
 				cal_node = next;
 				continue;
 			}
 		}
 		cal_prev = cal_node;
-		fnl_next(cal_node);
+		fnlist_next(cal_node);
 	}
 	if (!first_pass)
 		unfound_head = *cal_head;
 	int cnt = 0;
 	/* Remove unfound functions from the trie so they will not be skipped in the second pass. */
-	for (unfound_node = unfound_head; unfound_node->next; fnl_next(unfound_node), ++cnt)
+	for (unfound_node = unfound_head; unfound_node->next; fnlist_next(unfound_node), ++cnt)
 		jtrie_delete(trie_head, unfound_node->fn_name);
 	/* Check if the list of unfound functions is empty. */
 	return cnt;
 }
 
 int
-do_autosuggest2(fnl_ty **decl_head, fnl_ty **unfound_head, jtrie_ty *trie_head, const char *fname)
+do_autosuggest2(fnlist_ty **decl_head, fnlist_ty **unfound_head, jtrie_ty *trie_head, const char *fname)
 {
 	char *s = file_preprocess_alloc(fname);
 	/* We don't need the declarations from the previous file, so free the linked list
 	 * and initialize a new head. */
-	fnl_free(*decl_head);
-	*decl_head = fnl_alloc();
+	fnlist_free(*decl_head);
+	*decl_head = fnlist_alloc();
 	int ret = do_autosuggest(unfound_head, *decl_head, NULL, trie_head, s, fname, 0);
 	file_preprocess_free(s);
 	return ret;
@@ -713,7 +737,7 @@ autosuggest(const char *fname)
 {
 	char *file = file_preprocess_alloc(fname);
 	jtrie_ty *trie_head = jtrie_alloc();
-	fnl_ty *decl_head = fnl_alloc(), *cal_head = fnl_alloc(), *unfound_head = fnl_alloc();
+	fnlist_ty *decl_head = fnlist_alloc(), *cal_head = fnlist_alloc(), *unfound_head = fnlist_alloc();
 	int ret = do_autosuggest(&cal_head, decl_head, unfound_head, trie_head, file, fname, 1);
 	file_preprocess_free(file);
 	if (ret) {
@@ -744,7 +768,7 @@ autosuggest(const char *fname)
 				const char *p = strrchr(ep->d_name, '.');
 				/* Ignore non *.c and *.h files.
 				 * Also ignore "." and "..". */
-				if (!p || (*(p + 1) != 'c' && *(p + 1) != 'h') || *(p + 2) != '\0')
+				if (!p || (tolower(*(p + 1)) != 'c' && tolower(*(p + 1)) != 'h') || *(p + 2) != '\0')
 					continue;
 				assert(stat(ep->d_name, &st) == 0);
 				/* Ignore non-regular files. */
@@ -758,7 +782,7 @@ autosuggest(const char *fname)
 			free(dirof_file_heap);
 		}
 	}
-	for (fnl_ty *node = unfound_head; node->next; fnl_next(node)) {
+	for (fnlist_ty *node = unfound_head; node->next; fnlist_next(node)) {
 		const char *similar = node->fn_name + strlen(node->fn_name) + 1;
 		const char *header = similar + strlen(similar) + 1;
 		const char *dist_p = header + strlen(header) + 1;
@@ -771,7 +795,7 @@ autosuggest(const char *fname)
 			fprintf(stderr, "\"%s\" is an undeclared function. Did you mean to call \"%s\" defined in \"%s\"?\n", node->fn_name, similar, header);
 	}
 	jtrie_free(&trie_head);
-	fnl_free(decl_head);
-	fnl_free(cal_head);
-	fnl_free(unfound_head);
+	fnlist_free(decl_head);
+	fnlist_free(cal_head);
+	fnlist_free(unfound_head);
 }
