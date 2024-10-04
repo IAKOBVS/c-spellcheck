@@ -383,6 +383,8 @@ fn_start(const char *start, const char *paren, const char **fn_end)
 {
 	const char *p = paren;
 	while (--p >= start && xiswhite(*p)) {}
+	if (*p == ')')
+		while (--p >= start && xiswhite(*p)) {}
 	*fn_end = p + 1;
 	for (; p >= start && is_fn_char(*p); --p) {}
 	++p;
@@ -394,6 +396,16 @@ fn_start(const char *start, const char *paren, const char **fn_end)
 	    || starts_with(p, "while")
 	    || starts_with(p, "return")
 	    || starts_with(p, "switch")
+	    || starts_with(p, "void")
+	    || starts_with(p, "size_t")
+	    || starts_with(p, "int")
+	    || starts_with(p, "double")
+	    || starts_with(p, "float")
+	    || starts_with(p, "signed")
+	    || starts_with(p, "unsigned")
+	    || starts_with(p, "short")
+	    || starts_with(p, "long")
+	    || starts_with(p, "case")
 	    || starts_with(p, "sizeof"))
 		return NULL;
 	return (char *)p;
@@ -402,12 +414,13 @@ fn_start(const char *start, const char *paren, const char **fn_end)
 /* TODO: have a more robust way of checking whether a function is declared or called.
  *       handle function pointers. */
 
+/* TODO: handle function pointers; e.g., int (*pfn)(void *, int) */
+
 fn_mode_ty
 fn_get_type(const char *s, const char *end)
 {
 	--end;
-	for (; s <= end && (xiswhite(*end) || *end == '*'); --end)
-		;
+	for (; s <= end && (xiswhite(*end) || *end == '*'); --end) {}
 	if (s <= end && is_fn_char(*end))
 		return FN_DECLARED;
 	return FN_CALLED;
@@ -479,19 +492,33 @@ ret:
 int
 fn_get(const char *s, const char **next, fn_mode_ty *fn_mode, fnlist_ty *node_dst, const char *file)
 {
-	const char *fn, *fn_end, *paren, *p;
-	for (p = s;; p = paren + 1) {
+	const char *fn, *fn_end, *paren, *paren_e, *p;
+	p = s;
+	for (;;) {
 		paren = strchr(p, '(');
 		if (!paren)
 			break;
+		paren_e = paren_end(paren, paren + strlen(paren));
+		if (!paren_e)
+			break;
+		const char *tmp = paren_e + 1;
+		for (; *tmp && xiswhite(*tmp); ++tmp);
+		if (*tmp == '(') {
+			p = tmp;
+			continue;
+		}
 		fn = fn_start(s, paren, &fn_end);
 		if (fn) {
 			*fn_mode = fn_get_type(file, fn);
 			*next = paren + 1;
 			node_dst->fn_name = xmemdupz(fn, (size_t)(fn_end - fn));
-			node_dst->fn_args = fn_args_get(paren, paren_end(paren, paren + strlen(paren)));
+			node_dst->fn_args = fn_args_get(paren, paren_e);
+			/* printf(node_dst->fn_name); */
+			/* printf(" "); */
+			/* puts(*fn_mode == FN_DECLARED ? "decl" : "call"); */
 			return 1;
 		}
+		p = paren + 1;
 	}
 	return 0;
 }
