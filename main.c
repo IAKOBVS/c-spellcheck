@@ -18,6 +18,8 @@ main(int argc, char **argv)
 		die_print("The first argument, %s, is not a C file.\n", argv[1]);
 	if (access(argv[1], R_OK) != 0)
 		die_print("%s can not be read.", argv[1]);
+	if (argv[2])
+		file_target = argv[2];
 	autosuggest(argv[1]);
 	return 0;
 	(void)argc;

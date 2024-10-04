@@ -60,9 +60,17 @@ typedef struct llist_ty {
 typedef struct fnlist_ty {
 	char *fn_name;
 	int fn_id;
+	int is_typo;
 	llist_ty *fn_args;
 	struct fnlist_ty *next;
 } fnlist_ty;
+
+char *filename_target;
+char *file_target;
+fnlist_ty *decl_target_head;
+fnlist_ty *cal_target_head;
+fnlist_ty *notfound_target_head;
+jtrie_ty *trie_target_head;
 
 void
 fn_args_print(llist_ty *fn_args)
@@ -98,6 +106,8 @@ remove_literal_strings(char *s)
 {
 	char *dst, *src;
 	dst = src = s;
+	if (*src == '#')
+		goto newline;
 	for (;;) {
 		switch (*src) {
 		default:
@@ -110,11 +120,15 @@ remove_literal_strings(char *s)
 			if (*src == '\"')
 				*dst++ = *src++;
 			break;
-		case '#':
-			for (; *src && *src != '\n'; ++src)
-				;
-			if (*src == '\n')
+		case '\n':
+			if (*(src + 1) == '#') {
+newline:
 				++src;
+				for (; *src && *src != '\n'; ++src)
+					;
+			} else {
+				*dst++ = *src++;
+			}
 			break;
 		case '"':
 			++src;
@@ -640,27 +654,34 @@ file_preprocess_free(char *file)
 #define LEV_MAX(n) (0.6 * n)
 
 int
-do_autosuggest(fnlist_ty **cal_head, fnlist_ty *decl_head, fnlist_ty *unfound_head, jtrie_ty *trie_head, const char *file, const char *fname, int first_pass)
+do_autosuggest(fnlist_ty **cal_head, fnlist_ty *decl_head, fnlist_ty *notfound_head, jtrie_ty *trie_head, const char *file, const char *fname, int first_pass)
 {
 	cvt_buffer_to_nodes(decl_head, *cal_head, trie_head, file, first_pass);
-	fnlist_ty *cal_node, *cal_prev = NULL, *unfound_node = unfound_head;
+	if (file_target)
+		cvt_buffer_to_nodes(decl_target_head, cal_target_head, trie_target_head, file_target, first_pass);
+	fnlist_ty *cal_node, *cal_prev = NULL, *notfound_node = notfound_head;
 	for (cal_node = *cal_head; cal_node->next;) {
 		/* Check trie for exact match. If a match is found,
 		 * either the called function is declared or it has
 		 * been checked. */
 		if (!jtrie_match(trie_head, cal_node->fn_name)) {
+			/* Mark that a typo is found. */
+			cal_node->is_typo = 1;
 			/* Add called functions to the trie so multiple occurences
 			 * of the same function will only be checked once. */
 			assert(jtrie_insert(trie_head, cal_node->fn_name) == JTRIE_RET_SUCC);
 			int lev;
 			int val_len = strlen(cal_node->fn_name);
 			fnlist_ty *similar = get_most_similar_string(decl_head, cal_node->fn_name, LEV_MAX(val_len), &lev);
+			if (lev > 0)
+				/* Mark that a typo is found. */
+				cal_node->is_typo = 1;
 			if (similar) {
 				if (!first_pass) {
 					int min;
 					/* Point to the location of the integer in the string.
 					 * The format is
-					 * unfound_node->fn_name = "function_name\0similar_function_name\0filename\edit_distance" */
+					 * notfound_node->fn_name = "function_name\0similar_function_name\0filename\edit_distance" */
 					char *min_p = cal_node->fn_name + strlen(cal_node->fn_name) + 1;
 					min_p += strlen(min_p) + 1;
 					min_p += strlen(min_p) + 1;
@@ -692,7 +713,7 @@ do_autosuggest(fnlist_ty **cal_head, fnlist_ty *decl_head, fnlist_ty *unfound_he
 				memcpy(p, "?\0?\0", 4);
 				p += 4;
 				memcpy(p, &i, sizeof(i));
-				fnlist_insert_tail(&unfound_node, tmp, llist_dup(cal_node->fn_args), cal_node->fn_id);
+				fnlist_insert_tail(&notfound_node, tmp, llist_dup(cal_node->fn_args), cal_node->fn_id);
 			}
 		} else {
 			if (!first_pass) {
@@ -708,26 +729,54 @@ do_autosuggest(fnlist_ty **cal_head, fnlist_ty *decl_head, fnlist_ty *unfound_he
 		fnlist_next(cal_node);
 	}
 	if (!first_pass)
-		unfound_head = *cal_head;
+		notfound_head = *cal_head;
 	int cnt = 0;
-	/* Remove unfound functions from the trie so they will not be skipped in the second pass. */
-	for (unfound_node = unfound_head; unfound_node->next; fnlist_next(unfound_node), ++cnt)
-		jtrie_delete(trie_head, unfound_node->fn_name);
-	/* Check if the list of unfound functions is empty. */
+	/* Remove notfound functions from the trie so they will not be skipped in the second pass. */
+	for (notfound_node = notfound_head; notfound_node->next; fnlist_next(notfound_node), ++cnt)
+		jtrie_delete(trie_head, notfound_node->fn_name);
+	/* Check if the list of notfound functions is empty. */
 	return cnt;
 }
 
 int
-do_autosuggest2(fnlist_ty **decl_head, fnlist_ty **unfound_head, jtrie_ty *trie_head, const char *fname)
+do_autosuggest_headers(fnlist_ty **decl_head, fnlist_ty **notfound_head, jtrie_ty *trie_head, const char *fname)
 {
 	char *s = file_preprocess_alloc(fname);
 	/* We don't need the declarations from the previous file, so free the linked list
 	 * and initialize a new head. */
 	fnlist_free(*decl_head);
 	*decl_head = fnlist_alloc();
-	int ret = do_autosuggest(unfound_head, *decl_head, NULL, trie_head, s, fname, 0);
+	int ret = do_autosuggest(notfound_head, *decl_head, NULL, trie_head, s, fname, 0);
 	file_preprocess_free(s);
 	return ret;
+}
+
+typedef struct confusion_matrix_ty {
+	int TP;
+	int TN;
+	int FP;
+	int FN;
+} confusion_matrix_ty;
+
+void
+confusion_make(confusion_matrix_ty *confusion_matrix, fnlist_ty *cal_head, fnlist_ty *cal_target_head)
+{
+	for (fnlist_ty *node = cal_head, *target_node = cal_target_head; node->next && target_node->next; node = node->next, target_node = target_node->next) {
+		if (!node->is_typo && !target_node->is_typo)
+			++confusion_matrix->TN;
+		else if (node->is_typo && target_node->is_typo)
+			++confusion_matrix->TP;
+		else if (!node->is_typo && target_node->is_typo)
+			++confusion_matrix->FP;
+		else if (node->is_typo && !target_node->is_typo)
+			++confusion_matrix->FN;
+	}
+}
+
+double
+accuracy(confusion_matrix_ty *confusion_matrix)
+{
+	return (double)(confusion_matrix->TP + confusion_matrix->TN) / (double)(confusion_matrix->TP + confusion_matrix->TN + confusion_matrix->FP + confusion_matrix->FN);
 }
 
 #include <dirent.h>
@@ -737,21 +786,31 @@ autosuggest(const char *fname)
 {
 	char *file = file_preprocess_alloc(fname);
 	jtrie_ty *trie_head = jtrie_alloc();
-	fnlist_ty *decl_head = fnlist_alloc(), *cal_head = fnlist_alloc(), *unfound_head = fnlist_alloc();
-	int ret = do_autosuggest(&cal_head, decl_head, unfound_head, trie_head, file, fname, 1);
+	fnlist_ty *decl_head = fnlist_alloc(), *cal_head = fnlist_alloc(), *notfound_head = fnlist_alloc();
+	if (filename_target) {
+		file_target = file_preprocess_alloc(filename_target);
+		decl_target_head = fnlist_alloc(), cal_target_head = fnlist_alloc(), notfound_target_head = fnlist_alloc(), trie_target_head = jtrie_alloc();
+	}
+	int ret = do_autosuggest(&cal_head, decl_head, notfound_head, trie_head, file, fname, 1);
+	if (filename_target) {
+		confusion_matrix_ty confusion_matrix;
+		confusion_make(&confusion_matrix, cal_head, cal_target_head);
+		int acc = accuracy(&confusion_matrix);
+		(void)acc;
+	}
 	file_preprocess_free(file);
 	if (ret) {
-		/* If we have unfound called functions which do not have similar matches in the input file,
+		/* If we have notfound called functions which do not have similar matches in the input file,
 		 * search for them in system headers. */
 		for (int i = 0; i < (int)(sizeof(standard_headers) / sizeof(standard_headers[0])); ++i)
 			/* Check if the system header exists. */
 			if (access(standard_headers[i], R_OK) == 0) {
-				do_autosuggest2(&decl_head, &unfound_head, trie_head, standard_headers[i]);
+				do_autosuggest_headers(&decl_head, &notfound_head, trie_head, standard_headers[i]);
 				if (!ret)
 					break;
 			}
 		if (ret) {
-			/* If the unfound linked list is still not empty, search for similar matches
+			/* If the notfound linked list is still not empty, search for similar matches
 			 * in the files in the directory of FNAME. */
 			char *dir = strrchr(fname, '/');
 			char *dirof_file_heap = NULL;
@@ -770,11 +829,19 @@ autosuggest(const char *fname)
 				 * Also ignore "." and "..". */
 				if (!p || (tolower(*(p + 1)) != 'c' && tolower(*(p + 1)) != 'h') || *(p + 2) != '\0')
 					continue;
-				assert(stat(ep->d_name, &st) == 0);
+				char *fulpath = malloc(strlen(dirof_file) + 1 + strlen(ep->d_name) + 1);
+				assert(fulpath);
+				strcpy(fulpath, dirof_file);
+				strcat(fulpath, "/");
+				strcat(fulpath, ep->d_name);
+				assert(stat(fulpath, &st) == 0);
 				/* Ignore non-regular files. */
-				if (!S_ISREG(st.st_mode))
+				if (!S_ISREG(st.st_mode)) {
+					free(fulpath);
 					continue;
-				do_autosuggest2(&decl_head, &unfound_head, trie_head, ep->d_name);
+				}
+				do_autosuggest_headers(&decl_head, &notfound_head, trie_head, fulpath);
+				free(fulpath);
 				if (!ret)
 					break;
 			}
@@ -782,13 +849,13 @@ autosuggest(const char *fname)
 			free(dirof_file_heap);
 		}
 	}
-	for (fnlist_ty *node = unfound_head; node->next; fnlist_next(node)) {
+	for (fnlist_ty *node = notfound_head; node->next; fnlist_next(node)) {
 		const char *similar = node->fn_name + strlen(node->fn_name) + 1;
 		const char *header = similar + strlen(similar) + 1;
 		const char *dist_p = header + strlen(header) + 1;
 		int dist;
 		memcpy(&dist, dist_p, sizeof(int));
-		/* unfound_node->fn_name = "function_name\0similar_function_name\0filename\edit_distance" */
+		/* notfound_node->fn_name = "function_name\0similar_function_name\0filename\edit_distance" */
 		if (dist == INT_MAX)
 			fprintf(stderr, "\"%s\" is an undeclared function.\n", node->fn_name);
 		else
@@ -797,5 +864,5 @@ autosuggest(const char *fname)
 	jtrie_free(&trie_head);
 	fnlist_free(decl_head);
 	fnlist_free(cal_head);
-	fnlist_free(unfound_head);
+	fnlist_free(notfound_head);
 }
