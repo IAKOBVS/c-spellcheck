@@ -405,9 +405,12 @@ fn_start(const char *start, const char *paren, const char **fn_end)
 fn_mode_ty
 fn_get_type(const char *s, const char *end)
 {
-	const char *line = xmemrchr(s, '\n', (size_t)(end - s));
-	line = (line != NULL) ? line + 1 : s;
-	return (*line == '\t' || *line == ' ') ? FN_CALLED : FN_DECLARED;
+	--end;
+	for (; s <= end && (xiswhite(*end) || *end == '*'); --end)
+		;
+	if (s <= end && is_fn_char(*end))
+		return FN_DECLARED;
+	return FN_CALLED;
 }
 
 char *
@@ -511,7 +514,9 @@ cvt_buffer_to_nodes(fnlist_ty *decl_head, fnlist_ty *cal_head, jtrie_ty *trie_he
 		if (!first_pass && fn_mode == FN_CALLED)
 			goto next;
 		if (fn_mode == FN_DECLARED) {
-			assert(jtrie_insert(trie_head, node_dst.fn_name) == JTRIE_RET_SUCC);
+			jtrie_ty *node = jtrie_insert(trie_head, node_dst.fn_name);
+			assert(node);
+			node->id = fn_id;
 			fnlist_insert_tail(&decl_node, node_dst.fn_name, node_dst.fn_args, fn_id);
 		} else if (first_pass /* && fn_mode == FN_CALLED */) {
 			/* Add function declarations to the linked list. */
@@ -661,15 +666,17 @@ do_autosuggest(fnlist_ty **cal_head, fnlist_ty *decl_head, fnlist_ty *notfound_h
 		cvt_buffer_to_nodes(decl_target_head, cal_target_head, trie_target_head, file_target, first_pass);
 	fnlist_ty *cal_node, *cal_prev = NULL, *notfound_node = notfound_head;
 	for (cal_node = *cal_head; cal_node->next;) {
+		jtrie_ty *node;
 		/* Check trie for exact match. If a match is found,
 		 * either the called function is declared or it has
 		 * been checked. */
-		if (!jtrie_match(trie_head, cal_node->fn_name)) {
+		node = jtrie_match(trie_head, cal_node->fn_name);
+		if (!node) {
 			/* Mark that a typo is found. */
 			cal_node->is_typo = 1;
 			/* Add called functions to the trie so multiple occurences
 			 * of the same function will only be checked once. */
-			assert(jtrie_insert(trie_head, cal_node->fn_name) == JTRIE_RET_SUCC);
+			assert(jtrie_insert(trie_head, cal_node->fn_name));
 			int lev;
 			int val_len = strlen(cal_node->fn_name);
 			fnlist_ty *similar = get_most_similar_string(decl_head, cal_node->fn_name, LEV_MAX(val_len), &lev);
@@ -701,7 +708,7 @@ do_autosuggest(fnlist_ty **cal_head, fnlist_ty *decl_head, fnlist_ty *notfound_h
 					}
 				} else {
 					if (lev > 0)
-						printf("\"%s\" is an undeclared function. Did you mean \"%s\"?\n", cal_node->fn_name, similar->fn_name);
+						printf("\"%s\" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah \"%s\"?\n", cal_node->fn_name, similar->fn_name);
 				}
 			} else if (first_pass) {
 				/* Add called functions whose declaration we can not find in the current file. */
@@ -717,12 +724,15 @@ do_autosuggest(fnlist_ty **cal_head, fnlist_ty *decl_head, fnlist_ty *notfound_h
 			}
 		} else {
 			if (!first_pass) {
-				printf("\"%s\" is an undeclared function. Did you mean to include \"%s\"?\n", cal_node->fn_name, fname);
+				printf("\"%s\" merupakan sebuah fungsi yang belum dideklarasi. Apakah dimaksudkan untuk meng-include header \"%s\"?\n", cal_node->fn_name, fname);
 				/* Remove called functions we found from the linked list */
 				fnlist_ty *next = cal_node->next;
 				fnlist_delete_curr(cal_head, cal_node, cal_prev);
 				cal_node = next;
 				continue;
+			} else {
+				if (cal_node->fn_id < node->id)
+					printf("\"%s\" dipanggil sebelum didefinisikan.\n", cal_node->fn_name);
 			}
 		}
 		cal_prev = cal_node;
@@ -857,9 +867,9 @@ autosuggest(const char *fname)
 		memcpy(&dist, dist_p, sizeof(int));
 		/* notfound_node->fn_name = "function_name\0similar_function_name\0filename\edit_distance" */
 		if (dist == INT_MAX)
-			fprintf(stderr, "\"%s\" is an undeclared function.\n", node->fn_name);
+			fprintf(stderr, "\"%s\" merupakan sebuah fungsi yang belum dideklarasi.\n", node->fn_name);
 		else
-			fprintf(stderr, "\"%s\" is an undeclared function. Did you mean to call \"%s\" defined in \"%s\"?\n", node->fn_name, similar, header);
+			fprintf(stderr, "\"%s\" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah \"%s\" yang didefinisikan pada \"%s\"?\n", node->fn_name, similar, header);
 	}
 	jtrie_free(&trie_head);
 	fnlist_free(decl_head);

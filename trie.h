@@ -33,14 +33,10 @@
 #  define JTRIE_ASCII_IDX_GET(c) c
 #endif
 
-typedef enum {
-	JTRIE_RET_SUCC = 0,
-	JTRIE_RET_ERR = 1
-} jtrie_ret_ty;
-
 typedef struct jtrie_ty {
 	struct jtrie_ty *child[JTRIE_ASCII_SIZE];
 	int EOW;
+	int id;
 } jtrie_ty;
 
 static jtrie_ty *
@@ -67,12 +63,17 @@ jtrie_free(jtrie_ty **node)
 	jtrie__free(*node);
 }
 
-static jtrie_ret_ty
+/*
+   Return value:
+   Pointer to node with last letter of WORD.
+   NULL if error.
+*/
+static jtrie_ty *
 jtrie_insert(jtrie_ty *root,
           const char *word)
 {
 	if (*word == '\0')
-		return JTRIE_RET_SUCC;
+		return root;
 	const unsigned char *w = (unsigned char *)word;
 	jtrie_ty *node = root;
 	for (; *w; ++w) {
@@ -80,10 +81,10 @@ jtrie_insert(jtrie_ty *root,
 			node->child[JTRIE_ASCII_IDX_GET(*w)] = jtrie_alloc();
 		node = node->child[JTRIE_ASCII_IDX_GET(*w)];
 		if (node == NULL)
-			return JTRIE_RET_ERR;
+			return NULL;
 	}
 	node->EOW = 1;
-	return JTRIE_RET_SUCC;
+	return node;
 }
 
 typedef enum {
@@ -134,7 +135,7 @@ jtrie_starts(const jtrie_ty *root,
              const char *word)
 {
 	if (*word == '\0')
-		return NULL;
+		return (jtrie_ty *)root;
 	const unsigned char *w = (unsigned char *)word;
 	const jtrie_ty *node = root->child[JTRIE_ASCII_IDX_GET(*w)];
 	if (node == NULL)
@@ -153,21 +154,21 @@ jtrie_starts(const jtrie_ty *root,
 
 /*
    Return value:
-   1 if matches;
-   0 otherwise.
+   Pointer to node with last letter of WORD.
+   NULL if not found.
 */
-static int
+static jtrie_ty *
 jtrie_match(const jtrie_ty *root,
             const char *word)
 {
 	if (*word == '\0')
-		return 0;
+		return (jtrie_ty *)root;
 	const unsigned char *w = (unsigned char *)word;
 	const jtrie_ty *node = root->child[JTRIE_ASCII_IDX_GET(*w)];
 	if (node == NULL)
-		return 0;
+		return NULL;
 	for (; *++w && node->child[JTRIE_ASCII_IDX_GET(*w)]; node = node->child[JTRIE_ASCII_IDX_GET(*w)]) {}
-	return node ? node->EOW : 0;
+	return (node && node->EOW) ? (jtrie_ty *)node : NULL;
 }
 
 
