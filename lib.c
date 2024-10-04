@@ -414,13 +414,17 @@ fn_start(const char *start, const char *paren, const char **fn_end)
 /* TODO: have a more robust way of checking whether a function is declared or called.
  *       handle function pointers. */
 
-/* TODO: handle function pointers; e.g., int (*pfn)(void *, int) */
+/* TODO: handle function pointers (c_standard_lib/signal/raise.c) */
 
 fn_mode_ty
 fn_get_type(const char *s, const char *end)
 {
 	--end;
 	for (; s <= end && (xiswhite(*end) || *end == '*'); --end) {}
+	if (*end == '(') {
+		--end;
+		for (; s <= end && xiswhite(*end); --end) {}
+	}
 	if (s <= end && is_fn_char(*end))
 		return FN_DECLARED;
 	return FN_CALLED;
