@@ -395,8 +395,8 @@ fn_start(const char *start, const char *paren, const char **fn_end)
 {
 	const char *p = paren;
 	while (--p >= start && xiswhite(*p)) {}
-	if (*p == ')')
-		while (--p >= start && xiswhite(*p)) {}
+	/* if (*p == ')') */
+	/* 	while (--p >= start && xiswhite(*p)) {} */
 	*fn_end = p + 1;
 	for (; p >= start && is_fn_char(*p); --p) {}
 	++p;
@@ -473,7 +473,7 @@ fn_args_get(const char *paren_s, const char *paren_e)
 	const char *arg_e;
 	llist_ty *arg_head = llist_alloc();
 	llist_ty *arg_node = arg_head;
-	for (; ++p <= paren_e; ) {
+	for (; ++p <= paren_e;) {
 		switch (*p) {
 		case '\0':
 paren_error:
@@ -519,7 +519,8 @@ fn_get(const char *s, const char **next, fn_mode_ty *fn_mode, fnlist_ty *node_ds
 		if (!paren_e)
 			break;
 		const char *tmp = paren_e + 1;
-		for (; *tmp && xiswhite(*tmp); ++tmp);
+		for (; *tmp && xiswhite(*tmp); ++tmp)
+			;
 		if (*tmp == '(') {
 			p = tmp;
 			continue;
@@ -615,7 +616,7 @@ dld(const char *s, const char *t, int i, int j)
 			/* 	tbl[i][j] = MIN(tbl[i][j], tbl[i - 2][j - 2] + sub_cost); */
 		}
 	return tbl[j][i];
-#else	
+#else
 	int min = INT_MAX;
 	if (i == 0 && j == 0) /* base case */
 		min = MIN(min, 0);
@@ -737,6 +738,7 @@ do_autosuggest(fnlist_ty **cal_head, fnlist_ty *decl_head, fnlist_ty *notfound_h
 		 * been checked. */
 		node = jtrie_match(trie_head, cal_node->fn_name);
 		if (!node) {
+			char *tmp = NULL;
 			/* Mark that a typo is found. */
 			cal_node->is_typo = 1;
 			/* Add called functions to the trie so multiple occurences
@@ -744,7 +746,6 @@ do_autosuggest(fnlist_ty **cal_head, fnlist_ty *decl_head, fnlist_ty *notfound_h
 			/* assert(jtrie_insert(trie_head, cal_node->fn_name)); */
 dld:;
 			int lev;
-			int val_len = strlen(cal_node->fn_name);
 			fnlist_ty similar_fn_name_stack;
 			fnlist_ty *similar_fn_name;
 			if (algo == ALGO_TRIE || algo == ALGO_GABUNGAN) {
@@ -755,44 +756,58 @@ dld:;
 					int i;
 					for (i = 0; i < JTRIE_ASCII_SIZE && !node->child[i]; ++i) {}
 					if (i < JTRIE_ASCII_SIZE) {
-						char *similar = malloc(strlen(cal_node->fn_name) * 2);
-						strcpy(similar, cal_node->fn_name);
-						for (i = 0; i < JTRIE_ASCII_SIZE; ++i)
-							if (node->child[i]) {
-								similar = xrealloc(similar, strlen(similar) + 1);
-								similar[strlen(similar)] = i;
-								similar[strlen(similar) + 1] = '\0';
-							}
+						size_t len = strlen(cal_node->fn_name);
+						size_t actual_size = len + 2;
+						tmp = malloc(actual_size);
+						strcpy(tmp, cal_node->fn_name);
+						for (;;) {
+							for (i = 0; i < JTRIE_ASCII_SIZE && !node->child[i]; ++i) {}
+							if (i == JTRIE_ASCII_SIZE)
+								break;
+							node = node->child[i];
+							tmp = xrealloc(tmp, ++actual_size);
+							assert(tmp);
+							tmp[len] = i;
+							tmp[++len] = '\0';
+						}
 						similar_fn_name = &similar_fn_name_stack;
-						similar_fn_name->fn_name = similar;
+						similar_fn_name->fn_name = tmp;
 					} else {
 						if (algo == ALGO_GABUNGAN)
 							goto use_dld;
 					}
+				} else {
+					if (algo == ALGO_GABUNGAN)
+						goto use_dld;
 				}
 			} else {
 use_dld:
-				similar_fn_name = get_most_similar_fn_name_string(decl_head, cal_node->fn_name, INT_MAX, &lev);
+				similar_fn_name = get_most_similar_fn_name_string(decl_head, cal_node->fn_name, LEV_MAX(strlen(cal_node->fn_name)), &lev);
 				if (lev > 0)
 					/* Mark that a typo is found. */
 					cal_node->is_typo = 1;
 			}
 			if (similar_fn_name) {
+				free(cal_node->similar_fn_name);
 				cal_node->similar_fn_name = xstrdup(similar_fn_name->fn_name);
 				if (!first_pass) {
 					if (algo != ALGO_TRIE && !is_prefix && lev < cal_node->lev) {
+						free(cal_node->found_at);
 						cal_node->found_at = xstrdup(fname);
 						cal_node->lev = lev;
 					}
 				} else {
-					if (is_prefix || lev > 0)
+					if (is_prefix || lev > 0) {
 						printf("\"%s\" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah \"%s\"?\n", cal_node->fn_name, similar_fn_name->fn_name);
+						cal_node->status = 1;
+					}
 				}
 			} else if (first_pass) {
 				/* Add called functions whose declaration we can not find in the current file. */
 				notfound_node->lev = INT_MAX;
 				fnlist_insert_tail(&notfound_node, xstrdup(cal_node->fn_name), llist_dup(cal_node->fn_args), cal_node->fn_id);
 			}
+			free(tmp);
 		} else {
 			if (!first_pass) {
 				printf("\"%s\" merupakan sebuah fungsi yang belum dideklarasi. Apakah dimaksudkan untuk meng-include header \"%s\"?\n", cal_node->fn_name, fname);
@@ -841,24 +856,20 @@ typedef struct confusion_matrix_ty {
    FN: no typo, incorrect autocorrection */
 
 void
-confusion_make(confusion_matrix_ty *confusion_matrix, fnlist_ty *cal_head, fnlist_ty *cal_target_head)
+confusion_make(confusion_matrix_ty *matrix, fnlist_ty *cal_head, fnlist_ty *cal_target_head)
 {
-	confusion_matrix->TP = 0;
-	confusion_matrix->TN = 0;
-	confusion_matrix->FP = 0;
-	confusion_matrix->FN = 0;
+	matrix->TP = 0;
+	matrix->TN = 0;
+	matrix->FP = 0;
+	matrix->FN = 0;
 	for (fnlist_ty *node = cal_head, *target_node = cal_target_head; node->next && target_node->next; node = node->next, target_node = target_node->next) {
 		if (node->is_typo) {
-			if (!node->similar_fn_name) {
-				puts("missing similar:");
-				puts(node->fn_name);
-			}
 			if (node->similar_fn_name && !strcmp(node->similar_fn_name, target_node->fn_name))
-				++confusion_matrix->TP;
+				++matrix->TP;
 			else
-				++confusion_matrix->FP;
+				++matrix->FP;
 		} else {
-			++confusion_matrix->TN;
+			++matrix->TN;
 		}
 	}
 }
@@ -867,7 +878,7 @@ double
 accuracy(confusion_matrix_ty *confusion_matrix)
 {
 	return (double)(confusion_matrix->TP + confusion_matrix->TN)
-		/ (double)(confusion_matrix->TP + confusion_matrix->TN + confusion_matrix->FP + confusion_matrix->FN);
+	       / (double)(confusion_matrix->TP + confusion_matrix->TN + confusion_matrix->FP + confusion_matrix->FN);
 }
 
 #include <dirent.h>
