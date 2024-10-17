@@ -32,6 +32,14 @@
 #define JTRIE_ASCII_SIZE       (('Z' - 'A') + ('z' - 'a') + ('9' - '0') + '1')
 #define JTRIE_ASCII_IDX_GET(c) get_compressed_idx((unsigned char)c)
 
+enum algo_ty {
+	ALGO_DLD,
+	ALGO_TRIE,
+	ALGO_GABUNGAN,
+} algo_ty;
+
+int algo = ALGO_GABUNGAN;
+
 static int
 get_compressed_idx(int c)
 {
@@ -64,6 +72,7 @@ typedef struct fnlist_ty {
 	int lev;
 	int fn_id;
 	int is_typo;
+	int status;
 	llist_ty *fn_args;
 	struct fnlist_ty *next;
 } fnlist_ty;
@@ -72,8 +81,6 @@ char *filename_target;
 char *file_target;
 fnlist_ty *decl_target_head;
 fnlist_ty *cal_target_head;
-fnlist_ty *notfound_target_head;
-jtrie_ty *trie_target_head;
 
 void
 fn_args_print(llist_ty *fn_args)
@@ -523,9 +530,6 @@ fn_get(const char *s, const char **next, fn_mode_ty *fn_mode, fnlist_ty *node_ds
 			*next = paren + 1;
 			node_dst->fn_name = xmemdupz(fn, (size_t)(fn_end - fn));
 			node_dst->fn_args = fn_args_get(paren, paren_e);
-			/* printf(node_dst->fn_name); */
-			/* printf(" "); */
-			/* puts(*fn_mode == FN_DECLARED ? "decl" : "call"); */
 			return 1;
 		}
 		p = paren + 1;
@@ -551,10 +555,18 @@ cvt_buffer_to_nodes(fnlist_ty *decl_head, fnlist_ty *cal_head, jtrie_ty *trie_he
 		if (!first_pass && fn_mode == FN_CALLED)
 			goto next;
 		if (fn_mode == FN_DECLARED) {
-			jtrie_ty *node = jtrie_insert(trie_head, node_dst.fn_name);
-			assert(node);
-			node->id = fn_id;
-			fnlist_insert_tail(&decl_node, node_dst.fn_name, node_dst.fn_args, fn_id);
+			if (decl_head) {
+				if (trie_head) {
+					if (algo == ALGO_TRIE || algo == ALGO_GABUNGAN) {
+						jtrie_ty *node = jtrie_insert(trie_head, node_dst.fn_name);
+						assert(node);
+						node->id = fn_id;
+					}
+				}
+				fnlist_insert_tail(&decl_node, node_dst.fn_name, node_dst.fn_args, fn_id);
+			} else {
+				goto next;
+			}
 		} else if (first_pass /* && fn_mode == FN_CALLED */) {
 			/* Add function declarations to the linked list. */
 			fnlist_insert_tail(&cal_node, node_dst.fn_name, node_dst.fn_args, fn_id);
@@ -631,14 +643,10 @@ get_most_similar_fn_name_string(fnlist_ty *decl_head, const char *s, int max_lev
 	int s_len = strlen(s);
 	for (node = decl_head, min_node = decl_head; node->next; fnlist_next(node)) {
 		int val_len = (int)strlen(node->fn_name);
-		/* If the character frequency difference is too large, don't calculate LD. */
-		if (MAX(s_len, val_len) - MIN(s_len, val_len) <= CHAR_FREQ_DIFF_MAX(MIN(s_len, val_len))
-		    && cfreq_diff(s, node->fn_name) <= CHAR_FREQ_DIFF_MAX(MIN(s_len, val_len))) {
-			int lev = dld(node->fn_name, s, val_len, s_len);
-			if (lev < min_lev) {
-				min_lev = lev;
-				min_node = node;
-			}
+		int lev = dld(node->fn_name, s, val_len, s_len);
+		if (lev < min_lev) {
+			min_lev = lev;
+			min_node = node;
 		}
 	}
 	*dist = min_lev;
@@ -714,10 +722,15 @@ int
 do_autosuggest(fnlist_ty **cal_head, fnlist_ty *decl_head, fnlist_ty *notfound_head, jtrie_ty *trie_head, const char *file, const char *fname, int first_pass)
 {
 	cvt_buffer_to_nodes(decl_head, *cal_head, trie_head, file, first_pass);
-	if (file_target)
-		cvt_buffer_to_nodes(decl_target_head, cal_target_head, trie_target_head, file_target, first_pass);
-	fnlist_ty *cal_node, *cal_prev = NULL, *notfound_node = notfound_head;
-	for (cal_node = *cal_head; cal_node->next;) {
+	if (filename_target)
+		cvt_buffer_to_nodes(NULL, cal_target_head, NULL, file_target, first_pass);
+	fnlist_ty *cal_node, *notfound_node = notfound_head;
+	for (cal_node = *cal_head; cal_node->next; fnlist_next(cal_node)) {
+		if (cal_node->status == 1)
+			continue;
+		int is_prefix = 0;
+		if (algo == ALGO_DLD)
+			goto dld;
 		jtrie_ty *node;
 		/* Check trie for exact match. If a match is found,
 		 * either the called function is declared or it has
@@ -728,22 +741,51 @@ do_autosuggest(fnlist_ty **cal_head, fnlist_ty *decl_head, fnlist_ty *notfound_h
 			cal_node->is_typo = 1;
 			/* Add called functions to the trie so multiple occurences
 			 * of the same function will only be checked once. */
-			assert(jtrie_insert(trie_head, cal_node->fn_name));
+			/* assert(jtrie_insert(trie_head, cal_node->fn_name)); */
+dld:;
 			int lev;
 			int val_len = strlen(cal_node->fn_name);
-			fnlist_ty *similar_fn_name = get_most_similar_fn_name_string(decl_head, cal_node->fn_name, LEV_MAX(val_len), &lev);
-			if (lev > 0)
-				/* Mark that a typo is found. */
-				cal_node->is_typo = 1;
+			fnlist_ty similar_fn_name_stack;
+			fnlist_ty *similar_fn_name;
+			if (algo == ALGO_TRIE || algo == ALGO_GABUNGAN) {
+				similar_fn_name = NULL;
+				node = jtrie_starts(trie_head, cal_node->fn_name);
+				if (node) {
+					is_prefix = 1;
+					int i;
+					for (i = 0; i < JTRIE_ASCII_SIZE && !node->child[i]; ++i) {}
+					if (i < JTRIE_ASCII_SIZE) {
+						char *similar = malloc(strlen(cal_node->fn_name) * 2);
+						strcpy(similar, cal_node->fn_name);
+						for (i = 0; i < JTRIE_ASCII_SIZE; ++i)
+							if (node->child[i]) {
+								similar = xrealloc(similar, strlen(similar) + 1);
+								similar[strlen(similar)] = i;
+								similar[strlen(similar) + 1] = '\0';
+							}
+						similar_fn_name = &similar_fn_name_stack;
+						similar_fn_name->fn_name = similar;
+					} else {
+						if (algo == ALGO_GABUNGAN)
+							goto use_dld;
+					}
+				}
+			} else {
+use_dld:
+				similar_fn_name = get_most_similar_fn_name_string(decl_head, cal_node->fn_name, INT_MAX, &lev);
+				if (lev > 0)
+					/* Mark that a typo is found. */
+					cal_node->is_typo = 1;
+			}
 			if (similar_fn_name) {
+				cal_node->similar_fn_name = xstrdup(similar_fn_name->fn_name);
 				if (!first_pass) {
-					if (lev < cal_node->lev) {
-						cal_node->similar_fn_name = xstrdup(similar_fn_name->fn_name);
+					if (algo != ALGO_TRIE && !is_prefix && lev < cal_node->lev) {
 						cal_node->found_at = xstrdup(fname);
 						cal_node->lev = lev;
 					}
 				} else {
-					if (lev > 0)
+					if (is_prefix || lev > 0)
 						printf("\"%s\" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah \"%s\"?\n", cal_node->fn_name, similar_fn_name->fn_name);
 				}
 			} else if (first_pass) {
@@ -754,25 +796,21 @@ do_autosuggest(fnlist_ty **cal_head, fnlist_ty *decl_head, fnlist_ty *notfound_h
 		} else {
 			if (!first_pass) {
 				printf("\"%s\" merupakan sebuah fungsi yang belum dideklarasi. Apakah dimaksudkan untuk meng-include header \"%s\"?\n", cal_node->fn_name, fname);
-				/* Remove called functions we found from the linked list */
-				fnlist_ty *next = cal_node->next;
-				fnlist_delete_curr(cal_head, cal_node, cal_prev);
-				cal_node = next;
-				continue;
+				/* Mark called functions we found from the linked list */
+				cal_node->status = 1;
 			} else {
 				/* if (cal_node->fn_id < node->id) */
 				/* 	printf("\"%s\" dipanggil sebelum didefinisikan.\n", cal_node->fn_name); */
 			}
 		}
-		cal_prev = cal_node;
-		fnlist_next(cal_node);
 	}
 	if (!first_pass)
 		notfound_head = *cal_head;
 	int cnt = 0;
 	/* Remove notfound functions from the trie so they will not be skipped in the second pass. */
 	for (notfound_node = notfound_head; notfound_node->next; fnlist_next(notfound_node), ++cnt)
-		jtrie_delete(trie_head, notfound_node->fn_name);
+		if (notfound_node->status != 1)
+			++cnt;
 	/* Check if the list of notfound functions is empty. */
 	return cnt;
 }
@@ -797,29 +835,39 @@ typedef struct confusion_matrix_ty {
 	int FN;
 } confusion_matrix_ty;
 
+/* TP: typo, correct autocorrection
+   TN: no typo, no correction
+   FP: typo, incorrect autocorrection
+   FN: no typo, incorrect autocorrection */
+
 void
 confusion_make(confusion_matrix_ty *confusion_matrix, fnlist_ty *cal_head, fnlist_ty *cal_target_head)
 {
-	confusion_matrix->FN = 0;
-	confusion_matrix->FP = 0;
-	confusion_matrix->TN = 0;
 	confusion_matrix->TP = 0;
+	confusion_matrix->TN = 0;
+	confusion_matrix->FP = 0;
+	confusion_matrix->FN = 0;
 	for (fnlist_ty *node = cal_head, *target_node = cal_target_head; node->next && target_node->next; node = node->next, target_node = target_node->next) {
-		if (!node->is_typo && !target_node->is_typo)
+		if (node->is_typo) {
+			if (!node->similar_fn_name) {
+				puts("missing similar:");
+				puts(node->fn_name);
+			}
+			if (node->similar_fn_name && !strcmp(node->similar_fn_name, target_node->fn_name))
+				++confusion_matrix->TP;
+			else
+				++confusion_matrix->FP;
+		} else {
 			++confusion_matrix->TN;
-		else if (node->is_typo && target_node->is_typo)
-			++confusion_matrix->TP;
-		else if (!node->is_typo && target_node->is_typo)
-			++confusion_matrix->FP;
-		else if (node->is_typo && !target_node->is_typo)
-			++confusion_matrix->FN;
+		}
 	}
 }
 
 double
 accuracy(confusion_matrix_ty *confusion_matrix)
 {
-	return (double)(confusion_matrix->TP + confusion_matrix->TN) / (double)(confusion_matrix->TP + confusion_matrix->TN + confusion_matrix->FP + confusion_matrix->FN);
+	return (double)(confusion_matrix->TP + confusion_matrix->TN)
+		/ (double)(confusion_matrix->TP + confusion_matrix->TN + confusion_matrix->FP + confusion_matrix->FN);
 }
 
 #include <dirent.h>
@@ -828,22 +876,16 @@ void
 autosuggest(const char *fname)
 {
 	char *file = file_preprocess_alloc(fname);
-	jtrie_ty *trie_head = jtrie_alloc();
+	jtrie_ty *trie_head = (algo == ALGO_TRIE || algo == ALGO_GABUNGAN) ? jtrie_alloc() : NULL;
 	fnlist_ty *decl_head = fnlist_alloc(), *cal_head = fnlist_alloc(), *notfound_head = fnlist_alloc();
 	if (filename_target) {
 		file_target = file_preprocess_alloc(filename_target);
-		decl_target_head = fnlist_alloc(), cal_target_head = fnlist_alloc(), notfound_target_head = fnlist_alloc(), trie_target_head = jtrie_alloc();
+		cal_target_head = fnlist_alloc();
 	}
 	int ret = do_autosuggest(&cal_head, decl_head, notfound_head, trie_head, file, fname, 1);
-	if (filename_target) {
-		confusion_matrix_ty confusion_matrix;
-		confusion_make(&confusion_matrix, cal_head, cal_target_head);
-		int acc = accuracy(&confusion_matrix);
-		(void)acc;
-	}
 	file_preprocess_free(file);
 	if (ret) {
-		/* If we have notfound called functions which do not have similar_fn_name matches in the input file,
+		/* If we have notfound called functions which do not have similar matches in the input file,
 		 * search for them in system headers. */
 		for (int i = 0; i < (int)(sizeof(standard_headers) / sizeof(standard_headers[0])); ++i)
 			/* Check if the system header exists. */
@@ -853,7 +895,7 @@ autosuggest(const char *fname)
 					break;
 			}
 		if (ret) {
-			/* If the notfound linked list is still not empty, search for similar_fn_name matches
+			/* If the notfound linked list is still not empty, search for similar matches
 			 * in the files in the directory of FNAME. */
 			char *dir = strrchr(fname, '/');
 			char *dirof_file_heap = NULL;
@@ -898,8 +940,21 @@ autosuggest(const char *fname)
 		else
 			fprintf(stderr, "\"%s\" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah \"%s\" yang didefinisikan pada \"%s\"?\n", node->fn_name, node->similar_fn_name, node->found_at);
 	}
+	if (filename_target) {
+		confusion_matrix_ty confusion_matrix;
+		confusion_make(&confusion_matrix, cal_head, cal_target_head);
+		double acc = accuracy(&confusion_matrix);
+		printf("TP: %d\n", confusion_matrix.TP);
+		printf("TN: %d\n", confusion_matrix.TN);
+		printf("FP: %d\n", confusion_matrix.FP);
+		printf("FN: %d\n", confusion_matrix.FN);
+		printf("ACC: %f\n", acc);
+		(void)acc;
+	}
+	free(file_target);
 	jtrie_free(&trie_head);
 	fnlist_free(decl_head);
 	fnlist_free(cal_head);
 	fnlist_free(notfound_head);
+	fnlist_free(cal_target_head);
 }

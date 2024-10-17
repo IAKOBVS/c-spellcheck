@@ -18,8 +18,15 @@ main(int argc, char **argv)
 		die_print("The first argument, %s, is not a C file.\n", argv[1]);
 	if (access(argv[1], R_OK) != 0)
 		die_print("%s can not be read.", argv[1]);
-	if (argv[2])
-		file_target = argv[2];
+	for (int i = 2; i < argc; ++i)
+		if (!strcmp("--dld", argv[i]))
+			algo = ALGO_DLD;
+		else if (!strcmp("--trie", argv[i]))
+			algo = ALGO_TRIE;
+		else if (!strcmp("--gabungan", argv[i]))
+			algo = ALGO_GABUNGAN;
+		else
+			filename_target = argv[i];
 	autosuggest(argv[1]);
 	return 0;
 	(void)argc;
