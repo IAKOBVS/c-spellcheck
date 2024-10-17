@@ -59,6 +59,9 @@ typedef struct llist_ty {
 
 typedef struct fnlist_ty {
 	char *fn_name;
+	char *found_at;
+	char *similar_fn_name;
+	int lev;
 	int fn_id;
 	int is_typo;
 	llist_ty *fn_args;
@@ -325,6 +328,8 @@ void
 fnlist_node_free(fnlist_ty *node)
 {
 	free(node->fn_name);
+	free(node->similar_fn_name);
+	free(node->found_at);
 	llist_free(node->fn_args);
 	free(node);
 }
@@ -580,22 +585,35 @@ cfreq_diff(const char *s, const char *t)
 #define MIN3(x, y, z) (((x) < (y)) ? ((x) < (z) ? (x) : (z)) : ((y) < (z) ? (y) : (z)))
 
 int
-dld(const char *s, int m, const char *t, int n)
+dld(const char *s, const char *t, int i, int j)
 {
-	int tbl[n + 1][m + 1];
+#if 0
+	int tbl[j + 1][i + 1];
 	tbl[0][0] = 0;
-	for (int i = 1; i <= n; ++i)
+	for (int i = 1; i <= j; ++i)
 		tbl[i][0] = tbl[i - 1][0] + 1;
-	for (int j = 1; j <= m; ++j)
+	for (int j = 1; j <= i; ++j)
 		tbl[0][j] = tbl[0][j - 1] + 1;
-	for (int i = 1; i <= n; ++i)
-		for (int j = 1; j <= m; ++j) {
+	for (int i = 1; i <= j; ++i)
+		for (int j = 1; j <= i; ++j) {
 			int sub_cost = s[j - 1] == t[i - 1] ? 0 : 1;
 			tbl[i][j] = MIN3(tbl[i - 1][j] + 1, tbl[i][j - 1] + 1, tbl[i - 1][j - 1] + sub_cost);
 			/* if (i > 1 && j > 1 && s[i - 1] == t[i - 2] && s[i - 2] == t[i - 1]) */
 			/* 	tbl[i][j] = MIN(tbl[i][j], tbl[i - 2][j - 2] + sub_cost); */
 		}
-	return tbl[n][m];
+	return tbl[j][i];
+#else	
+	if (i == 0 && j == 0) /* base case */
+		return 0;
+	if (i > 0) /* deletion */
+		return dld(s, t, i - 1, j) + 1;
+	if (j > 0) /* insertion */
+		return dld(s, t, i, j - 1) + 1;
+	if (i > 0 && j > 0) /* substitution */
+		return dld(s, t, i - 1, j - 1) + s[i - 1] != t[j - 1];
+	if (i > 1 && j > 1 && s[i - 1] == t[j - 2] && s[i - 2] == t[j - 1]) /* transposition */
+		return dld(s, t, i - 2, j - 2) + s[i - 1] != t[j - 1];
+#endif
 }
 
 #undef MIN3
@@ -603,7 +621,7 @@ dld(const char *s, int m, const char *t, int n)
 #define CHAR_FREQ_DIFF_MAX(n) (n / 2)
 
 fnlist_ty *
-get_most_similar_string(fnlist_ty *decl_head, const char *s, int max_lev, int *dist)
+get_most_similar_fn_name_string(fnlist_ty *decl_head, const char *s, int max_lev, int *dist)
 {
 	fnlist_ty *node, *min_node;
 	int min_lev = INT_MAX;
@@ -613,7 +631,7 @@ get_most_similar_string(fnlist_ty *decl_head, const char *s, int max_lev, int *d
 		/* If the character frequency difference is too large, don't calculate LD. */
 		if (MAX(s_len, val_len) - MIN(s_len, val_len) <= CHAR_FREQ_DIFF_MAX(MIN(s_len, val_len))
 		    && cfreq_diff(s, node->fn_name) <= CHAR_FREQ_DIFF_MAX(MIN(s_len, val_len))) {
-			int lev = dld(node->fn_name, val_len, s, s_len);
+			int lev = dld(node->fn_name, s, val_len, s_len);
 			if (lev < min_lev) {
 				min_lev = lev;
 				min_node = node;
@@ -710,48 +728,26 @@ do_autosuggest(fnlist_ty **cal_head, fnlist_ty *decl_head, fnlist_ty *notfound_h
 			assert(jtrie_insert(trie_head, cal_node->fn_name));
 			int lev;
 			int val_len = strlen(cal_node->fn_name);
-			fnlist_ty *similar = get_most_similar_string(decl_head, cal_node->fn_name, LEV_MAX(val_len), &lev);
+			fnlist_ty *similar_fn_name = get_most_similar_fn_name_string(decl_head, cal_node->fn_name, LEV_MAX(val_len), &lev);
 			if (lev > 0)
 				/* Mark that a typo is found. */
 				cal_node->is_typo = 1;
-			if (similar) {
+			if (similar_fn_name) {
 				if (!first_pass) {
-					int min;
-					/* Point to the location of the integer in the string.
-					 * The format is
-					 * notfound_node->fn_name = "function_name\0similar_function_name\0filename\edit_distance" */
-					char *min_p = cal_node->fn_name + strlen(cal_node->fn_name) + 1;
-					min_p += strlen(min_p) + 1;
-					min_p += strlen(min_p) + 1;
-					/* Read the integer from the string. */
-					memcpy(&min, min_p, sizeof(int));
-					if (lev < min) {
-						cal_node->fn_name = xrealloc(cal_node->fn_name, strlen(cal_node->fn_name) + 1 + strlen(similar->fn_name) + 1 + strlen(fname) + 1 + sizeof(int));
-						char *p = cal_node->fn_name + strlen(cal_node->fn_name) + 1;
-						strcpy(p, similar->fn_name);
-						p += strlen(p) + 1;
-						strcpy(p, fname);
-						p += strlen(p) + 1;
-						/* Write the integer to the string.
-						 * Safe version of *(int *)p = i;
-						 * since p may be unaligned. */
-						memcpy(p, &lev, sizeof(lev));
+					if (lev < cal_node->lev) {
+						cal_node->similar_fn_name = xstrdup(similar_fn_name->fn_name);
+						cal_node->found_at = xstrdup(fname);
+						cal_node->lev = lev;
 					}
 				} else {
 					if (lev > 0)
-						printf("\"%s\" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah \"%s\"?\n", cal_node->fn_name, similar->fn_name);
+						printf("\"%s\" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah \"%s\"?\n", cal_node->fn_name, similar_fn_name->fn_name);
 				}
 			} else if (first_pass) {
 				/* Add called functions whose declaration we can not find in the current file. */
-				int i = INT_MAX;
-				char *tmp = xmalloc(strlen(cal_node->fn_name) + 1 + strlen("?") + 1 + strlen("?") + 1 + sizeof(int));
-				char *p = tmp;
-				strcpy(p, cal_node->fn_name);
-				p += strlen(cal_node->fn_name) + 1;
-				memcpy(p, "?\0?\0", 4);
-				p += 4;
-				memcpy(p, &i, sizeof(i));
-				fnlist_insert_tail(&notfound_node, tmp, llist_dup(cal_node->fn_args), cal_node->fn_id);
+				notfound_node->found_at = xstrdup(fname);
+				notfound_node->lev = INT_MAX;
+				fnlist_insert_tail(&notfound_node, xstrdup(cal_node->fn_name), llist_dup(cal_node->fn_args), cal_node->fn_id);
 			}
 		} else {
 			if (!first_pass) {
@@ -762,8 +758,8 @@ do_autosuggest(fnlist_ty **cal_head, fnlist_ty *decl_head, fnlist_ty *notfound_h
 				cal_node = next;
 				continue;
 			} else {
-				if (cal_node->fn_id < node->id)
-					printf("\"%s\" dipanggil sebelum didefinisikan.\n", cal_node->fn_name);
+				/* if (cal_node->fn_id < node->id) */
+				/* 	printf("\"%s\" dipanggil sebelum didefinisikan.\n", cal_node->fn_name); */
 			}
 		}
 		cal_prev = cal_node;
@@ -802,6 +798,10 @@ typedef struct confusion_matrix_ty {
 void
 confusion_make(confusion_matrix_ty *confusion_matrix, fnlist_ty *cal_head, fnlist_ty *cal_target_head)
 {
+	confusion_matrix->FN = 0;
+	confusion_matrix->FP = 0;
+	confusion_matrix->TN = 0;
+	confusion_matrix->TP = 0;
 	for (fnlist_ty *node = cal_head, *target_node = cal_target_head; node->next && target_node->next; node = node->next, target_node = target_node->next) {
 		if (!node->is_typo && !target_node->is_typo)
 			++confusion_matrix->TN;
@@ -841,7 +841,7 @@ autosuggest(const char *fname)
 	}
 	file_preprocess_free(file);
 	if (ret) {
-		/* If we have notfound called functions which do not have similar matches in the input file,
+		/* If we have notfound called functions which do not have similar_fn_name matches in the input file,
 		 * search for them in system headers. */
 		for (int i = 0; i < (int)(sizeof(standard_headers) / sizeof(standard_headers[0])); ++i)
 			/* Check if the system header exists. */
@@ -851,7 +851,7 @@ autosuggest(const char *fname)
 					break;
 			}
 		if (ret) {
-			/* If the notfound linked list is still not empty, search for similar matches
+			/* If the notfound linked list is still not empty, search for similar_fn_name matches
 			 * in the files in the directory of FNAME. */
 			char *dir = strrchr(fname, '/');
 			char *dirof_file_heap = NULL;
@@ -891,16 +891,10 @@ autosuggest(const char *fname)
 		}
 	}
 	for (fnlist_ty *node = notfound_head; node->next; fnlist_next(node)) {
-		const char *similar = node->fn_name + strlen(node->fn_name) + 1;
-		const char *header = similar + strlen(similar) + 1;
-		const char *dist_p = header + strlen(header) + 1;
-		int dist;
-		memcpy(&dist, dist_p, sizeof(int));
-		/* notfound_node->fn_name = "function_name\0similar_function_name\0filename\edit_distance" */
-		if (dist == INT_MAX)
+		if (node->lev == INT_MAX)
 			fprintf(stderr, "\"%s\" merupakan sebuah fungsi yang belum dideklarasi.\n", node->fn_name);
 		else
-			fprintf(stderr, "\"%s\" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah \"%s\" yang didefinisikan pada \"%s\"?\n", node->fn_name, similar, header);
+			fprintf(stderr, "\"%s\" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah \"%s\" yang didefinisikan pada \"%s\"?\n", node->fn_name, node->similar_fn_name, node->found_at);
 	}
 	jtrie_free(&trie_head);
 	fnlist_free(decl_head);

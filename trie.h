@@ -168,7 +168,7 @@ jtrie_match(const jtrie_ty *root,
 	if (node == NULL)
 		return NULL;
 	for (; *++w && node->child[JTRIE_ASCII_IDX_GET(*w)]; node = node->child[JTRIE_ASCII_IDX_GET(*w)]) {}
-	return (node && node->EOW) ? (jtrie_ty *)node : NULL;
+	return (*w == '\0' && node && node->EOW) ? (jtrie_ty *)node : NULL;
 }
 
 
