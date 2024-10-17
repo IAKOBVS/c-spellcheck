@@ -59,8 +59,8 @@ typedef struct llist_ty {
 
 typedef struct fnlist_ty {
 	char *fn_name;
-	char *found_at;
 	char *similar_fn_name;
+	char *found_at;
 	int lev;
 	int fn_id;
 	int is_typo;
@@ -396,6 +396,7 @@ fn_start(const char *start, const char *paren, const char **fn_end)
 	if (!is_fn_char(*p)
 	    || *p == '_'
 	    || (*p >= '0' && *p <= '9')
+	    || (*(*fn_end - 1) == 't' && *fn_end - p >= 2 && *(*fn_end - 2) == '_')
 	    || starts_with(p, "if")
 	    || starts_with(p, "for")
 	    || starts_with(p, "while")
@@ -747,7 +748,6 @@ do_autosuggest(fnlist_ty **cal_head, fnlist_ty *decl_head, fnlist_ty *notfound_h
 				}
 			} else if (first_pass) {
 				/* Add called functions whose declaration we can not find in the current file. */
-				notfound_node->found_at = xstrdup(fname);
 				notfound_node->lev = INT_MAX;
 				fnlist_insert_tail(&notfound_node, xstrdup(cal_node->fn_name), llist_dup(cal_node->fn_args), cal_node->fn_id);
 			}
