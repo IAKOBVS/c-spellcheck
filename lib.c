@@ -603,16 +603,18 @@ dld(const char *s, const char *t, int i, int j)
 		}
 	return tbl[j][i];
 #else	
+	int min = INT_MAX;
 	if (i == 0 && j == 0) /* base case */
-		return 0;
+		min = MIN(min, 0);
 	if (i > 0) /* deletion */
-		return dld(s, t, i - 1, j) + 1;
+		min = MIN(min, dld(s, t, i - 1, j) + 1);
 	if (j > 0) /* insertion */
-		return dld(s, t, i, j - 1) + 1;
+		min = MIN(min, dld(s, t, i, j - 1) + 1);
 	if (i > 0 && j > 0) /* substitution */
-		return dld(s, t, i - 1, j - 1) + s[i - 1] != t[j - 1];
+		min = MIN(min, dld(s, t, i - 1, j - 1) + (s[i - 1] != t[j - 1]));
 	if (i > 1 && j > 1 && s[i - 1] == t[j - 2] && s[i - 2] == t[j - 1]) /* transposition */
-		return dld(s, t, i - 2, j - 2) + s[i - 1] != t[j - 1];
+		min = MIN(min, dld(s, t, i - 2, j - 2) + (s[i - 1] != t[j - 1]));
+	return min;
 #endif
 }
 
