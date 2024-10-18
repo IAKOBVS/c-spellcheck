@@ -483,6 +483,7 @@ paren_error:
 			if (p == NULL)
 				goto paren_error;
 			++p;
+		case ')':
 		case ',':
 			for (; xiswhite(*arg_s); ++arg_s)
 				;
@@ -942,7 +943,6 @@ autosuggest(const char *fname)
 		}
 	}
 	for (fnlist_ty *node = notfound_head; node->next; fnlist_next(node)) {
-		fn_args_print(node->fn_args);
 		if (node->lev == INT_MAX)
 			fprintf(stderr, "\"%s\" merupakan sebuah fungsi yang belum dideklarasi.\n", node->fn_name);
 		else
