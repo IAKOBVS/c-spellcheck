@@ -434,10 +434,6 @@ fn_get_type(const char *s, const char *end)
 {
 	--end;
 	for (; s <= end && (xiswhite(*end) || *end == '*'); --end) {}
-	if (*end == '(') {
-		--end;
-		for (; s <= end && xiswhite(*end); --end) {}
-	}
 	if (s <= end && is_fn_char(*end))
 		return FN_DECLARED;
 	return FN_CALLED;
@@ -946,6 +942,7 @@ autosuggest(const char *fname)
 		}
 	}
 	for (fnlist_ty *node = notfound_head; node->next; fnlist_next(node)) {
+		fn_args_print(node->fn_args);
 		if (node->lev == INT_MAX)
 			fprintf(stderr, "\"%s\" merupakan sebuah fungsi yang belum dideklarasi.\n", node->fn_name);
 		else
