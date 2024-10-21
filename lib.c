@@ -32,6 +32,11 @@
 #define JTRIE_ASCII_SIZE       (('Z' - 'A') + ('z' - 'a') + ('9' - '0') + '1')
 #define JTRIE_ASCII_IDX_GET(c) get_compressed_idx((unsigned char)c)
 
+enum status_ty {
+	STATUS_NOSKIP = 0,
+	STATUS_SKIP,
+} status_ty;
+
 enum algo_ty {
 	ALGO_DLD,
 	ALGO_TRIE,
@@ -72,6 +77,7 @@ typedef struct fnlist_ty {
 	int lev;
 	int fn_id;
 	int is_typo;
+	int is_typo_syn;
 	int status;
 	llist_ty *fn_args;
 	struct fnlist_ty *next;
@@ -528,6 +534,19 @@ fn_get(const char *s, const char **next, fn_mode_ty *fn_mode, fnlist_ty *node_ds
 			*next = paren + 1;
 			node_dst->fn_name = xmemdupz(fn, (size_t)(fn_end - fn));
 			node_dst->fn_args = fn_args_get(paren, paren_e);
+			/* For declared functions, remove the parameter name. */
+			if (*fn_mode == FN_DECLARED) {
+				for (llist_ty *node = node_dst->fn_args; node->next; node = node->next) {
+					char *ptr = node->value + strlen(node->value) - 1;
+					for (; ptr > node->value; --ptr) {
+						if (!is_fn_char(*ptr)) {
+							*ptr = '\0';
+							for (; ptr > node->value && xiswhite(*ptr); --ptr)
+								*ptr = '\0';
+						}
+					}
+				}
+			}
 			return 1;
 		}
 		p = paren + 1;
@@ -559,6 +578,7 @@ cvt_buffer_to_nodes(fnlist_ty *decl_head, fnlist_ty *cal_head, jtrie_ty *trie_he
 						jtrie_ty *node = jtrie_insert(trie_head, node_dst.fn_name);
 						assert(node);
 						node->id = fn_id;
+						node->fn_args = node_dst.fn_args;
 					}
 				}
 				fnlist_insert_tail(&decl_node, node_dst.fn_name, node_dst.fn_args, fn_id);
@@ -724,17 +744,17 @@ do_autosuggest(fnlist_ty **cal_head, fnlist_ty *decl_head, fnlist_ty *notfound_h
 		cvt_buffer_to_nodes(NULL, cal_target_head, NULL, file_target, first_pass);
 	fnlist_ty *cal_node, *notfound_node = notfound_head;
 	for (cal_node = *cal_head; cal_node->next; fnlist_next(cal_node)) {
-		if (cal_node->status == 1)
+		if (cal_node->status == STATUS_SKIP)
 			continue;
 		int is_prefix = 0;
 		if (algo == ALGO_DLD)
 			goto dld;
-		jtrie_ty *node;
+		jtrie_ty *trie_node;
 		/* Check trie for exact match. If a match is found,
 		 * either the called function is declared or it has
 		 * been checked. */
-		node = jtrie_match(trie_head, cal_node->fn_name);
-		if (!node) {
+		trie_node = jtrie_match(trie_head, cal_node->fn_name);
+		if (!trie_node) {
 			char *tmp = NULL;
 			/* Mark that a typo is found. */
 			cal_node->is_typo = 1;
@@ -747,21 +767,21 @@ dld:;
 			fnlist_ty *similar_fn_name;
 			if (algo == ALGO_TRIE || algo == ALGO_GABUNGAN) {
 				similar_fn_name = NULL;
-				node = jtrie_starts(trie_head, cal_node->fn_name);
-				if (node) {
+				trie_node = jtrie_starts(trie_head, cal_node->fn_name);
+				if (trie_node) {
 					is_prefix = 1;
 					int i;
-					for (i = 0; i < JTRIE_ASCII_SIZE && !node->child[i]; ++i) {}
+					for (i = 0; i < JTRIE_ASCII_SIZE && !trie_node->child[i]; ++i) {}
 					if (i < JTRIE_ASCII_SIZE) {
 						size_t len = strlen(cal_node->fn_name);
 						size_t actual_size = len + 2;
 						tmp = malloc(actual_size);
 						strcpy(tmp, cal_node->fn_name);
 						for (;;) {
-							for (i = 0; i < JTRIE_ASCII_SIZE && !node->child[i]; ++i) {}
+							for (i = 0; i < JTRIE_ASCII_SIZE && !trie_node->child[i]; ++i) {}
 							if (i == JTRIE_ASCII_SIZE)
 								break;
-							node = node->child[i];
+							trie_node = trie_node->child[i];
 							tmp = xrealloc(tmp, ++actual_size);
 							assert(tmp);
 							tmp[len] = i;
@@ -796,7 +816,7 @@ use_dld:
 				} else {
 					if (is_prefix || lev > 0) {
 						printf("\"%s\" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah \"%s\"?\n", cal_node->fn_name, similar_fn_name->fn_name);
-						cal_node->status = 1;
+						cal_node->status = STATUS_SKIP;
 					}
 				}
 			} else if (first_pass) {
@@ -806,12 +826,22 @@ use_dld:
 			}
 			free(tmp);
 		} else {
+			if (fn_args_count(cal_node->fn_args) != fn_args_count(trie_node->fn_args)) {
+				printf("\"%s(", cal_node->fn_name);
+				fn_args_print(cal_node->fn_args);
+				printf(")\"");
+				printf(" merupakan sebuah pemanggilan dengan jumlah argumen yang tidak sesuai dengan deklarasinya, \"%s(", cal_node->fn_name);
+				fn_args_print(trie_node->fn_args);
+				printf(")\"\n");
+				cal_node->is_typo_syn = 1;
+				cal_node->status = STATUS_SKIP;
+			}
 			if (!first_pass) {
 				printf("\"%s\" merupakan sebuah fungsi yang belum dideklarasi. Apakah dimaksudkan untuk meng-include header \"%s\"?\n", cal_node->fn_name, fname);
 				/* Mark called functions we found from the linked list */
-				cal_node->status = 1;
+				cal_node->status = STATUS_SKIP;
 			} else {
-				/* if (cal_node->fn_id < node->id) */
+				/* if (cal_node->fn_id < trie_node->id) */
 				/* 	printf("\"%s\" dipanggil sebelum didefinisikan.\n", cal_node->fn_name); */
 			}
 		}

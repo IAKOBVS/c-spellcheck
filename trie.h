@@ -33,10 +33,14 @@
 #  define JTRIE_ASCII_IDX_GET(c) c
 #endif
 
+struct llist_ty;
+typedef struct llist_ty llist_ty;
+
 typedef struct jtrie_ty {
 	struct jtrie_ty *child[JTRIE_ASCII_SIZE];
 	int EOW;
 	int id;
+	llist_ty *fn_args;
 } jtrie_ty;
 
 static jtrie_ty *
