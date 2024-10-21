@@ -446,15 +446,15 @@ fn_get_type(const char *s, const char *end)
 }
 
 char *
-paren_end(const char *paren_s, const char *paren_e)
+paren_end(const char *paren_s, const char *paren_e, char c_s, char c_e)
 {
 	const char *p = paren_s;
-	if (*p == '(') {
+	if (*p == c_s) {
 		int end_paren = 1;
 		while (++p <= paren_e) {
-			if (*p == ')')
+			if (*p == c_e)
 				--end_paren;
-			else if (*p == '(')
+			else if (*p == c_s)
 				++end_paren;
 			else
 				continue;
@@ -484,11 +484,11 @@ paren_error:
 			goto ret;
 			break;
 		case '(':
-			p = paren_end(p, paren_e);
+			p = paren_end(p, paren_e, '(', ')');
 			assert(p);
 			if (p == NULL)
 				goto paren_error;
-			++p;
+			break;
 		case ')':
 		case ',':
 			for (; xiswhite(*arg_s); ++arg_s)
@@ -518,7 +518,7 @@ fn_get(const char *s, const char **next, fn_mode_ty *fn_mode, fnlist_ty *node_ds
 		paren = strchr(p, '(');
 		if (!paren)
 			break;
-		paren_e = paren_end(paren, paren + strlen(paren));
+		paren_e = paren_end(paren, paren + strlen(paren), '(', ')');
 		if (!paren_e)
 			break;
 		const char *tmp = paren_e + 1;
@@ -540,9 +540,14 @@ fn_get(const char *s, const char **next, fn_mode_ty *fn_mode, fnlist_ty *node_ds
 					char *ptr = node->value + strlen(node->value) - 1;
 					for (; ptr > node->value; --ptr) {
 						if (!is_fn_char(*ptr)) {
-							*ptr = '\0';
-							for (; ptr > node->value && xiswhite(*ptr); --ptr)
+							if (*ptr != '*') {
 								*ptr = '\0';
+								for (; ptr > node->value && xiswhite(*ptr); --ptr)
+									*ptr = '\0';
+							} else {
+								*(ptr + 1) = '\0';
+							}
+							break;
 						}
 					}
 				}
@@ -734,6 +739,65 @@ file_preprocess_free(char *file)
 	file_free(file);
 }
 
+llist_ty *type_get(const char *s)
+{
+	llist_ty *head = llist_alloc();
+	llist_ty *node = head;
+	for (; (s = strstr(s, "typedef")); ++s) {
+		s += strlen("typedef");
+		while (xiswhite(*s))
+			++s;
+		if (starts_with(s, "struct")) {
+			s += strlen("struct");
+		} else if (starts_with(s, "enum")) {
+			s += strlen("enum");
+		} else if (starts_with(s, "union")) {
+			s += strlen("union");
+		} else {
+		}
+		while (xiswhite(*s))
+			++s;
+		if (*s == '{') {
+			s = paren_end(s, s + strlen(s), '{', '}');
+			assert(s);
+			++s;
+		}
+		const char *p = strchr(s, ';');
+		if (p && p > s) {
+			--p;
+			size_t len = 0;
+			for (; p > s && xiswhite(*p); --p) {}
+			const char *p_s = p;
+			for (; p_s > s && is_fn_char(*p_s); --p_s, ++len) {}
+			if (!is_fn_char(*p_s))
+				++p_s;
+			if (len) {
+				char *tmp = malloc(len + 1);
+				assert(tmp);
+				memcpy(tmp, p_s, len);
+				tmp[len] = '\0';
+				llist_insert_tail(&node, tmp);
+			}
+		}
+	}
+	return head;
+}
+
+llist_ty *var_get(const char *s, llist_ty *types)
+{
+	llist_ty *head = llist_alloc();
+	llist_ty *node = head;
+	const char *p = s;
+	for (llist_ty *n = types; n->next; n = n->next) {
+		if (n->value)
+			for (; (p = strstr(p, n->value)); ++p) {
+				while (xiswhite(*p))
+					++p;
+			}
+	}
+	return head;
+}
+
 #define LEV_MAX(n) (0.6 * n)
 
 int
@@ -776,6 +840,7 @@ dld:;
 						size_t len = strlen(cal_node->fn_name);
 						size_t actual_size = len + 2;
 						tmp = malloc(actual_size);
+						assert(tmp);
 						strcpy(tmp, cal_node->fn_name);
 						for (;;) {
 							for (i = 0; i < JTRIE_ASCII_SIZE && !trie_node->child[i]; ++i) {}
@@ -827,14 +892,22 @@ use_dld:
 			free(tmp);
 		} else {
 			if (fn_args_count(cal_node->fn_args) != fn_args_count(trie_node->fn_args)) {
-				printf("\"%s(", cal_node->fn_name);
-				fn_args_print(cal_node->fn_args);
-				printf(")\"");
-				printf(" merupakan sebuah pemanggilan dengan jumlah argumen yang tidak sesuai dengan deklarasinya, \"%s(", cal_node->fn_name);
-				fn_args_print(trie_node->fn_args);
-				printf(")\"\n");
-				cal_node->is_typo_syn = 1;
-				cal_node->status = STATUS_SKIP;
+				int is_variadic = 0;
+				for (llist_ty *node = trie_node->fn_args; node->next; node = node->next) {
+					/* variadic function */
+					if (node->value && *(node->value) == '.')
+						is_variadic = 1;
+				}
+				if (!is_variadic) {
+					printf("\"%s(", cal_node->fn_name);
+					fn_args_print(cal_node->fn_args);
+					printf(")\"");
+					printf(" merupakan sebuah pemanggilan dengan jumlah argumen yang tidak sesuai dengan deklarasinya, \"%s(", cal_node->fn_name);
+					fn_args_print(trie_node->fn_args);
+					printf(")\"\n");
+					cal_node->is_typo_syn = 1;
+					cal_node->status = STATUS_SKIP;
+				}
 			}
 			if (!first_pass) {
 				printf("\"%s\" merupakan sebuah fungsi yang belum dideklarasi. Apakah dimaksudkan untuk meng-include header \"%s\"?\n", cal_node->fn_name, fname);
@@ -920,6 +993,8 @@ autosuggest(const char *fname)
 		file_target = file_preprocess_alloc(filename_target);
 		cal_target_head = fnlist_alloc();
 	}
+	llist_ty *types = type_get(file);
+	llist_ty *variables = var_get(file, types);
 	int ret = do_autosuggest(&cal_head, decl_head, notfound_head, trie_head, file, fname, 1);
 	file_preprocess_free(file);
 	if (ret) {
@@ -989,6 +1064,8 @@ autosuggest(const char *fname)
 		printf("ACC: %f\n", acc);
 		(void)acc;
 	}
+	llist_free(types);
+	llist_free(variables);
 	free(file_target);
 	jtrie_free(&trie_head);
 	fnlist_free(decl_head);
