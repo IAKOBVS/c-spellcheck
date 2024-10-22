@@ -1,9 +1,22 @@
-void f(int x, int y, int z, int q)
+struct x {
+
+};
+
+struct ll {
+
+};
+
+int f(struct x q)
 {
+
 }
+
+struct ll z;
 
 int main()
 {
-	f(9);
+	struct x a;
+	struct x b;
+	f(z);
 }
 /* ----------------- */

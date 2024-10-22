@@ -70,6 +70,14 @@ typedef struct llist_ty {
 	struct llist_ty *next;
 } llist_ty;
 
+typedef struct type_ty {
+	llist_ty *variables;
+	char *value;
+	struct type_ty *next;
+} type_ty;
+
+type_ty *types;
+
 typedef struct fnlist_ty {
 	char *fn_name;
 	char *similar_fn_name;
@@ -87,6 +95,15 @@ char *filename_target;
 char *file_target;
 fnlist_ty *decl_target_head;
 fnlist_ty *cal_target_head;
+
+llist_ty *
+llist_find(llist_ty *head, const char *value)
+{
+	for (llist_ty *node = head; node->next; node = node->next)
+		if (!strcmp(value, node->value))
+			return node;
+	return NULL;
+}
 
 void
 fn_args_print(llist_ty *fn_args)
@@ -327,6 +344,48 @@ llist_delete(llist_ty **head, llist_ty *target)
 	for (; node != target; llist_next(node))
 		prev = node;
 	llist_delete_curr(head, node, prev);
+}
+
+void
+type_node_free(type_ty *node)
+{
+	llist_free(node->variables);
+	free(node->value);
+	free(node);
+}
+
+void
+type_free(type_ty *node)
+{
+	if (node) {
+		type_free(node->next);
+		type_node_free(node);
+	}
+}
+
+type_ty *
+type_alloc()
+{
+	return xcalloc(sizeof(type_ty));
+}
+
+void
+type_insert_tail(type_ty **tail, char *value)
+{
+	(*tail)->value = value;
+	(*tail)->variables = llist_alloc();
+	(*tail)->next = type_alloc();
+	*tail = (*tail)->next;
+}
+
+type_ty *
+var_find(type_ty *head, const char *variable)
+{
+	for (type_ty *type_node = head; type_node->next; type_node = type_node->next)
+		for (llist_ty *var_node = type_node->variables; var_node->next; var_node = var_node->next)
+			if (!strcmp(variable, var_node->value))
+				return type_node;
+	return NULL;
 }
 
 #define fnlist_next(node) llist_next(node)
@@ -739,63 +798,116 @@ file_preprocess_free(char *file)
 	file_free(file);
 }
 
-llist_ty *type_get(const char *s)
+type_ty *
+type_get(const char *s)
 {
-	llist_ty *head = llist_alloc();
-	llist_ty *node = head;
-	for (; (s = strstr(s, "typedef")); ++s) {
-		s += strlen("typedef");
-		while (xiswhite(*s))
-			++s;
-		if (starts_with(s, "struct")) {
-			s += strlen("struct");
-		} else if (starts_with(s, "enum")) {
-			s += strlen("enum");
-		} else if (starts_with(s, "union")) {
-			s += strlen("union");
-		} else {
-		}
-		while (xiswhite(*s))
-			++s;
-		if (*s == '{') {
-			s = paren_end(s, s + strlen(s), '{', '}');
-			assert(s);
-			++s;
-		}
-		const char *p = strchr(s, ';');
-		if (p && p > s) {
-			--p;
-			size_t len = 0;
-			for (; p > s && xiswhite(*p); --p) {}
-			const char *p_s = p;
-			for (; p_s > s && is_fn_char(*p_s); --p_s, ++len) {}
-			if (!is_fn_char(*p_s))
-				++p_s;
-			if (len) {
-				char *tmp = malloc(len + 1);
-				assert(tmp);
-				memcpy(tmp, p_s, len);
-				tmp[len] = '\0';
-				llist_insert_tail(&node, tmp);
+	type_ty *head = type_alloc();
+	type_ty *node = head;
+	type_insert_tail(&node, xstrdup("void"));
+	type_insert_tail(&node, xstrdup("void *"));
+	type_insert_tail(&node, xstrdup("void*"));
+	type_insert_tail(&node, xstrdup("char"));
+	type_insert_tail(&node, xstrdup("char *"));
+	type_insert_tail(&node, xstrdup("char*"));
+	type_insert_tail(&node, xstrdup("char*"));
+	type_insert_tail(&node, xstrdup("int"));
+	type_insert_tail(&node, xstrdup("short"));
+	type_insert_tail(&node, xstrdup("long"));
+	type_insert_tail(&node, xstrdup("float"));
+	type_insert_tail(&node, xstrdup("double"));
+	const char *s_s = s;
+	const char *array[] = { "typedef", "struct", "enum", "union", NULL };
+	for (int i = 0; array[i] != NULL; ++i) {
+		s = s_s;
+		for (; (s = strstr(s, array[i])); ++s) {
+			if (!strcmp("typedef", array[i])) {
+				s += strlen("typedef");
+			} else {
+				s += strlen(array[i]);
+				const char *p = s;
+				for (; p > s_s && xiswhite(*p); --p) {}
+				if (p - s_s >= strlen("typedef") && starts_with(p - strlen("typedef"), "typedef"))
+					continue;
+				while (xiswhite(*s))
+					++s;
+				const char *type_s = s;
+				size_t len = 0;
+				while (is_fn_char(*s)) {
+					++s;
+					++len;
+				}
+				if (len)
+					type_insert_tail(&node, xmemdupz(type_s, len));
+			}
+			while (xiswhite(*s))
+				++s;
+			if (starts_with(s, "struct"))
+				s += strlen("struct");
+			else if (starts_with(s, "enum"))
+				s += strlen("enum");
+			else if (starts_with(s, "union"))
+				s += strlen("union");
+			while (xiswhite(*s))
+				++s;
+			if (*s == '{') {
+				s = paren_end(s, s + strlen(s), '{', '}');
+				assert(s);
+				++s;
+			}
+			const char *p = strchr(s, ';');
+			if (p && p > s) {
+				--p;
+				for (; p > s && xiswhite(*p); --p) {}
+				const char *p_s = p;
+				size_t len = 0;
+				for (; p_s > s && is_fn_char(*p_s); --p_s, ++len) {}
+				if (!is_fn_char(*p_s))
+					++p_s;
+				if (len)
+					type_insert_tail(&node, xmemdupz(p_s, len));
 			}
 		}
 	}
 	return head;
 }
 
-llist_ty *var_get(const char *s, llist_ty *types)
+void
+var_get(const char *s, type_ty *types)
 {
-	llist_ty *head = llist_alloc();
-	llist_ty *node = head;
 	const char *p = s;
-	for (llist_ty *n = types; n->next; n = n->next) {
-		if (n->value)
-			for (; (p = strstr(p, n->value)); ++p) {
+	llist_ty *var_node;
+	for (type_ty *n = types; n->next; n = n->next) {
+		var_node = n->variables;
+		p = s;
+		for (; (p = strstr(p, n->value)); ++p) {
+			p += strlen(n->value);
+			while (xiswhite(*p))
+				++p;
+			if (*p != '{') {
+				size_t len = 0;
+				const char *p_s = p;
 				while (xiswhite(*p))
 					++p;
+				for (; *p; ++p, ++len) {
+					/* if (*p == ',') { */
+					/* 	llist_insert_tail(&var_node, xmemdupz(p_s, len)); */
+					/* 	while (xiswhite(*p)) */
+					/* 		++p; */
+					/* 	len = 0; */
+					/* 	p_s = p; */
+					/* } */
+					if (len) {
+						while (xiswhite(*p))
+							++p;
+					}
+					if (*p == ';' || *p == '=' || *p == '[' || *p == ')' || *p == '(' || *p == ',') {
+						llist_insert_tail(&var_node, xmemdupz(p_s, len));
+						break;
+					}
+				}
 			}
+		}
 	}
-	return head;
 }
 
 #define LEV_MAX(n) (0.6 * n)
@@ -904,9 +1016,36 @@ use_dld:
 					printf(")\"");
 					printf(" merupakan sebuah pemanggilan dengan jumlah argumen yang tidak sesuai dengan deklarasinya, \"%s(", cal_node->fn_name);
 					fn_args_print(trie_node->fn_args);
-					printf(")\"\n");
+					printf(")\".\n");
 					cal_node->is_typo_syn = 1;
 					cal_node->status = STATUS_SKIP;
+				}
+			} else {
+				for (llist_ty *n = cal_node->fn_args, *t_n = trie_node->fn_args; n->next && t_n->next; n = n->next, t_n = t_n->next) {
+					if (starts_with(n->value, "__")
+					|| starts_with(n->value, "stdin")
+					|| starts_with(n->value, "stdout")
+					|| starts_with(n->value, "stderr")
+					|| *(n->value + strcspn(n->value, "*&+-=.'\"?:()0123456789")))
+						continue;
+					type_ty *type_node = var_find(types, n->value);
+					if (!type_node) {
+						printf("\"%s(", cal_node->fn_name);
+						fn_args_print(cal_node->fn_args);
+						printf(")\"");
+						printf(" merupakan sebuah pemanggilan dengan variabel argumen, %s, yang belum dideklarasi.\n", n->value);
+						cal_node->is_typo_syn = 1;
+						cal_node->status = STATUS_SKIP;
+					} else if (strcmp(type_node->value, t_n->value)
+					           && !((starts_with(type_node->value, "char") || starts_with(type_node->value, "void"))
+					                && (starts_with(type_node->value, "char") || starts_with(type_node->value, "void")))) {
+						printf("\"%s(", cal_node->fn_name);
+						fn_args_print(cal_node->fn_args);
+						printf(")\"");
+						printf(" merupakan sebuah pemanggilan dengan variabel argumen, %s, dengan tipe argumen yang salah (%s, seharusnya %s).\n", n->value, type_node->value, t_n->value);
+						cal_node->is_typo_syn = 1;
+						cal_node->status = STATUS_SKIP;
+					}
 				}
 			}
 			if (!first_pass) {
@@ -993,8 +1132,15 @@ autosuggest(const char *fname)
 		file_target = file_preprocess_alloc(filename_target);
 		cal_target_head = fnlist_alloc();
 	}
-	llist_ty *types = type_get(file);
-	llist_ty *variables = var_get(file, types);
+	types = type_get(file);
+	var_get(file, types);
+	/* for (type_ty *t = types; t->next; t = t->next) { */
+	/* 	puts("type:"); */
+	/* 	puts(t->value); */
+	/* 	puts("vars:"); */
+	/* 	for (llist_ty *v = t->variables; v->next; v = v->next) */
+	/* 		puts(v->value); */
+	/* } */
 	int ret = do_autosuggest(&cal_head, decl_head, notfound_head, trie_head, file, fname, 1);
 	file_preprocess_free(file);
 	if (ret) {
@@ -1064,8 +1210,7 @@ autosuggest(const char *fname)
 		printf("ACC: %f\n", acc);
 		(void)acc;
 	}
-	llist_free(types);
-	llist_free(variables);
+	type_free(types);
 	free(file_target);
 	jtrie_free(&trie_head);
 	fnlist_free(decl_head);
