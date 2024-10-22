@@ -475,14 +475,14 @@ fn_start(const char *start, const char *paren, const char **fn_end)
 	    || starts_with(p, "return")
 	    || starts_with(p, "switch")
 	    || starts_with(p, "void")
+	    || starts_with(p, "short")
+	    || starts_with(p, "long")
 	    || starts_with(p, "size_t")
 	    || starts_with(p, "int")
 	    || starts_with(p, "double")
 	    || starts_with(p, "float")
 	    || starts_with(p, "signed")
 	    || starts_with(p, "unsigned")
-	    || starts_with(p, "short")
-	    || starts_with(p, "long")
 	    || starts_with(p, "case")
 	    || starts_with(p, "sizeof"))
 		return NULL;
@@ -889,6 +889,7 @@ var_get(const char *s, type_ty *types)
 				while (xiswhite(*p))
 					++p;
 				for (; *p; ++p, ++len) {
+					/* TODO: handle var x, y; */
 					/* if (*p == ',') { */
 					/* 	llist_insert_tail(&var_node, xmemdupz(p_s, len)); */
 					/* 	while (xiswhite(*p)) */
@@ -1023,12 +1024,13 @@ use_dld:
 			} else {
 				for (llist_ty *n = cal_node->fn_args, *t_n = trie_node->fn_args; n->next && t_n->next; n = n->next, t_n = t_n->next) {
 					if (starts_with(n->value, "_")
-					|| starts_with(n->value, "stdin")
-					|| starts_with(n->value, "stdout")
-					|| starts_with(n->value, "stderr")
-					|| *(n->value + strcspn(n->value, "*&+-=.'\"?:()0123456789")))
+					    || starts_with(n->value, "stdin")
+					    || starts_with(n->value, "stdout")
+					    || starts_with(n->value, "stderr")
+					    || *(n->value + strcspn(n->value, "*&+-=,.'\"?:()0123456789")))
 						continue;
 					type_ty *type_node = var_find(types, n->value);
+					char *p;
 					if (!type_node) {
 						printf("\"%s(", cal_node->fn_name);
 						fn_args_print(cal_node->fn_args);
@@ -1036,9 +1038,22 @@ use_dld:
 						printf(" merupakan sebuah pemanggilan dengan variabel argumen, %s, yang belum dideklarasi.\n", n->value);
 						cal_node->is_typo_syn = 1;
 						cal_node->status = STATUS_SKIP;
-					} else if (strcmp(type_node->value, t_n->value)
+					} else if (!((p = strstr(t_n->value, type_node->value))
+					             && !is_fn_char(*p))
 					           && !((starts_with(type_node->value, "char") || starts_with(type_node->value, "void"))
-					                && (starts_with(type_node->value, "char") || starts_with(type_node->value, "void")))) {
+					                && (starts_with(type_node->value, "char") || starts_with(type_node->value, "void")))
+					           && !((strstr(type_node->value, "short")
+					                 || strstr(type_node->value, "long")
+					                 || strstr(type_node->value, "size_t")
+					                 || strstr(type_node->value, "int")
+					                 || strstr(type_node->value, "double")
+					                 || strstr(type_node->value, "float"))
+					                && (strstr(type_node->value, "short")
+					                    || strstr(type_node->value, "long")
+					                    || strstr(type_node->value, "size_t")
+					                    || strstr(type_node->value, "int")
+					                    || strstr(type_node->value, "double")
+					                    || strstr(type_node->value, "float")))) {
 						printf("\"%s(", cal_node->fn_name);
 						fn_args_print(cal_node->fn_args);
 						printf(")\"");
