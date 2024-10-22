@@ -1022,7 +1022,7 @@ use_dld:
 				}
 			} else {
 				for (llist_ty *n = cal_node->fn_args, *t_n = trie_node->fn_args; n->next && t_n->next; n = n->next, t_n = t_n->next) {
-					if (starts_with(n->value, "__")
+					if (starts_with(n->value, "_")
 					|| starts_with(n->value, "stdin")
 					|| starts_with(n->value, "stdout")
 					|| starts_with(n->value, "stderr")
