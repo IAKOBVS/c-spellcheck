@@ -29,6 +29,14 @@
 #include <unistd.h>
 #include <ctype.h>
 
+#define VERBOSE 0
+
+#if VERBOSE
+#	define V(x) x
+#else
+#	define V(x)
+#endif
+
 #define JTRIE_ASCII_SIZE       (('Z' - 'A') + ('z' - 'a') + ('9' - '0') + '1')
 #define JTRIE_ASCII_IDX_GET(c) get_compressed_idx((unsigned char)c)
 
@@ -70,8 +78,14 @@ typedef struct llist_ty {
 	struct llist_ty *next;
 } llist_ty;
 
+typedef struct var_ty {
+	char *value;
+	struct var_ty *next;
+	int indirection_level;
+} var_ty;
+
 typedef struct type_ty {
-	llist_ty *variables;
+	var_ty *variables;
 	char *value;
 	struct type_ty *next;
 } type_ty;
@@ -87,7 +101,7 @@ typedef struct fnlist_ty {
 	int is_typo;
 	int is_typo_syn;
 	int status;
-	llist_ty *fn_args;
+	var_ty *fn_args;
 	struct fnlist_ty *next;
 } fnlist_ty;
 
@@ -106,11 +120,11 @@ llist_find(llist_ty *head, const char *value)
 }
 
 void
-fn_args_print(llist_ty *fn_args)
+fn_args_print(var_ty *fn_args)
 {
 	if (fn_args->value == NULL)
 		return;
-	for (llist_ty *curr = fn_args; curr->next; curr = curr->next) {
+	for (var_ty *curr = fn_args; curr->next; curr = curr->next) {
 		printf("%s", curr->value);
 		if (curr->next->next)
 			putchar(',');
@@ -118,12 +132,12 @@ fn_args_print(llist_ty *fn_args)
 }
 
 int
-fn_args_count(llist_ty *fn_args)
+fn_args_count(var_ty *fn_args)
 {
 	int i = 0;
 	if (fn_args->value == NULL)
 		return i;
-	for (llist_ty *curr = fn_args; curr->next; curr = curr->next)
+	for (var_ty *curr = fn_args; curr->next; curr = curr->next)
 		++i;
 	return i;
 }
@@ -132,6 +146,46 @@ int
 xiswhite(int c)
 {
 	return c == ' ' || c == '\t' || c == '\n';
+}
+
+char *
+skipwhite(const char *s)
+{
+	while (xiswhite(*s))
+		++s;
+	return (char *)s;
+}
+
+char *
+skipstars(const char *s, int *indirection_level)
+{
+	*indirection_level = 0;
+	while (*s == '*') {
+		++*indirection_level;
+		++s;
+		s = skipwhite(s);
+	}
+	return (char *)s;
+}
+
+int
+count_indirection(const char *s)
+{
+	int indirection = 0;
+	for (; *s; ++s)
+		if (*s == '*')
+			++indirection;
+	return indirection;
+}
+
+int
+count_indirection_len(const char *s, const char *s_e)
+{
+	int indirection = 0;
+	for (; s < s_e; ++s)
+		if (*s == '*')
+			++indirection;
+	return indirection;
 }
 
 static void
@@ -171,7 +225,7 @@ newline:
 					++src;
 					break;
 				case '\0':
-					fprintf(stderr, "Unmatched quotes.\n");
+					fprintf(stderr, "Unmatched quotes error.\n");
 					exit(EXIT_FAILURE);
 				case '\\':
 					++src;
@@ -268,6 +322,16 @@ starts_with(const char *s, const char *with)
 	return !strncmp(s, with, strlen(with));
 }
 
+char *
+skiprestrict(const char *s)
+{
+	if (starts_with(s, "restrict"))
+		s += strlen("restrict");
+	if (starts_with(s, "__restrict"))
+		s += strlen("__restrict");
+	return (char *)s;
+}
+
 static int
 is_fn_char(int c)
 {
@@ -311,6 +375,40 @@ llist_free(llist_ty *node)
 }
 
 void
+var_node_free(var_ty *node)
+{
+	free(node->value);
+	free(node);
+}
+
+var_ty *
+var_alloc()
+{
+	return xcalloc(sizeof(var_ty));
+}
+
+void
+var_free(var_ty *node)
+{
+	if (node) {
+		var_free(node->next);
+		var_node_free(node);
+	}
+}
+
+var_ty *
+var_dup(var_ty *node)
+{
+	var_ty *ret_head = var_alloc();
+	var_ty *ret_node = ret_head;
+	for (; node->next; node = node->next, ret_node = ret_node->next) {
+		ret_node->value = xstrdup(node->value);
+		ret_node->next = var_alloc();
+	}
+	return ret_head;
+}
+
+void
 llist_insert_head(llist_ty **head, char *value)
 {
 	llist_ty *old_head = *head;
@@ -325,6 +423,14 @@ llist_insert_tail(llist_ty **tail, char *value)
 	(*tail)->value = value;
 	(*tail)->next = llist_alloc();
 	llist_next(*tail);
+}
+
+void
+var_insert_tail(var_ty **tail, char *value)
+{
+	(*tail)->value = value;
+	(*tail)->next = var_alloc();
+	*tail = (*tail)->next;
 }
 
 void
@@ -349,7 +455,7 @@ llist_delete(llist_ty **head, llist_ty *target)
 void
 type_node_free(type_ty *node)
 {
-	llist_free(node->variables);
+	var_free(node->variables);
 	free(node->value);
 	free(node);
 }
@@ -373,18 +479,29 @@ void
 type_insert_tail(type_ty **tail, char *value)
 {
 	(*tail)->value = value;
-	(*tail)->variables = llist_alloc();
+	(*tail)->variables = var_alloc();
 	(*tail)->next = type_alloc();
 	*tail = (*tail)->next;
 }
 
 type_ty *
-var_find(type_ty *head, const char *variable)
+type_find(type_ty *head, const char *type)
 {
 	for (type_ty *type_node = head; type_node->next; type_node = type_node->next)
-		for (llist_ty *var_node = type_node->variables; var_node->next; var_node = var_node->next)
-			if (!strcmp(variable, var_node->value))
-				return type_node;
+		if (!strcmp(type, type_node->value))
+			return type_node;
+	return NULL;
+}
+
+var_ty *
+var_find(type_ty *head, const char *variable, type_ty **type_ptr)
+{
+	for (type_ty *type_node = head; type_node->next; type_node = type_node->next)
+		for (var_ty *var_node = type_node->variables; var_node->next; var_node = var_node->next)
+			if (!strcmp(variable, var_node->value)) {
+				*type_ptr = type_node;
+				return var_node;
+			}
 	return NULL;
 }
 
@@ -402,7 +519,7 @@ fnlist_node_free(fnlist_ty *node)
 	free(node->fn_name);
 	free(node->similar_fn_name);
 	free(node->found_at);
-	llist_free(node->fn_args);
+	var_free(node->fn_args);
 	free(node);
 }
 
@@ -416,7 +533,7 @@ fnlist_free(fnlist_ty *node)
 }
 
 void
-fnlist_insert_head(fnlist_ty **head, char *fn_name, llist_ty *fn_args, int fn_id)
+fnlist_insert_head(fnlist_ty **head, char *fn_name, var_ty *fn_args, int fn_id)
 {
 	fnlist_ty *old_head = *head;
 	*head = xmalloc(sizeof(fnlist_ty));
@@ -427,7 +544,7 @@ fnlist_insert_head(fnlist_ty **head, char *fn_name, llist_ty *fn_args, int fn_id
 }
 
 void
-fnlist_insert_tail(fnlist_ty **tail, char *fn_name, llist_ty *fn_args, int fn_id)
+fnlist_insert_tail(fnlist_ty **tail, char *fn_name, var_ty *fn_args, int fn_id)
 {
 	(*tail)->fn_name = fn_name;
 	(*tail)->fn_args = fn_args;
@@ -460,8 +577,6 @@ fn_start(const char *start, const char *paren, const char **fn_end)
 {
 	const char *p = paren;
 	while (--p >= start && xiswhite(*p)) {}
-	/* if (*p == ')') */
-	/* 	while (--p >= start && xiswhite(*p)) {} */
 	*fn_end = p + 1;
 	for (; p >= start && is_fn_char(*p); --p) {}
 	++p;
@@ -526,14 +641,14 @@ paren_end(const char *paren_s, const char *paren_e, char c_s, char c_e)
 	return (char *)p;
 }
 
-llist_ty *
+var_ty *
 fn_args_get(const char *paren_s, const char *paren_e)
 {
 	const char *p = paren_s;
 	const char *arg_s = p + 1;
 	const char *arg_e;
-	llist_ty *arg_head = llist_alloc();
-	llist_ty *arg_node = arg_head;
+	var_ty *arg_head = var_alloc();
+	var_ty *arg_node = arg_head;
 	for (; ++p <= paren_e;) {
 		switch (*p) {
 		case '\0':
@@ -544,14 +659,12 @@ paren_error:
 			break;
 		case '(':
 			p = paren_end(p, paren_e, '(', ')');
-			assert(p);
 			if (p == NULL)
 				goto paren_error;
 			break;
 		case ')':
 		case ',':
-			for (; xiswhite(*arg_s); ++arg_s)
-				;
+			arg_s = skipwhite(arg_s);
 			arg_e = p;
 			if (arg_s < arg_e && xiswhite(*(arg_e - 1))) {
 				--arg_e;
@@ -559,7 +672,8 @@ paren_error:
 					;
 				++arg_e;
 			}
-			llist_insert_tail(&arg_node, xmemdupz(arg_s, (size_t)(arg_e - arg_s)));
+			arg_node->indirection_level = count_indirection_len(arg_s, arg_e);
+			var_insert_tail(&arg_node, xmemdupz(arg_s, (size_t)(arg_e - arg_s)));
 			arg_s = p + 1;
 			break;
 		}
@@ -581,8 +695,7 @@ fn_get(const char *s, const char **next, fn_mode_ty *fn_mode, fnlist_ty *node_ds
 		if (!paren_e)
 			break;
 		const char *tmp = paren_e + 1;
-		for (; *tmp && xiswhite(*tmp); ++tmp)
-			;
+		tmp = skipwhite(tmp);
 		if (*tmp == '(') {
 			p = tmp;
 			continue;
@@ -595,7 +708,7 @@ fn_get(const char *s, const char **next, fn_mode_ty *fn_mode, fnlist_ty *node_ds
 			node_dst->fn_args = fn_args_get(paren, paren_e);
 			/* For declared functions, remove the parameter name. */
 			if (*fn_mode == FN_DECLARED) {
-				for (llist_ty *node = node_dst->fn_args; node->next; node = node->next) {
+				for (var_ty *node = node_dst->fn_args; node->next; node = node->next) {
 					char *ptr = node->value + strlen(node->value) - 1;
 					for (; ptr > node->value; --ptr) {
 						if (!is_fn_char(*ptr)) {
@@ -655,7 +768,7 @@ cvt_buffer_to_nodes(fnlist_ty *decl_head, fnlist_ty *cal_head, jtrie_ty *trie_he
 		} else {
 next:
 			free(node_dst.fn_name);
-			llist_free(node_dst.fn_args);
+			var_free(node_dst.fn_args);
 		}
 	}
 }
@@ -798,18 +911,23 @@ file_preprocess_free(char *file)
 	file_free(file);
 }
 
+char *
+find_keyword(const char *hs, const char *ne)
+{
+	const char *p = strstr(hs, ne);
+	if (p && !is_fn_char(*(p + strlen(ne))))
+		if (p == hs || !is_fn_char(*(p - 1)))
+			return (char *)p;
+	return NULL;
+}
+
 type_ty *
 type_get(const char *s)
 {
 	type_ty *head = type_alloc();
 	type_ty *node = head;
 	type_insert_tail(&node, xstrdup("void"));
-	type_insert_tail(&node, xstrdup("void *"));
-	type_insert_tail(&node, xstrdup("void*"));
 	type_insert_tail(&node, xstrdup("char"));
-	type_insert_tail(&node, xstrdup("char *"));
-	type_insert_tail(&node, xstrdup("char*"));
-	type_insert_tail(&node, xstrdup("char*"));
 	type_insert_tail(&node, xstrdup("int"));
 	type_insert_tail(&node, xstrdup("short"));
 	type_insert_tail(&node, xstrdup("long"));
@@ -819,7 +937,7 @@ type_get(const char *s)
 	const char *array[] = { "typedef", "struct", "enum", "union", NULL };
 	for (int i = 0; array[i] != NULL; ++i) {
 		s = s_s;
-		for (; (s = strstr(s, array[i])); ++s) {
+		for (; (s = find_keyword(s, array[i])); ++s) {
 			if (!strcmp("typedef", array[i])) {
 				s += strlen("typedef");
 			} else {
@@ -828,8 +946,7 @@ type_get(const char *s)
 				for (; p > s_s && xiswhite(*p); --p) {}
 				if (p - s_s >= strlen("typedef") && starts_with(p - strlen("typedef"), "typedef"))
 					continue;
-				while (xiswhite(*s))
-					++s;
+				s = skipwhite(s);
 				const char *type_s = s;
 				size_t len = 0;
 				while (is_fn_char(*s)) {
@@ -839,16 +956,14 @@ type_get(const char *s)
 				if (len)
 					type_insert_tail(&node, xmemdupz(type_s, len));
 			}
-			while (xiswhite(*s))
-				++s;
+			s = skipwhite(s);
 			if (starts_with(s, "struct"))
 				s += strlen("struct");
 			else if (starts_with(s, "enum"))
 				s += strlen("enum");
 			else if (starts_with(s, "union"))
 				s += strlen("union");
-			while (xiswhite(*s))
-				++s;
+			s = skipwhite(s);
 			if (*s == '{') {
 				s = paren_end(s, s + strlen(s), '{', '}');
 				assert(s);
@@ -871,43 +986,121 @@ type_get(const char *s)
 	return head;
 }
 
+char *
+skipsquarebrackets(const char *s, int *indirection_level)
+{
+	while (*s == '[') {
+		while (*s && *s != ']')
+			++s;
+		++*indirection_level;
+		if (*s != ']') {
+			fprintf(stderr, "Unmatched square brackets error.\n");
+			exit(EXIT_FAILURE);
+		}
+		++s;
+	}
+	return (char *)s;
+}
+
 void
 var_get(const char *s, type_ty *types)
 {
 	const char *p = s;
-	llist_ty *var_node;
+	var_ty *var_node;
 	for (type_ty *n = types; n->next; n = n->next) {
 		var_node = n->variables;
 		p = s;
 		for (; (p = strstr(p, n->value)); ++p) {
+			if (p != s)
+				if (is_fn_char(*(p - 1)))
+					continue;
+			if (!xiswhite(*(p + strlen(n->value))))
+				continue;
 			p += strlen(n->value);
-			while (xiswhite(*p))
-				++p;
+			if (!xiswhite(*p))
+				continue;
+			int indirection_level;
+			p = skipwhite(p);
+			p = skipstars(p, &indirection_level);
+			p = skipwhite(p);
+			p = skiprestrict(p);
+			p = skipwhite(p);
 			if (*p != '{') {
 				size_t len = 0;
 				const char *p_s = p;
-				while (xiswhite(*p))
-					++p;
+				p = skipwhite(p);
 				for (; *p; ++p, ++len) {
-					/* TODO: handle var x, y; */
-					/* if (*p == ',') { */
-					/* 	llist_insert_tail(&var_node, xmemdupz(p_s, len)); */
-					/* 	while (xiswhite(*p)) */
-					/* 		++p; */
-					/* 	len = 0; */
-					/* 	p_s = p; */
-					/* } */
 					if (len) {
-						while (xiswhite(*p))
-							++p;
+						p = skipwhite(p);
 					}
 					if (*p == ';' || *p == '=' || *p == '[' || *p == ')' || *p == '(' || *p == ',') {
-						llist_insert_tail(&var_node, xmemdupz(p_s, len));
+						p = skipsquarebrackets(p, &indirection_level);
+						var_node->indirection_level = indirection_level;
+						var_insert_tail(&var_node, xmemdupz(p_s, len));
+						if (*p == ',') {
+							++p;
+							p = skipwhite(p);
+							p = skipstars(p, &indirection_level);
+							p = skipwhite(p);
+							p = skiprestrict(p);
+							p = skipwhite(p);
+							p_s = p;
+							while (is_fn_char(*p))
+								++p;
+							char *v = xmemdupz(p_s, (size_t)(p - p_s));
+							if (!type_find(types, v)) {
+								p = skipwhite(p);
+								p = skipsquarebrackets(p, &indirection_level);
+								var_node->indirection_level = indirection_level;
+								var_insert_tail(&var_node, v);
+								p = skipwhite(p);
+								while (*p == ',') {
+									++p;
+									p = skipwhite(p);
+									p = skipstars(p, &indirection_level);
+									p = skipwhite(p);
+									p = skiprestrict(p);
+									p = skipwhite(p);
+									p_s = p;
+									while (is_fn_char(*p))
+										++p;
+									p = skipwhite(p);
+									len = (size_t)(p - p_s);
+									p = skipsquarebrackets(p, &indirection_level);
+									var_node->indirection_level = indirection_level;
+									var_insert_tail(&var_node, xmemdupz(p_s, len));
+									p = skipwhite(p);
+								}
+							} else {
+								free(v);
+							}
+						while (*p == '[') {
+							while (*p && *p != ']')
+								++p;
+							++indirection_level;
+							if (*p != ']') {
+								fprintf(stderr, "Unmatched square brackets error.\n");
+								exit(EXIT_FAILURE);
+							}
+							++p;
+						}
+						}
 						break;
 					}
 				}
 			}
 		}
+	}
+}
+
+void
+var_print(type_ty *types)
+{
+	for (type_ty *node = types; node->next; node = node->next) {
+		printf("type:%s\n", node->value);
+		puts("vars:");
+		for (var_ty *n = node->variables; n->next; n = n->next)
+			puts(n->value);
 	}
 }
 
@@ -1000,76 +1193,80 @@ use_dld:
 			} else if (first_pass) {
 				/* Add called functions whose declaration we can not find in the current file. */
 				notfound_node->lev = INT_MAX;
-				fnlist_insert_tail(&notfound_node, xstrdup(cal_node->fn_name), llist_dup(cal_node->fn_args), cal_node->fn_id);
+				fnlist_insert_tail(&notfound_node, xstrdup(cal_node->fn_name), var_dup(cal_node->fn_args), cal_node->fn_id);
 			}
 			free(tmp);
 		} else {
-			if (fn_args_count(cal_node->fn_args) != fn_args_count(trie_node->fn_args)) {
+			if (first_pass) {
+				int cal_argc = fn_args_count(cal_node->fn_args);
+				int decl_argc = fn_args_count(trie_node->fn_args);
 				int is_variadic = 0;
-				for (llist_ty *node = trie_node->fn_args; node->next; node = node->next) {
+				for (var_ty *node = trie_node->fn_args; node->next; node = node->next) {
 					/* variadic function */
 					if (node->value && *(node->value) == '.')
 						is_variadic = 1;
 				}
 				if (!is_variadic) {
-					printf("\"%s(", cal_node->fn_name);
-					fn_args_print(cal_node->fn_args);
-					printf(")\"");
-					printf(" merupakan sebuah pemanggilan dengan jumlah argumen yang tidak sesuai dengan deklarasinya, \"%s(", cal_node->fn_name);
-					fn_args_print(trie_node->fn_args);
-					printf(")\".\n");
-					cal_node->is_typo_syn = 1;
-					cal_node->status = STATUS_SKIP;
-				}
-			} else {
-				for (llist_ty *n = cal_node->fn_args, *t_n = trie_node->fn_args; n->next && t_n->next; n = n->next, t_n = t_n->next) {
-					if (starts_with(n->value, "_")
-					    || starts_with(n->value, "stdin")
-					    || starts_with(n->value, "stdout")
-					    || starts_with(n->value, "stderr")
-					    || *(n->value + strcspn(n->value, "*&+-=,.'\"?:()0123456789")))
-						continue;
-					type_ty *type_node = var_find(types, n->value);
-					char *p;
-					if (!type_node) {
+					if (cal_argc != decl_argc) {
 						printf("\"%s(", cal_node->fn_name);
 						fn_args_print(cal_node->fn_args);
 						printf(")\"");
-						printf(" merupakan sebuah pemanggilan dengan variabel argumen, %s, yang belum dideklarasi.\n", n->value);
+						printf(" merupakan sebuah pemanggilan fungsi dengan jumlah argumen yang tidak sesuai dengan jumlah parameternya, \"%s(", cal_node->fn_name);
+						fn_args_print(trie_node->fn_args);
+						printf(")\".\n");
 						cal_node->is_typo_syn = 1;
 						cal_node->status = STATUS_SKIP;
-					} else if (!((p = strstr(t_n->value, type_node->value))
-					             && !is_fn_char(*p))
-					           && !((starts_with(type_node->value, "char") || starts_with(type_node->value, "void"))
-					                && (starts_with(type_node->value, "char") || starts_with(type_node->value, "void")))
-					           && !((strstr(type_node->value, "short")
-					                 || strstr(type_node->value, "long")
-					                 || strstr(type_node->value, "size_t")
-					                 || strstr(type_node->value, "int")
-					                 || strstr(type_node->value, "double")
-					                 || strstr(type_node->value, "float"))
-					                && (strstr(type_node->value, "short")
-					                    || strstr(type_node->value, "long")
-					                    || strstr(type_node->value, "size_t")
-					                    || strstr(type_node->value, "int")
-					                    || strstr(type_node->value, "double")
-					                    || strstr(type_node->value, "float")))) {
-						printf("\"%s(", cal_node->fn_name);
-						fn_args_print(cal_node->fn_args);
-						printf(")\"");
-						printf(" merupakan sebuah pemanggilan dengan variabel argumen, %s, dengan tipe argumen yang salah (%s, seharusnya %s).\n", n->value, type_node->value, t_n->value);
-						cal_node->is_typo_syn = 1;
-						cal_node->status = STATUS_SKIP;
+					} else if (!((*(trie_node->fn_args->value) == '\0' || !strcmp("void", trie_node->fn_args->value))
+					             && *(cal_node->fn_args->value) == '\0')) {
+						for (var_ty *c_n = cal_node->fn_args, *t_n = trie_node->fn_args; c_n->next && t_n->next; c_n = c_n->next, t_n = t_n->next) {
+							if (starts_with(c_n->value, "_")
+							    || !strcmp(c_n->value, "stdin")
+							    || !strcmp(c_n->value, "stdout")
+							    || !strcmp(c_n->value, "stderr")
+							    || *(c_n->value + strcspn(c_n->value, "*&+-=,.'\"?:()0123456789")))
+								continue;
+							type_ty *type_node;
+							var_ty *var_node = var_find(types, c_n->value, &type_node);
+							if (!var_node) {
+								printf("\"%s(", cal_node->fn_name);
+								fn_args_print(cal_node->fn_args);
+								printf(")\"");
+								printf(" merupakan sebuah pemanggilan fungsi dengan variabel argumen, \"%s\", yang belum dideklarasi.\n", c_n->value);
+								cal_node->is_typo_syn = 1;
+								cal_node->status = STATUS_SKIP;
+							} else if ((!find_keyword(t_n->value, type_node->value)
+							            && !((find_keyword(type_node->value, "char") || find_keyword(type_node->value, "void"))
+							                 && (find_keyword(t_n->value, "char") || find_keyword(t_n->value, "void")))
+							            && !((find_keyword(type_node->value, "short")
+							                  || find_keyword(type_node->value, "long")
+							                  || find_keyword(type_node->value, "size_t")
+							                  || find_keyword(type_node->value, "int")
+							                  || find_keyword(type_node->value, "double")
+							                  || find_keyword(type_node->value, "float"))
+							                 && (find_keyword(t_n->value, "short")
+							                     || find_keyword(t_n->value, "long")
+							                     || find_keyword(t_n->value, "size_t")
+							                     || find_keyword(t_n->value, "int")
+							                     || find_keyword(t_n->value, "double")
+							                     || find_keyword(t_n->value, "float"))))
+							           || var_node->indirection_level != t_n->indirection_level) {
+								printf("\"%s(", cal_node->fn_name);
+								fn_args_print(cal_node->fn_args);
+								printf(")\"");
+								printf(" merupakan sebuah pemanggilan fungsi dengan variabel argumen, \"%s\", dengan tipe argumen yang salah (%s", c_n->value, type_node->value);
+								for (int i = 0; i < var_node->indirection_level; ++i)
+									putchar('*');
+								printf(", seharusnya %s).\n", t_n->value);
+								cal_node->is_typo_syn = 1;
+								cal_node->status = STATUS_SKIP;
+							}
+						}
 					}
 				}
-			}
-			if (!first_pass) {
+			} else {
 				printf("\"%s\" merupakan sebuah fungsi yang belum dideklarasi. Apakah dimaksudkan untuk meng-include header \"%s\"?\n", cal_node->fn_name, fname);
 				/* Mark called functions we found from the linked list */
 				cal_node->status = STATUS_SKIP;
-			} else {
-				/* if (cal_node->fn_id < trie_node->id) */
-				/* 	printf("\"%s\" dipanggil sebelum didefinisikan.\n", cal_node->fn_name); */
 			}
 		}
 	}
@@ -1078,7 +1275,7 @@ use_dld:
 	int cnt = 0;
 	/* Remove notfound functions from the trie so they will not be skipped in the second pass. */
 	for (notfound_node = notfound_head; notfound_node->next; fnlist_next(notfound_node), ++cnt)
-		if (notfound_node->status != 1)
+		if (notfound_node->status == STATUS_NOSKIP)
 			++cnt;
 	/* Check if the list of notfound functions is empty. */
 	return cnt;
@@ -1149,13 +1346,7 @@ autosuggest(const char *fname)
 	}
 	types = type_get(file);
 	var_get(file, types);
-	/* for (type_ty *t = types; t->next; t = t->next) { */
-	/* 	puts("type:"); */
-	/* 	puts(t->value); */
-	/* 	puts("vars:"); */
-	/* 	for (llist_ty *v = t->variables; v->next; v = v->next) */
-	/* 		puts(v->value); */
-	/* } */
+	V(var_print(types));
 	int ret = do_autosuggest(&cal_head, decl_head, notfound_head, trie_head, file, fname, 1);
 	file_preprocess_free(file);
 	if (ret) {
@@ -1209,10 +1400,12 @@ autosuggest(const char *fname)
 		}
 	}
 	for (fnlist_ty *node = notfound_head; node->next; fnlist_next(node)) {
-		if (node->lev == INT_MAX)
-			fprintf(stderr, "\"%s\" merupakan sebuah fungsi yang belum dideklarasi.\n", node->fn_name);
-		else
-			fprintf(stderr, "\"%s\" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah \"%s\" yang didefinisikan pada \"%s\"?\n", node->fn_name, node->similar_fn_name, node->found_at);
+		if (node->status == STATUS_NOSKIP) {
+			if (node->lev == INT_MAX)
+				fprintf(stderr, "\"%s\" merupakan sebuah fungsi yang belum dideklarasi.\n", node->fn_name);
+			else
+				fprintf(stderr, "\"%s\" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah \"%s\" yang didefinisikan pada \"%s\"?\n", node->fn_name, node->similar_fn_name, node->found_at);
+		}
 	}
 	if (filename_target) {
 		confusion_matrix_ty confusion_matrix;
@@ -1225,6 +1418,7 @@ autosuggest(const char *fname)
 		printf("ACC: %f\n", acc);
 		(void)acc;
 	}
+	var_print(types);
 	type_free(types);
 	free(file_target);
 	jtrie_free(&trie_head);
