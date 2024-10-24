@@ -25,6 +25,8 @@ main(int argc, char **argv)
 			algo = ALGO_TRIE;
 		else if (!strcmp("--gabungan", argv[i]))
 			algo = ALGO_GABUNGAN;
+		else if (!strcmp("-v", argv[i]))
+			VERBOSE = 1;
 		else
 			filename_target = argv[i];
 	autosuggest(argv[1]);

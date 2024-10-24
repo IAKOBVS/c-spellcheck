@@ -29,13 +29,9 @@
 #include <unistd.h>
 #include <ctype.h>
 
-#define VERBOSE 0
+int VERBOSE;
 
-#if VERBOSE
-#	define V(x) x
-#else
-#	define V(x)
-#endif
+#define V(x) ((VERBOSE) ? x : (void)0)
 
 #define JTRIE_ASCII_SIZE       (('Z' - 'A') + ('z' - 'a') + ('9' - '0') + '1')
 #define JTRIE_ASCII_IDX_GET(c) get_compressed_idx((unsigned char)c)
@@ -327,6 +323,7 @@ skiprestrict(const char *s)
 {
 	if (starts_with(s, "restrict"))
 		s += strlen("restrict");
+	s = skipwhite(s);
 	if (starts_with(s, "__restrict"))
 		s += strlen("__restrict");
 	return (char *)s;
@@ -641,6 +638,28 @@ paren_end(const char *paren_s, const char *paren_e, char c_s, char c_e)
 	return (char *)p;
 }
 
+char *
+skipbracketsorequal(const char *s, int *indirection_level)
+{
+	while (*s == '[') {
+		while (*s && *s != ']')
+			++s;
+		++*indirection_level;
+		if (*s != ']') {
+			fprintf(stderr, "Unmatched square brackets error.\n");
+			exit(EXIT_FAILURE);
+		}
+		++s;
+	}
+	s = skipwhite(s);
+	if (*s == '=') {
+		++s;
+		while (*s && *s != ';' && *s != ',')
+			++s;
+	}
+	return (char *)s;
+}
+
 var_ty *
 fn_args_get(const char *paren_s, const char *paren_e)
 {
@@ -672,7 +691,13 @@ paren_error:
 					;
 				++arg_e;
 			}
-			arg_node->indirection_level = count_indirection_len(arg_s, arg_e);
+			const char *tmp = memchr(arg_s, '[', (size_t)(arg_e - arg_s));
+			int indirection_level = 0;
+			if (tmp) {
+				arg_e = tmp;
+				tmp = skipbracketsorequal(tmp, &indirection_level);
+			}
+			arg_node->indirection_level = indirection_level + count_indirection_len(arg_s, arg_e);
 			var_insert_tail(&arg_node, xmemdupz(arg_s, (size_t)(arg_e - arg_s)));
 			arg_s = p + 1;
 			break;
@@ -941,8 +966,8 @@ type_get(const char *s)
 			if (!strcmp("typedef", array[i])) {
 				s += strlen("typedef");
 			} else {
-				s += strlen(array[i]);
 				const char *p = s;
+				s += strlen(array[i]);
 				for (; p > s_s && xiswhite(*p); --p) {}
 				if (p - s_s >= strlen("typedef") && starts_with(p - strlen("typedef"), "typedef"))
 					continue;
@@ -955,6 +980,7 @@ type_get(const char *s)
 				}
 				if (len)
 					type_insert_tail(&node, xmemdupz(type_s, len));
+				continue;
 			}
 			s = skipwhite(s);
 			if (starts_with(s, "struct"))
@@ -984,22 +1010,6 @@ type_get(const char *s)
 		}
 	}
 	return head;
-}
-
-char *
-skipsquarebrackets(const char *s, int *indirection_level)
-{
-	while (*s == '[') {
-		while (*s && *s != ']')
-			++s;
-		++*indirection_level;
-		if (*s != ']') {
-			fprintf(stderr, "Unmatched square brackets error.\n");
-			exit(EXIT_FAILURE);
-		}
-		++s;
-	}
-	return (char *)s;
 }
 
 void
@@ -1034,7 +1044,7 @@ var_get(const char *s, type_ty *types)
 						p = skipwhite(p);
 					}
 					if (*p == ';' || *p == '=' || *p == '[' || *p == ')' || *p == '(' || *p == ',') {
-						p = skipsquarebrackets(p, &indirection_level);
+						p = skipbracketsorequal(p, &indirection_level);
 						var_node->indirection_level = indirection_level;
 						var_insert_tail(&var_node, xmemdupz(p_s, len));
 						if (*p == ',') {
@@ -1050,7 +1060,7 @@ var_get(const char *s, type_ty *types)
 							char *v = xmemdupz(p_s, (size_t)(p - p_s));
 							if (!type_find(types, v)) {
 								p = skipwhite(p);
-								p = skipsquarebrackets(p, &indirection_level);
+								p = skipbracketsorequal(p, &indirection_level);
 								var_node->indirection_level = indirection_level;
 								var_insert_tail(&var_node, v);
 								p = skipwhite(p);
@@ -1064,9 +1074,9 @@ var_get(const char *s, type_ty *types)
 									p_s = p;
 									while (is_fn_char(*p))
 										++p;
-									p = skipwhite(p);
 									len = (size_t)(p - p_s);
-									p = skipsquarebrackets(p, &indirection_level);
+									p = skipwhite(p);
+									p = skipbracketsorequal(p, &indirection_level);
 									var_node->indirection_level = indirection_level;
 									var_insert_tail(&var_node, xmemdupz(p_s, len));
 									p = skipwhite(p);
@@ -1074,16 +1084,16 @@ var_get(const char *s, type_ty *types)
 							} else {
 								free(v);
 							}
-						while (*p == '[') {
-							while (*p && *p != ']')
+							while (*p == '[') {
+								while (*p && *p != ']')
+									++p;
+								++indirection_level;
+								if (*p != ']') {
+									fprintf(stderr, "Unmatched square brackets error.\n");
+									exit(EXIT_FAILURE);
+								}
 								++p;
-							++indirection_level;
-							if (*p != ']') {
-								fprintf(stderr, "Unmatched square brackets error.\n");
-								exit(EXIT_FAILURE);
 							}
-							++p;
-						}
 						}
 						break;
 					}
@@ -1100,7 +1110,7 @@ var_print(type_ty *types)
 		printf("type:%s\n", node->value);
 		puts("vars:");
 		for (var_ty *n = node->variables; n->next; n = n->next)
-			puts(n->value);
+			printf("%s.\n", n->value);
 	}
 }
 
@@ -1248,7 +1258,8 @@ use_dld:
 							                     || find_keyword(t_n->value, "size_t")
 							                     || find_keyword(t_n->value, "int")
 							                     || find_keyword(t_n->value, "double")
-							                     || find_keyword(t_n->value, "float"))))
+							                     || find_keyword(t_n->value, "float")))
+							            && !(find_keyword(t_n->value, "void")))
 							           || var_node->indirection_level != t_n->indirection_level) {
 								printf("\"%s(", cal_node->fn_name);
 								fn_args_print(cal_node->fn_args);
@@ -1346,7 +1357,6 @@ autosuggest(const char *fname)
 	}
 	types = type_get(file);
 	var_get(file, types);
-	V(var_print(types));
 	int ret = do_autosuggest(&cal_head, decl_head, notfound_head, trie_head, file, fname, 1);
 	file_preprocess_free(file);
 	if (ret) {
@@ -1418,7 +1428,7 @@ autosuggest(const char *fname)
 		printf("ACC: %f\n", acc);
 		(void)acc;
 	}
-	var_print(types);
+	V(var_print(types));
 	type_free(types);
 	free(file_target);
 	jtrie_free(&trie_head);
