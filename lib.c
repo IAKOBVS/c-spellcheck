@@ -1084,16 +1084,6 @@ var_get(const char *s, type_ty *types)
 							} else {
 								free(v);
 							}
-							while (*p == '[') {
-								while (*p && *p != ']')
-									++p;
-								++indirection_level;
-								if (*p != ']') {
-									fprintf(stderr, "Unmatched square brackets error.\n");
-									exit(EXIT_FAILURE);
-								}
-								++p;
-							}
 						}
 						break;
 					}
