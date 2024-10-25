@@ -152,15 +152,32 @@ skipwhite(const char *s)
 	return (char *)s;
 }
 
+static int
+starts_with(const char *s, const char *with)
+{
+	return !strncmp(s, with, strlen(with));
+}
+
+char *
+skipkeyword(const char *s, const char *w)
+{
+	if (starts_with(s, w))
+		s += strlen(w);
+	s = skipwhite(s);
+	return (char *)s;
+}
+
 char *
 skipstars(const char *s, int *indirection_level)
 {
 	*indirection_level = 0;
+	s = skipkeyword(s, "const");
 	while (*s == '*') {
 		++*indirection_level;
 		++s;
 		s = skipwhite(s);
 	}
+	s = skipkeyword(s, "const");
 	return (char *)s;
 }
 
@@ -310,12 +327,6 @@ void
 file_free(char *s)
 {
 	free(s);
-}
-
-static int
-starts_with(const char *s, const char *with)
-{
-	return !strncmp(s, with, strlen(with));
 }
 
 char *
@@ -698,6 +709,8 @@ paren_error:
 				tmp = skipbracketsorequal(tmp, &indirection_level);
 			}
 			arg_node->indirection_level = indirection_level + count_indirection_len(arg_s, arg_e);
+			arg_s = skipkeyword(arg_s, "unsigned");
+			arg_s = skipkeyword(arg_s, "signed");
 			var_insert_tail(&arg_node, xmemdupz(arg_s, (size_t)(arg_e - arg_s)));
 			arg_s = p + 1;
 			break;
@@ -946,6 +959,14 @@ find_keyword(const char *hs, const char *ne)
 	return NULL;
 }
 
+void
+puts_dup(const char *s, size_t len)
+{
+	char *p;
+	puts(p = xmemdupz(s, len));
+	free(p);
+}
+
 type_ty *
 type_get(const char *s)
 {
@@ -998,10 +1019,15 @@ type_get(const char *s)
 			const char *p = strchr(s, ';');
 			if (p && p > s) {
 				--p;
-				for (; p > s && xiswhite(*p); --p) {}
+				for (; p > s && (xiswhite(*p)); --p) {}
+				if (*p == ']') {
+					for (; p > s && (*p != '['); --p) {}
+					assert(*p == '[');
+					--p;
+				}
 				const char *p_s = p;
 				size_t len = 0;
-				for (; p_s > s && is_fn_char(*p_s); --p_s, ++len) {}
+				for (; p_s > s && (is_fn_char(*p_s)); --p_s, ++len) {}
 				if (!is_fn_char(*p_s))
 					++p_s;
 				if (len)
@@ -1021,33 +1047,49 @@ var_get(const char *s, type_ty *types)
 		var_node = n->variables;
 		p = s;
 		for (; (p = strstr(p, n->value)); ++p) {
+			const char *p_prev = p;
 			if (p != s)
 				if (is_fn_char(*(p - 1)))
 					continue;
 			if (!xiswhite(*(p + strlen(n->value))))
 				continue;
 			p += strlen(n->value);
-			if (!xiswhite(*p))
-				continue;
 			int indirection_level;
 			p = skipwhite(p);
 			p = skipstars(p, &indirection_level);
 			p = skipwhite(p);
 			p = skiprestrict(p);
 			p = skipwhite(p);
-			if (*p != '{') {
-				size_t len = 0;
-				const char *p_s = p;
-				p = skipwhite(p);
-				for (; *p; ++p, ++len) {
-					if (len) {
+			size_t len = 0;
+			const char *p_s = p;
+			while (is_fn_char(*p))
+				++p;
+			len = (size_t)(p - p_s);
+			p = skipwhite(p);
+			if (len && (*p == ';' || *p == '=' || *p == '[' || *p == ')' || *p == '(' || *p == ',') && !starts_with(p_s, "const")) {
+				p = skipbracketsorequal(p, &indirection_level);
+				var_node->indirection_level = indirection_level;
+				var_insert_tail(&var_node, xmemdupz(p_s, len));
+				if (*p == ',') {
+					++p;
+					p = skipwhite(p);
+					p = skipstars(p, &indirection_level);
+					p = skipwhite(p);
+					p = skiprestrict(p);
+					p = skipwhite(p);
+					p_s = p;
+					while (is_fn_char(*p))
+						++p;
+					char *v = xmemdupz(p_s, (size_t)(p - p_s));
+					V(puts(v));
+					V(puts(n->value));
+					if (!type_find(types, v)) {
 						p = skipwhite(p);
-					}
-					if (*p == ';' || *p == '=' || *p == '[' || *p == ')' || *p == '(' || *p == ',') {
 						p = skipbracketsorequal(p, &indirection_level);
 						var_node->indirection_level = indirection_level;
-						var_insert_tail(&var_node, xmemdupz(p_s, len));
-						if (*p == ',') {
+						var_insert_tail(&var_node, v);
+						p = skipwhite(p);
+						while (*p == ',') {
 							++p;
 							p = skipwhite(p);
 							p = skipstars(p, &indirection_level);
@@ -1057,35 +1099,16 @@ var_get(const char *s, type_ty *types)
 							p_s = p;
 							while (is_fn_char(*p))
 								++p;
-							char *v = xmemdupz(p_s, (size_t)(p - p_s));
-							if (!type_find(types, v)) {
-								p = skipwhite(p);
-								p = skipbracketsorequal(p, &indirection_level);
-								var_node->indirection_level = indirection_level;
-								var_insert_tail(&var_node, v);
-								p = skipwhite(p);
-								while (*p == ',') {
-									++p;
-									p = skipwhite(p);
-									p = skipstars(p, &indirection_level);
-									p = skipwhite(p);
-									p = skiprestrict(p);
-									p = skipwhite(p);
-									p_s = p;
-									while (is_fn_char(*p))
-										++p;
-									len = (size_t)(p - p_s);
-									p = skipwhite(p);
-									p = skipbracketsorequal(p, &indirection_level);
-									var_node->indirection_level = indirection_level;
-									var_insert_tail(&var_node, xmemdupz(p_s, len));
-									p = skipwhite(p);
-								}
-							} else {
-								free(v);
-							}
+							len = (size_t)(p - p_s);
+							p = skipwhite(p);
+							p = skipbracketsorequal(p, &indirection_level);
+							var_node->indirection_level = indirection_level;
+							var_insert_tail(&var_node, xmemdupz(p_s, len));
+							p = skipwhite(p);
 						}
-						break;
+					} else {
+						p = p_prev;
+						free(v);
 					}
 				}
 			}
@@ -1223,7 +1246,7 @@ use_dld:
 							    || !strcmp(c_n->value, "stdin")
 							    || !strcmp(c_n->value, "stdout")
 							    || !strcmp(c_n->value, "stderr")
-							    || *(c_n->value + strcspn(c_n->value, "*&+-=,.'\"?:()0123456789")))
+							    || *(c_n->value + strcspn(c_n->value, "*&+-=,.'\"?:()[]0123456789")))
 								continue;
 							type_ty *type_node;
 							var_ty *var_node = var_find(types, c_n->value, &type_node);
@@ -1234,32 +1257,41 @@ use_dld:
 								printf(" merupakan sebuah pemanggilan fungsi dengan variabel argumen, \"%s\", yang belum dideklarasi.\n", c_n->value);
 								cal_node->is_typo_syn = 1;
 								cal_node->status = STATUS_SKIP;
-							} else if ((!find_keyword(t_n->value, type_node->value)
-							            && !((find_keyword(type_node->value, "char") || find_keyword(type_node->value, "void"))
-							                 && (find_keyword(t_n->value, "char") || find_keyword(t_n->value, "void")))
-							            && !((find_keyword(type_node->value, "short")
-							                  || find_keyword(type_node->value, "long")
-							                  || find_keyword(type_node->value, "size_t")
-							                  || find_keyword(type_node->value, "int")
-							                  || find_keyword(type_node->value, "double")
-							                  || find_keyword(type_node->value, "float"))
-							                 && (find_keyword(t_n->value, "short")
-							                     || find_keyword(t_n->value, "long")
-							                     || find_keyword(t_n->value, "size_t")
-							                     || find_keyword(t_n->value, "int")
-							                     || find_keyword(t_n->value, "double")
-							                     || find_keyword(t_n->value, "float")))
-							            && !(find_keyword(t_n->value, "void")))
-							           || var_node->indirection_level != t_n->indirection_level) {
-								printf("\"%s(", cal_node->fn_name);
-								fn_args_print(cal_node->fn_args);
-								printf(")\"");
-								printf(" merupakan sebuah pemanggilan fungsi dengan variabel argumen, \"%s\", dengan tipe argumen yang salah (%s", c_n->value, type_node->value);
-								for (int i = 0; i < var_node->indirection_level; ++i)
-									putchar('*');
-								printf(", seharusnya %s).\n", t_n->value);
-								cal_node->is_typo_syn = 1;
-								cal_node->status = STATUS_SKIP;
+							} else {
+								int indirection_level_diff = var_node->indirection_level - c_n->indirection_level != t_n->indirection_level;
+								int type_mismatch = !find_keyword(t_n->value, type_node->value);
+								int is_void_ptr = t_n->indirection_level > 0
+								                  && (find_keyword(t_n->value, "void"));
+								int is_number = (find_keyword(type_node->value, "short")
+								                 || find_keyword(type_node->value, "long")
+								                 || find_keyword(type_node->value, "size_t")
+								                 || find_keyword(type_node->value, "int")
+								                 || find_keyword(type_node->value, "double")
+								                 || find_keyword(type_node->value, "float"))
+								                && (find_keyword(t_n->value, "short")
+								                    || find_keyword(t_n->value, "long")
+								                    || find_keyword(t_n->value, "size_t")
+								                    || find_keyword(t_n->value, "int")
+								                    || find_keyword(t_n->value, "double")
+								                    || find_keyword(t_n->value, "float"));
+								int is_char_or_int = t_n->indirection_level == 0
+								                     && (find_keyword(type_node->value, "char")
+								                         || find_keyword(type_node->value, "int"))
+								                     && (find_keyword(t_n->value, "char")
+								                         || find_keyword(t_n->value, "int"));
+								int error = indirection_level_diff
+								            || (type_mismatch && !is_void_ptr && !is_number && !is_char_or_int);
+								if (error) {
+									printf("\"%s(", cal_node->fn_name);
+									fn_args_print(cal_node->fn_args);
+									printf(")\"");
+									printf(" merupakan sebuah pemanggilan fungsi dengan variabel argumen, \"%s\", dengan tipe argumen yang salah (%s", c_n->value, type_node->value);
+									for (int i = 0; i < (var_node->indirection_level - c_n->indirection_level); ++i)
+										putchar('*');
+									printf(", seharusnya %s).\n", t_n->value);
+									cal_node->is_typo_syn = 1;
+									cal_node->status = STATUS_SKIP;
+								}
 							}
 						}
 					}
