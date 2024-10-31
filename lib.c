@@ -861,12 +861,11 @@ cfreq_diff(const char *s, const char *t)
 	return diff;
 }
 
-#define MIN3(x, y, z) (((x) < (y)) ? ((x) < (z) ? (x) : (z)) : ((y) < (z) ? (y) : (z)))
-
 int
 dld(const char *s, const char *t, int i, int j)
 {
 #if 0
+#	define MIN3(x, y, z) (((x) < (y)) ? ((x) < (z) ? (x) : (z)) : ((y) < (z) ? (y) : (z)))
 	int tbl[j + 1][i + 1];
 	tbl[0][0] = 0;
 	for (int i = 1; i <= j; ++i)
@@ -881,25 +880,27 @@ dld(const char *s, const char *t, int i, int j)
 			/* 	tbl[i][j] = MIN(tbl[i][j], tbl[i - 2][j - 2] + sub_cost); */
 		}
 	return tbl[j][i];
+#	undef MIN3
 #else
 	int min = INT_MAX;
-	if (i == 0 && j == 0) /* base case */
+	/* base case */
+	if (i == 0 && j == 0)
 		min = MIN(min, 0);
-	if (i > 0) /* deletion */
+	/* deletion */
+	if (i > 0)
 		min = MIN(min, dld(s, t, i - 1, j) + 1);
-	if (j > 0) /* insertion */
+	/* insertion */
+	if (j > 0)
 		min = MIN(min, dld(s, t, i, j - 1) + 1);
-	if (i > 0 && j > 0) /* substitution */
+	/* substitution */
+	if (i > 0 && j > 0)
 		min = MIN(min, dld(s, t, i - 1, j - 1) + (s[i - 1] != t[j - 1]));
-	if (i > 1 && j > 1 && s[i - 1] == t[j - 2] && s[i - 2] == t[j - 1]) /* transposition */
+	/* transposition */
+	if (i > 1 && j > 1 && s[i - 1] == t[j - 2] && s[i - 2] == t[j - 1])
 		min = MIN(min, dld(s, t, i - 2, j - 2) + (s[i - 1] != t[j - 1]));
 	return min;
 #endif
 }
-
-#undef MIN3
-
-#define CHAR_FREQ_DIFF_MAX(n) (n / 2)
 
 fnlist_ty *
 get_most_similar_fn_name_string(fnlist_ty *decl_head, const char *s, int max_lev, int *dist)
@@ -909,17 +910,26 @@ get_most_similar_fn_name_string(fnlist_ty *decl_head, const char *s, int max_lev
 	int s_len = strlen(s);
 	for (node = decl_head, min_node = decl_head; node->next; fnlist_next(node)) {
 		int val_len = (int)strlen(node->fn_name);
-		int lev = dld(node->fn_name, s, val_len, s_len);
-		if (lev < min_lev) {
-			min_lev = lev;
-			min_node = node;
+		if (MAX(val_len, s_len) - MIN(val_len, s_len) <= 4) {
+			V(printf("Calculating DLD of %s and %s.\n", s, node->fn_name));
+			int lev;
+			if (s_len == val_len && !memcmp(s, node->fn_name, val_len)) {
+				lev = 0;
+				goto found_similar;
+			}
+			lev = dld(node->fn_name, s, val_len, s_len);
+			if (lev < min_lev) {
+found_similar:
+				min_lev = lev;
+				min_node = node;
+				if (min_lev == 0)
+					break;
+			}
 		}
 	}
 	*dist = min_lev;
 	return (min_lev > max_lev) ? NULL : min_node;
 }
-
-#undef CHAR_FREQ_DIFF_MAX
 
 const char *standard_headers[] = {
 	"/usr/include/assert.h",
@@ -966,11 +976,11 @@ replaceat(char *s, size_t at, const char *rplc, size_t find_len)
 	return s;
 }
 
-#define CMD_GREP "grep"
-#define CMD_PAT "'^#[ \t]*include[ \t]*'"
-#define CMD_PIPE "|"
+#define CMD_GREP       "grep"
+#define CMD_PAT        "'^#[ \t]*include[ \t]*'"
+#define CMD_PIPE       "|"
 #define CMD_PREPROCESS "cpp"
-#define CMD_REDIRECT ">"
+#define CMD_REDIRECT   ">"
 
 char *
 file_preprocess_includes(const char *fname, int only_includes)
@@ -978,31 +988,12 @@ file_preprocess_includes(const char *fname, int only_includes)
 	char tmpfile[] = "/tmp/XXXXXX";
 	mktemp(tmpfile);
 	char *cmd = xmalloc(4096 * 2);
-	if (only_includes) {
-		/* grep '^#[ \t]*include[ \t]*' <filename> | cpp > <tmpfile> */
-		strcpy(cmd, CMD_GREP);
-		strcat(cmd, " ");
-		strcat(cmd, only_includes ? CMD_PAT : "''");
-		strcat(cmd, " ");
-		strcat(cmd, fname);
-		strcat(cmd, " ");
-		strcat(cmd, CMD_PIPE);
-		strcat(cmd, " ");
-		strcat(cmd, CMD_PREPROCESS);
-		strcat(cmd, " ");
-		strcat(cmd, CMD_REDIRECT);
-		strcat(cmd, " ");
-		strcat(cmd, tmpfile);
-	} else {
-		/* cpp fname > tmpfile */
-		strcpy(cmd, CMD_PREPROCESS);
-		strcat(cmd, " ");
-		strcat(cmd, fname);
-		strcat(cmd, " ");
-		strcat(cmd, CMD_REDIRECT);
-		strcat(cmd, " ");
-		strcat(cmd, tmpfile);
-	}
+	if (only_includes)
+		/* grep <pattern> <filename> | cpp > <tmpfile> */
+		sprintf(cmd, "%s %s %s | %s > %s", CMD_GREP, CMD_PAT, fname, CMD_PREPROCESS, tmpfile);
+	else
+		/* cpp <filename> > <tmpfile> */
+		sprintf(cmd, "%s %s > %s", CMD_PREPROCESS, fname, tmpfile);
 	assert(system(cmd) == 0);
 	free(cmd);
 	char *ret = file_alloc(tmpfile);
@@ -1011,37 +1002,18 @@ file_preprocess_includes(const char *fname, int only_includes)
 	return ret;
 }
 
+#undef CMD_GREP
+#undef CMD_PAT
+#undef CMD_PIPE
+#undef CMD_PREPROCESS
+#undef CMD_REDIRECT
+
 char *
 file_preprocess_alloc(const char *fname)
 {
-#if 0
-	char tmpfile[] = "/tmp/XXXXXX";
-	mktemp(tmpfile);
-	char *cmd = xmalloc(strlen(CMD_PREPROCESS) + strlen(" ") + strlen(fname) + strlen(" > ") + strlen(tmpfile) + 1);
-	strcpy(cmd, CMD_PREPROCESS);
-	strcat(cmd, " ");
-	strcat(cmd, fname);
-	strcat(cmd, " > ");
-	strcat(cmd, tmpfile);
-	/* Execute "cpp fname > tmpfile" */
-	assert(system(cmd) == 0);
-	free(cmd);
-	char *ret = file_alloc(tmpfile);
-	assert(remove(tmpfile) == 0);
-	return ret;
-#else
 	char *p = file_alloc(fname);
 	remove_literal_strings(p);
 	return p;
-#endif
-}
-
-#undef CMD_PREPROCESS
-
-void
-file_preprocess_free(char *file)
-{
-	file_free(file);
 }
 
 char *
@@ -1085,7 +1057,7 @@ type_get(const char *s)
 				const char *p = s;
 				s += strlen(array[i]);
 				for (; p > s_s && xiswhite(*p); --p) {}
-				if (p - s_s >= strlen("typedef") && starts_with(p - strlen("typedef"), "typedef"))
+				if ((size_t)(p - s_s) >= strlen("typedef") && starts_with(p - strlen("typedef"), "typedef"))
 					continue;
 				s = skipwhite(s);
 				const char *type_s = s;
@@ -1134,11 +1106,11 @@ type_get(const char *s)
 }
 
 void
-var_get(const char *s, type_ty *types)
+var_get(const char *s, type_ty *type)
 {
 	const char *p = s;
 	var_ty *var_node;
-	for (type_ty *n = types; n->next; n = n->next) {
+	for (type_ty *n = type; n->next; n = n->next) {
 		var_node = n->variables;
 		p = s;
 		for (; (p = strstr(p, n->value)); ++p) {
@@ -1176,7 +1148,7 @@ var_get(const char *s, type_ty *types)
 					while (is_fn_char(*p))
 						++p;
 					char *v = xmemdupz(p_s, (size_t)(p - p_s));
-					if (!type_find(types, v)) {
+					if (!type_find(type, v)) {
 						p = skipwhite(p);
 						p = skipbracketsorequal(p, &indirection_level);
 						var_node->indirection_level = indirection_level;
@@ -1210,9 +1182,9 @@ var_get(const char *s, type_ty *types)
 }
 
 void
-var_print(type_ty *types)
+var_print(type_ty *type)
 {
-	for (type_ty *node = types; node->next; node = node->next) {
+	for (type_ty *node = type; node->next; node = node->next) {
 		printf("type:%s\n", node->value);
 		puts("vars:");
 		for (var_ty *n = node->variables; n->next; n = n->next)
@@ -1274,17 +1246,18 @@ dld:;
 							tmp[++len] = '\0';
 						}
 						similar_fn_name = &similar_fn_name_stack;
-						similar_fn_name->fn_name = tmp;
+						similar_fn_name->fn_name = xstrdup(tmp);
+						free(tmp);
 					} else {
 						if (algo == ALGO_GABUNGAN)
-							goto use_dld;
+							goto calc_dld;
 					}
 				} else {
 					if (algo == ALGO_GABUNGAN)
-						goto use_dld;
+						goto calc_dld;
 				}
 			} else {
-use_dld:
+calc_dld:
 				similar_fn_name = get_most_similar_fn_name_string(decl_head, cal_node->fn_name, LEV_MAX(strlen(cal_node->fn_name)), &lev);
 				if (lev > 0)
 					/* Mark that a typo is found. */
@@ -1293,6 +1266,8 @@ use_dld:
 			if (similar_fn_name) {
 				free(cal_node->similar_fn_name);
 				cal_node->similar_fn_name = xstrdup(similar_fn_name->fn_name);
+				if (similar_fn_name == &similar_fn_name_stack)
+					free(similar_fn_name->fn_name);
 				if (!first_pass) {
 					if (algo != ALGO_TRIE && !is_prefix && lev < cal_node->lev) {
 						free(cal_node->found_at);
@@ -1315,11 +1290,10 @@ use_dld:
 				int cal_argc = fn_args_count(cal_node->fn_args);
 				int decl_argc = fn_args_count(trie_node->fn_args);
 				int is_variadic = 0;
-				for (var_ty *node = trie_node->fn_args; node->next; node = node->next) {
+				for (var_ty *node = trie_node->fn_args; node->next; node = node->next)
 					/* variadic function */
 					if (node->value && *(node->value) == '.')
 						is_variadic = 1;
-				}
 				if (!is_variadic) {
 					if (cal_argc != decl_argc) {
 						printf("\"%s(", cal_node->fn_name);
@@ -1414,7 +1388,7 @@ do_autosuggest_headers(fnlist_ty **decl_head, fnlist_ty **notfound_head, jtrie_t
 	fnlist_free(*decl_head);
 	*decl_head = fnlist_alloc();
 	int ret = do_autosuggest(notfound_head, *decl_head, NULL, trie_head, s, NULL, fname, 0);
-	file_preprocess_free(s);
+	free(s);
 	return ret;
 }
 
@@ -1431,13 +1405,13 @@ typedef struct confusion_matrix_ty {
    FN: no typo, incorrect autocorrection */
 
 void
-confusion_make(confusion_matrix_ty *matrix, fnlist_ty *cal_head, fnlist_ty *cal_target_head)
+confusion_make(confusion_matrix_ty *matrix, fnlist_ty *call_head, fnlist_ty *call_target_head)
 {
 	matrix->TP = 0;
 	matrix->TN = 0;
 	matrix->FP = 0;
 	matrix->FN = 0;
-	for (fnlist_ty *node = cal_head, *target_node = cal_target_head; node->next && target_node->next; node = node->next, target_node = target_node->next) {
+	for (fnlist_ty *node = call_head, *target_node = call_target_head; node->next && target_node->next; node = node->next, target_node = target_node->next) {
 		if (node->is_typo) {
 			if (node->similar_fn_name && !strcmp(node->similar_fn_name, target_node->fn_name))
 				++matrix->TP;
@@ -1456,7 +1430,7 @@ autocorrect(char *s, fnlist_ty *cal_head)
 	char *p_next;
 	for (fnlist_ty *node = cal_head; node->next; node = node->next) {
 		if (node->is_typo && node->similar_fn_name) {
-			for (size_t i = 0;; ++i, p = p_next) {
+			for (int i = 0;; ++i, p = p_next) {
 				fn_mode_ty m_dummy;
 				fnlist_ty *fnlist_dummy = fnlist_alloc();
 				p = fn_get(p, (const char **)&p_next, &m_dummy, fnlist_dummy, s);
@@ -1465,7 +1439,7 @@ autocorrect(char *s, fnlist_ty *cal_head)
 				if (i == node->fn_id)
 					break;
 			}
-			s = replaceat(s, p - s, node->similar_fn_name, strlen(node->fn_name));
+			s = replaceat(s, (size_t)(p - s), node->similar_fn_name, strlen(node->fn_name));
 			p = s;
 		}
 	}
@@ -1496,17 +1470,17 @@ autosuggest(const char *fname)
 	}
 	types = type_get(file_and_includes);
 	var_get(file_and_includes, types);
-	file_preprocess_free(file_and_includes);
+	free(file_and_includes);
 	V(var_print(types));
 	int ret = do_autosuggest(&cal_head, decl_head, notfound_head, trie_head, file, file_includes, fname, 1);
-	file_preprocess_free(file);
+	free(file);
 	if (ret) {
 		/* If we have notfound called functions which do not have similar matches in the input file,
 		 * search for them in system headers. */
 		for (int i = 0; i < (int)(sizeof(standard_headers) / sizeof(standard_headers[0])); ++i)
 			/* Check if the system header exists. */
 			if (access(standard_headers[i], R_OK) == 0) {
-				do_autosuggest_headers(&decl_head, &notfound_head, trie_head, standard_headers[i]);
+				ret = do_autosuggest_headers(&decl_head, &notfound_head, trie_head, standard_headers[i]);
 				if (!ret)
 					break;
 			}
@@ -1529,9 +1503,7 @@ autosuggest(const char *fname)
 					continue;
 				char *fulpath = malloc(strlen(dirof_file) + 1 + strlen(ep->d_name) + 1);
 				assert(fulpath);
-				strcpy(fulpath, dirof_file);
-				strcat(fulpath, "/");
-				strcat(fulpath, ep->d_name);
+				sprintf(fulpath, "%s/%s", dirof_file, ep->d_name);
 				assert(stat(fulpath, &st) == 0);
 				/* Ignore non-regular files. */
 				if (!S_ISREG(st.st_mode)) {
@@ -1572,7 +1544,7 @@ autosuggest(const char *fname)
 	puts(file_const);
 #endif
 	free(file_const);
-	file_preprocess_free(file_includes);
+	free(file_includes);
 	free(file_target);
 	jtrie_free(&trie_head);
 	fnlist_free(decl_head);
