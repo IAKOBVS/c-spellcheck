@@ -853,51 +853,67 @@ cfreq_diff(const char *s, const char *t)
 	int t1[JTRIE_ASCII_SIZE] = { 0 }, t2[JTRIE_ASCII_SIZE] = { 0 };
 	int diff = 0;
 	for (; *s; ++s)
-		++t1[JTRIE_ASCII_IDX_GET(*s)];
+		++t1[JTRIE_ASCII_IDX_GET(tolower(*s))];
 	for (; *t; ++t)
-		++t2[JTRIE_ASCII_IDX_GET(*t)];
+		++t2[JTRIE_ASCII_IDX_GET(tolower(*t))];
 	for (int i = 0; i < JTRIE_ASCII_SIZE; ++i)
 		diff += MAX(t1[i], t2[i]) - MIN(t1[i], t2[i]);
 	return diff;
 }
 
+int number_of_ops = 0;
+
 int
-dld(const char *s, const char *t, int i, int j)
+dld(char *s, char *t, int i, int j)
 {
 #if 0
 #	define MIN3(x, y, z) (((x) < (y)) ? ((x) < (z) ? (x) : (z)) : ((y) < (z) ? (y) : (z)))
 	int tbl[j + 1][i + 1];
 	tbl[0][0] = 0;
-	for (int i = 1; i <= j; ++i)
-		tbl[i][0] = tbl[i - 1][0] + 1;
-	for (int j = 1; j <= i; ++j)
-		tbl[0][j] = tbl[0][j - 1] + 1;
-	for (int i = 1; i <= j; ++i)
-		for (int j = 1; j <= i; ++j) {
-			int sub_cost = s[j - 1] == t[i - 1] ? 0 : 1;
-			tbl[i][j] = MIN3(tbl[i - 1][j] + 1, tbl[i][j - 1] + 1, tbl[i - 1][j - 1] + sub_cost);
-			/* if (i > 1 && j > 1 && s[i - 1] == t[i - 2] && s[i - 2] == t[i - 1]) */
-			/* 	tbl[i][j] = MIN(tbl[i][j], tbl[i - 2][j - 2] + sub_cost); */
+	int ii, jj;
+	for (ii = 1; ii <= j; ++ii)
+		tbl[ii][0] = tbl[ii - 1][0] + 1;
+	for (jj = 1; jj <= i; ++jj)
+		tbl[0][jj] = tbl[0][jj - 1] + 1;
+	for (ii = 1; ii <= j; ++ii)
+		for (jj = 1; jj <= i; ++jj) {
+			int sub_cost = s[jj - 1] == t[ii - 1] ? 0 : 1;
+			tbl[ii][jj] = MIN3(tbl[ii - 1][jj] + 1, tbl[ii][jj - 1] + 1, tbl[ii - 1][jj - 1] + sub_cost);
+			/* if (ii > 1 && jj > 1 && s[ii - 1] == t[ii - 2] && s[ii - 2] == t[ii - 1]) */
+			/* 	tbl[ii][jj] = MIN(tbl[ii][jj], tbl[ii - 2][jj - 2] + sub_cost); */
 		}
 	return tbl[j][i];
 #	undef MIN3
 #else
+	char old_s = s[i];
+	char old_t = t[j];
+	V(s[i] = '\0');
+	V(t[j] = '\0');
+	V(printf("i:%d, j:%d, s: %s, t: %s\n", i, j, s, t));
+	V(s[i] = old_s);
+	V(t[j] = old_t);
 	int min = INT_MAX;
 	/* base case */
-	if (i == 0 && j == 0)
-		min = MIN(min, 0);
+	if (i == 0 && j == 0) {
+		V(++number_of_ops);
+		return 0;
+	}
 	/* deletion */
 	if (i > 0)
+		V(++number_of_ops),
 		min = MIN(min, dld(s, t, i - 1, j) + 1);
 	/* insertion */
 	if (j > 0)
+		V(++number_of_ops),
 		min = MIN(min, dld(s, t, i, j - 1) + 1);
 	/* substitution */
 	if (i > 0 && j > 0)
-		min = MIN(min, dld(s, t, i - 1, j - 1) + (s[i - 1] != t[j - 1]));
+		V(++number_of_ops),
+		min = MIN(min, dld(s, t, i - 1, j - 1) + (tolower(s[i - 1]) != tolower(t[j - 1])));
 	/* transposition */
 	if (i > 1 && j > 1 && s[i - 1] == t[j - 2] && s[i - 2] == t[j - 1])
-		min = MIN(min, dld(s, t, i - 2, j - 2) + (s[i - 1] != t[j - 1]));
+		V(++number_of_ops),
+		min = MIN(min, dld(s, t, i - 2, j - 2) + (tolower(s[i - 1]) != tolower(t[j - 1])));
 	return min;
 #endif
 }
@@ -908,15 +924,20 @@ get_most_similar_fn_name_string(fnlist_ty *decl_head, const char *s, int max_lev
 	fnlist_ty *node, *min_node;
 	int min_lev = INT_MAX;
 	int s_len = strlen(s);
+	int lev;
+	for (node = decl_head, min_node = decl_head; node->next; fnlist_next(node)) {
+		int val_len = (int)strlen(node->fn_name);
+		if (val_len == s_len && !memcmp(s, node->fn_name, s_len)) {
+			lev = 0;
+			goto found_similar;
+		}
+	}
 	for (node = decl_head, min_node = decl_head; node->next; fnlist_next(node)) {
 		int val_len = (int)strlen(node->fn_name);
 		if (MAX(val_len, s_len) - MIN(val_len, s_len) <= 4) {
 			V(printf("Calculating DLD of %s and %s.\n", s, node->fn_name));
-			int lev;
-			if (s_len == val_len && !memcmp(s, node->fn_name, val_len)) {
-				lev = 0;
-				goto found_similar;
-			}
+			if (cfreq_diff(s, node->fn_name) > 4)
+				continue;
 			lev = dld(node->fn_name, s, val_len, s_len);
 			if (lev < min_lev) {
 found_similar:
