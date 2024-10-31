@@ -28,6 +28,7 @@
 #include <limits.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <libgen.h>
 
 int VERBOSE;
 
@@ -1514,13 +1515,10 @@ autosuggest(const char *fname)
 		if (ret) {
 			/* If the notfound linked list is still not empty, search for similar matches
 			 * in the files in the directory of FNAME. */
-			char *dir = strrchr(fname, '/');
-			char *dirof_file_heap = NULL;
-			char *dirof_file;
-			if (dir)
-				dirof_file = dirof_file_heap = xmemdupz(fname, (size_t)(dir - fname));
-			else
-				dirof_file = (char *)".";
+			assert(strlen(fname) < 4096);
+			char tmp[4096];
+			strcpy(tmp, fname);
+			char *dirof_file = dirname(tmp);
 			DIR *dp = opendir(dirof_file);
 			assert(dp);
 			struct dirent *ep;
@@ -1548,7 +1546,6 @@ autosuggest(const char *fname)
 					break;
 			}
 			closedir(dp);
-			free(dirof_file_heap);
 		}
 	}
 	for (fnlist_ty *node = notfound_head; node->next; fnlist_next(node)) {

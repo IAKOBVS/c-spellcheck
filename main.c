@@ -29,7 +29,13 @@ main(int argc, char **argv)
 			VERBOSE = 1;
 		else
 			filename_target = argv[i];
-	autosuggest(argv[1]);
+#define FNAME argv[1]
+	char tmp[4096];
+	assert(strlen(FNAME) < 4096);
+	strcpy(tmp, FNAME);
+	chdir(dirname(tmp));
+	strcpy(tmp, FNAME);
+	autosuggest(basename(tmp));
 	return 0;
 	(void)argc;
 }
