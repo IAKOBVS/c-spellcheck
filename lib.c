@@ -804,7 +804,6 @@ cvt_buffer_to_nodes(fnlist_ty *decl_head, fnlist_ty *cal_head, jtrie_ty *trie_he
 	fnlist_ty node_dst;
 	fn_mode_ty fn_mode;
 	int fn_id = 0;
-	int exit_loop = 0;
 loop:
 	for (; (fn_get(p, &p_next, &fn_mode, &node_dst, file)); p = p_next, ++fn_id) {
 		/* Ignore called functions on the second pass
@@ -837,10 +836,10 @@ next:
 			var_free(node_dst.fn_args);
 		}
 	}
-	if (file_includes && !exit_loop) {
+	if (file_includes && file != file_includes) {
 		p = file_includes;
-		exit_loop = 1;
 		file = file_includes;
+		first_pass = 0;
 		goto loop;
 	}
 }
@@ -1177,8 +1176,6 @@ var_get(const char *s, type_ty *types)
 					while (is_fn_char(*p))
 						++p;
 					char *v = xmemdupz(p_s, (size_t)(p - p_s));
-					V(puts(v));
-					V(puts(n->value));
 					if (!type_find(types, v)) {
 						p = skipwhite(p);
 						p = skipbracketsorequal(p, &indirection_level);
@@ -1492,14 +1489,17 @@ autosuggest(const char *fname)
 	char *file = file_preprocess_alloc(fname);
 	char *file_const = file_alloc(fname);
 	char *file_includes = file_preprocess_includes(fname, 1);
+	char *file_and_includes = file_preprocess_includes(fname, 0);
 	jtrie_ty *trie_head = (algo == ALGO_TRIE || algo == ALGO_GABUNGAN) ? jtrie_alloc() : NULL;
 	fnlist_ty *decl_head = fnlist_alloc(), *cal_head = fnlist_alloc(), *notfound_head = fnlist_alloc();
 	if (filename_target) {
 		file_target = file_preprocess_alloc(filename_target);
 		cal_target_head = fnlist_alloc();
 	}
-	types = type_get(file);
-	var_get(file, types);
+	types = type_get(file_and_includes);
+	var_get(file_and_includes, types);
+	file_preprocess_free(file_and_includes);
+	V(var_print(types));
 	int ret = do_autosuggest(&cal_head, decl_head, notfound_head, trie_head, file, file_includes, fname, 1);
 	file_preprocess_free(file);
 	if (ret) {
@@ -1567,9 +1567,8 @@ autosuggest(const char *fname)
 		printf("ACC: %f\n", acc);
 		(void)acc;
 	}
-	V(var_print(types));
 	type_free(types);
-#if 1
+#if 0
 	file_const = autocorrect(file_const, cal_head);
 	puts("\nPengoreksian:\n");
 	puts(file_const);
