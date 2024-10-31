@@ -1241,7 +1241,6 @@ do_autosuggest(fnlist_ty **cal_head, fnlist_ty *decl_head, fnlist_ty *notfound_h
 		 * been checked. */
 		trie_node = jtrie_match(trie_head, cal_node->fn_name);
 		if (!trie_node) {
-			char *tmp = NULL;
 			/* Mark that a typo is found. */
 			cal_node->is_typo = 1;
 			/* Add called functions to the trie so multiple occurences
@@ -1261,7 +1260,7 @@ dld:;
 					if (i < JTRIE_ASCII_SIZE) {
 						size_t len = strlen(cal_node->fn_name);
 						size_t actual_size = len + 2;
-						tmp = malloc(actual_size);
+						char *tmp = malloc(actual_size);
 						assert(tmp);
 						strcpy(tmp, cal_node->fn_name);
 						for (;;) {
@@ -1311,7 +1310,6 @@ use_dld:
 				notfound_node->lev = INT_MAX;
 				fnlist_insert_tail(&notfound_node, xstrdup(cal_node->fn_name), var_dup(cal_node->fn_args), cal_node->fn_id);
 			}
-			free(tmp);
 		} else {
 			if (first_pass) {
 				int cal_argc = fn_args_count(cal_node->fn_args);
