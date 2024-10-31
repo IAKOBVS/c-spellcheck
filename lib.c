@@ -213,6 +213,25 @@ remove_literal_strings(char *s)
 		default:
 			*dst++ = *src++;
 			break;
+		case '/':
+			*dst++ = *src++;
+			if (*src == '*') {
+				*dst++ = *src++;
+				while (*src) {
+					if (*src == '\n') {
+						*dst++ = *src++;
+					} else {
+						if (*src == '*' && *(src + 1) == '/') {
+							*dst++ = *src++;
+							*dst++ = *src++;
+							break;
+						} else {
+							++src;
+						}
+					}
+				}
+			}
+			break;
 		case '\0':
 			goto at_nul;
 		case '\\':
@@ -226,16 +245,20 @@ newline:
 				++src;
 				for (; *src && *src != '\n'; ++src)
 					;
+				*dst++ = '\n';
 			} else {
 				*dst++ = *src++;
 			}
 			break;
 		case '"':
-			++src;
+			*dst++ = *src++;
 			for (;;) {
 				switch (*src) {
 				default:
 					++src;
+					break;
+				case '\n':
+					*dst++ = *src++;
 					break;
 				case '\0':
 					fprintf(stderr, "Unmatched quotes error.\n");
@@ -246,9 +269,7 @@ newline:
 						++src;
 					break;
 				case '"':
-					++src;
-					*dst++ = '"';
-					*dst++ = '"';
+					*dst++ = *src++;
 					goto close_quote;
 				}
 			}
@@ -319,7 +340,6 @@ file_alloc(const char *fname)
 	assert(fread(p, 1, (size_t)st.st_size, fp) == (size_t)st.st_size);
 	assert(!fclose(fp));
 	p[st.st_size] = '\0';
-	remove_literal_strings(p);
 	return p;
 }
 
@@ -720,11 +740,12 @@ ret:
 	return arg_head;
 }
 
-int
+char *
 fn_get(const char *s, const char **next, fn_mode_ty *fn_mode, fnlist_ty *node_dst, const char *file)
 {
 	const char *fn, *fn_end, *paren, *paren_e, *p;
 	p = s;
+	const char *ret = NULL;
 	for (;;) {
 		paren = strchr(p, '(');
 		if (!paren)
@@ -740,6 +761,7 @@ fn_get(const char *s, const char **next, fn_mode_ty *fn_mode, fnlist_ty *node_ds
 		}
 		fn = fn_start(s, paren, &fn_end);
 		if (fn) {
+			ret = fn;
 			*fn_mode = fn_get_type(file, fn);
 			*next = paren + 1;
 			node_dst->fn_name = xmemdupz(fn, (size_t)(fn_end - fn));
@@ -762,25 +784,27 @@ fn_get(const char *s, const char **next, fn_mode_ty *fn_mode, fnlist_ty *node_ds
 					}
 				}
 			}
-			return 1;
+			return (char *)ret;
 		}
 		p = paren + 1;
 	}
-	return 0;
+	return NULL;
 }
 
 /* TODO: sort linked list of declared functions based on the length of the function name
  * so we can skip comparions with called functions that are too dissimilar. */
 
 void
-cvt_buffer_to_nodes(fnlist_ty *decl_head, fnlist_ty *cal_head, jtrie_ty *trie_head, const char *file, int first_pass)
+cvt_buffer_to_nodes(fnlist_ty *decl_head, fnlist_ty *cal_head, jtrie_ty *trie_head, const char *file, const char *file_includes, int first_pass)
 {
 	const char *p = file;
 	const char *p_next;
 	fnlist_ty *decl_node = decl_head, *cal_node = cal_head;
 	fnlist_ty node_dst;
 	fn_mode_ty fn_mode;
-	int fn_id = 1;
+	int fn_id = 0;
+	int exit_loop = 0;
+loop:
 	for (; (fn_get(p, &p_next, &fn_mode, &node_dst, file)); p = p_next, ++fn_id) {
 		/* Ignore called functions on the second pass
 		 * since we only check for declarations. */
@@ -802,12 +826,21 @@ cvt_buffer_to_nodes(fnlist_ty *decl_head, fnlist_ty *cal_head, jtrie_ty *trie_he
 			}
 		} else if (first_pass /* && fn_mode == FN_CALLED */) {
 			/* Add function declarations to the linked list. */
-			fnlist_insert_tail(&cal_node, node_dst.fn_name, node_dst.fn_args, fn_id);
+			if (cal_head)
+				fnlist_insert_tail(&cal_node, node_dst.fn_name, node_dst.fn_args, fn_id);
+			else
+				goto next;
 		} else {
 next:
 			free(node_dst.fn_name);
 			var_free(node_dst.fn_args);
 		}
+	}
+	if (file_includes && !exit_loop) {
+		p = file_includes;
+		exit_loop = 1;
+		file = file_includes;
+		goto loop;
 	}
 }
 
@@ -920,15 +953,72 @@ const char *standard_headers[] = {
 	"/usr/include/wctype.h"
 };
 
-#define PREPROCESS "cpp"
+char *
+replaceat(char *s, size_t at, const char *rplc, size_t find_len)
+{
+	assert(s);
+	size_t sz = strlen(s);
+	assert(at < sz);
+	size_t rplc_len = strlen(rplc);
+	s = xrealloc(s, sz + rplc_len + 1);
+	memmove(s + at + rplc_len, s + at + find_len, sz - (at + find_len) + 1);
+	memcpy(s + at, rplc, rplc_len);
+	return s;
+}
+
+#define CMD_GREP "grep"
+#define CMD_PAT "'^#[ \t]*include[ \t]*'"
+#define CMD_PIPE "|"
+#define CMD_PREPROCESS "cpp"
+#define CMD_REDIRECT ">"
+
+char *
+file_preprocess_includes(const char *fname, int only_includes)
+{
+	char tmpfile[] = "/tmp/XXXXXX";
+	mktemp(tmpfile);
+	char *cmd = xmalloc(4096 * 2);
+	if (only_includes) {
+		/* grep '^#[ \t]*include[ \t]*' <filename> | cpp > <tmpfile> */
+		strcpy(cmd, CMD_GREP);
+		strcat(cmd, " ");
+		strcat(cmd, only_includes ? CMD_PAT : "''");
+		strcat(cmd, " ");
+		strcat(cmd, fname);
+		strcat(cmd, " ");
+		strcat(cmd, CMD_PIPE);
+		strcat(cmd, " ");
+		strcat(cmd, CMD_PREPROCESS);
+		strcat(cmd, " ");
+		strcat(cmd, CMD_REDIRECT);
+		strcat(cmd, " ");
+		strcat(cmd, tmpfile);
+	} else {
+		/* cpp fname > tmpfile */
+		strcpy(cmd, CMD_PREPROCESS);
+		strcat(cmd, " ");
+		strcat(cmd, fname);
+		strcat(cmd, " ");
+		strcat(cmd, CMD_REDIRECT);
+		strcat(cmd, " ");
+		strcat(cmd, tmpfile);
+	}
+	assert(system(cmd) == 0);
+	free(cmd);
+	char *ret = file_alloc(tmpfile);
+	remove_literal_strings(ret);
+	assert(remove(tmpfile) == 0);
+	return ret;
+}
 
 char *
 file_preprocess_alloc(const char *fname)
 {
+#if 0
 	char tmpfile[] = "/tmp/XXXXXX";
 	mktemp(tmpfile);
-	char *cmd = xmalloc(strlen(PREPROCESS) + strlen(" ") + strlen(fname) + strlen(" > ") + strlen(tmpfile) + 1);
-	strcpy(cmd, PREPROCESS);
+	char *cmd = xmalloc(strlen(CMD_PREPROCESS) + strlen(" ") + strlen(fname) + strlen(" > ") + strlen(tmpfile) + 1);
+	strcpy(cmd, CMD_PREPROCESS);
 	strcat(cmd, " ");
 	strcat(cmd, fname);
 	strcat(cmd, " > ");
@@ -939,9 +1029,14 @@ file_preprocess_alloc(const char *fname)
 	char *ret = file_alloc(tmpfile);
 	assert(remove(tmpfile) == 0);
 	return ret;
+#else
+	char *p = file_alloc(fname);
+	remove_literal_strings(p);
+	return p;
+#endif
 }
 
-#undef PREPROCESS
+#undef CMD_PREPROCESS
 
 void
 file_preprocess_free(char *file)
@@ -1130,11 +1225,11 @@ var_print(type_ty *types)
 #define LEV_MAX(n) (0.6 * n)
 
 int
-do_autosuggest(fnlist_ty **cal_head, fnlist_ty *decl_head, fnlist_ty *notfound_head, jtrie_ty *trie_head, const char *file, const char *fname, int first_pass)
+do_autosuggest(fnlist_ty **cal_head, fnlist_ty *decl_head, fnlist_ty *notfound_head, jtrie_ty *trie_head, const char *file, const char *file_includes, const char *fname, int first_pass)
 {
-	cvt_buffer_to_nodes(decl_head, *cal_head, trie_head, file, first_pass);
+	cvt_buffer_to_nodes(decl_head, *cal_head, trie_head, file, file_includes, first_pass);
 	if (filename_target)
-		cvt_buffer_to_nodes(NULL, cal_target_head, NULL, file_target, first_pass);
+		cvt_buffer_to_nodes(NULL, cal_target_head, NULL, file_target, NULL, first_pass);
 	fnlist_ty *cal_node, *notfound_node = notfound_head;
 	for (cal_node = *cal_head; cal_node->next; fnlist_next(cal_node)) {
 		if (cal_node->status == STATUS_SKIP)
@@ -1317,12 +1412,12 @@ use_dld:
 int
 do_autosuggest_headers(fnlist_ty **decl_head, fnlist_ty **notfound_head, jtrie_ty *trie_head, const char *fname)
 {
-	char *s = file_preprocess_alloc(fname);
+	char *s = file_preprocess_includes(fname, 0);
 	/* We don't need the declarations from the previous file, so free the linked list
 	 * and initialize a new head. */
 	fnlist_free(*decl_head);
 	*decl_head = fnlist_alloc();
-	int ret = do_autosuggest(notfound_head, *decl_head, NULL, trie_head, s, fname, 0);
+	int ret = do_autosuggest(notfound_head, *decl_head, NULL, trie_head, s, NULL, fname, 0);
 	file_preprocess_free(s);
 	return ret;
 }
@@ -1358,6 +1453,29 @@ confusion_make(confusion_matrix_ty *matrix, fnlist_ty *cal_head, fnlist_ty *cal_
 	}
 }
 
+char *
+autocorrect(char *s, fnlist_ty *cal_head)
+{
+	char *p = s;
+	char *p_next;
+	for (fnlist_ty *node = cal_head; node->next; node = node->next) {
+		if (node->is_typo && node->similar_fn_name) {
+			for (size_t i = 0;; ++i, p = p_next) {
+				fn_mode_ty m_dummy;
+				fnlist_ty *fnlist_dummy = fnlist_alloc();
+				p = fn_get(p, (const char **)&p_next, &m_dummy, fnlist_dummy, s);
+				fnlist_free(fnlist_dummy);
+				assert(p);
+				if (i == node->fn_id)
+					break;
+			}
+			s = replaceat(s, p - s, node->similar_fn_name, strlen(node->fn_name));
+			p = s;
+		}
+	}
+	return p;
+}
+
 double
 accuracy(confusion_matrix_ty *confusion_matrix)
 {
@@ -1371,6 +1489,8 @@ void
 autosuggest(const char *fname)
 {
 	char *file = file_preprocess_alloc(fname);
+	char *file_const = file_alloc(fname);
+	char *file_includes = file_preprocess_includes(fname, 1);
 	jtrie_ty *trie_head = (algo == ALGO_TRIE || algo == ALGO_GABUNGAN) ? jtrie_alloc() : NULL;
 	fnlist_ty *decl_head = fnlist_alloc(), *cal_head = fnlist_alloc(), *notfound_head = fnlist_alloc();
 	if (filename_target) {
@@ -1379,7 +1499,7 @@ autosuggest(const char *fname)
 	}
 	types = type_get(file);
 	var_get(file, types);
-	int ret = do_autosuggest(&cal_head, decl_head, notfound_head, trie_head, file, fname, 1);
+	int ret = do_autosuggest(&cal_head, decl_head, notfound_head, trie_head, file, file_includes, fname, 1);
 	file_preprocess_free(file);
 	if (ret) {
 		/* If we have notfound called functions which do not have similar matches in the input file,
@@ -1434,9 +1554,9 @@ autosuggest(const char *fname)
 	for (fnlist_ty *node = notfound_head; node->next; fnlist_next(node)) {
 		if (node->status == STATUS_NOSKIP) {
 			if (node->lev == INT_MAX)
-				fprintf(stderr, "\"%s\" merupakan sebuah fungsi yang belum dideklarasi.\n", node->fn_name);
+				printf("\"%s\" merupakan sebuah fungsi yang belum dideklarasi.\n", node->fn_name);
 			else
-				fprintf(stderr, "\"%s\" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah \"%s\" yang didefinisikan pada \"%s\"?\n", node->fn_name, node->similar_fn_name, node->found_at);
+				printf("\"%s\" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah \"%s\" yang didefinisikan pada \"%s\"?\n", node->fn_name, node->similar_fn_name, node->found_at);
 		}
 	}
 	if (filename_target) {
@@ -1452,6 +1572,13 @@ autosuggest(const char *fname)
 	}
 	V(var_print(types));
 	type_free(types);
+#if 1
+	file_const = autocorrect(file_const, cal_head);
+	puts("\nPengoreksian:\n");
+	puts(file_const);
+#endif
+	free(file_const);
+	file_preprocess_free(file_includes);
 	free(file_target);
 	jtrie_free(&trie_head);
 	fnlist_free(decl_head);

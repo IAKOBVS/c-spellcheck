@@ -1,3 +1,5 @@
+#include <string.h>
+#include <stdlib.h>
 struct x {
 
 };
@@ -11,12 +13,18 @@ int f(struct x q)
 
 }
 
-struct ll z;
+struct x z;
 
 int main()
 {
 	struct x a;
 	struct x b;
+	fa(z);
 	f(z);
+	faa(z);
+	hello();
+	memcpy();
 }
-/* ----------------- */
+/* -----------------
+---
+*/
