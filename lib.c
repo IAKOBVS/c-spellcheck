@@ -29,6 +29,7 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <libgen.h>
+#include <float.h>
 
 int VERBOSE;
 
@@ -90,7 +91,7 @@ typedef struct fnlist_ty {
 	char *fn_name;
 	char *similar_fn_name;
 	char *found_at;
-	int lev;
+	float lev;
 	int fn_id;
 	int is_typo;
 	int is_typo_syn;
@@ -880,7 +881,7 @@ old_dld(char *s, char *t, int i, int j)
 #undef MIN3
 }
 
-int
+float
 dld(char *s, char *t, int i, int j)
 {
 	char old_s = s[i];
@@ -902,8 +903,13 @@ dld(char *s, char *t, int i, int j)
 	if (j > 0)
 		min = MIN(min, dld(s, t, i, j - 1) + 1);
 	/* substitution */
-	if (i > 0 && j > 0)
+	float sub_cost;
+	if (i > 0 && j > 0) {
+		sub_cost = s[i - 1] != t[j - 1];
+		if (sub_cost)
+			sub_cost = (tolower(s[i - 1]) != tolower(t[j - 1])) ? 0.5 : 1;
 		min = MIN(min, dld(s, t, i - 1, j - 1) + (tolower(s[i - 1]) != tolower(t[j - 1])));
+	}
 	/* transposition */
 	if (i > 1 && j > 1 && s[i - 1] == t[j - 2] && s[i - 2] == t[j - 1])
 		min = MIN(min, dld(s, t, i - 2, j - 2) + (tolower(s[i - 1]) != tolower(t[j - 1])));
@@ -911,12 +917,12 @@ dld(char *s, char *t, int i, int j)
 }
 
 fnlist_ty *
-get_most_similar_fn_name_string(fnlist_ty *decl_head, const char *s, int max_lev, int *dist)
+get_most_similar_fn_name_string(fnlist_ty *decl_head, const char *s, float max_lev, float *dist)
 {
 	fnlist_ty *node, *min_node;
-	int min_lev = INT_MAX;
+	float min_lev = FLT_MAX;
 	int s_len = strlen(s);
-	int lev;
+	float lev;
 	for (node = decl_head, min_node = decl_head; node->next; fnlist_next(node)) {
 		int val_len = (int)strlen(node->fn_name);
 		if (val_len == s_len && !memcmp(s, node->fn_name, s_len)) {
@@ -1233,7 +1239,7 @@ do_autosuggest(fnlist_ty **cal_head, fnlist_ty *decl_head, fnlist_ty *notfound_h
 			 * of the same function will only be checked once. */
 			/* assert(jtrie_insert(trie_head, cal_node->fn_name)); */
 dld:;
-			int lev;
+			float lev;
 			fnlist_ty similar_fn_name_stack;
 			fnlist_ty *similar_fn_name = NULL;
 			if (algo == ALGO_TRIE || algo == ALGO_GABUNGAN) {
