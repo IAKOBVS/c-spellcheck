@@ -21,7 +21,7 @@ char norm(char c)
 	return c;
 }
 
-int is_palindrome(char *s)
+int palind(char *s)
 {
 	char *s_e = s + strlen(s) - 1;
 	while (s < s_e) {
@@ -39,6 +39,6 @@ main(int argc, char **argv)
 	if (argv[1] == NULL)
 		return 1;
 	char *input = argv[1];
-	printf("%s\n", is_palindrome(input) ? "true" : "false");
+	printf("%s\n", palind(input) ? "true" : "false");
 	return 0;
 }

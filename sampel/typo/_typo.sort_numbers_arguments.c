@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 double *
-cvt_to_arr(int argc, char **argv)
+to_arr(int argc, char **argv)
 {
 	double *arr = alloc(argc * sizeof(double));
 	double *arrp = arr;
@@ -37,7 +37,7 @@ main(int argc, char **argv)
 	if (argv[1] == NULL)
 		return 1;
 	char **inputv = argv + 1;
-	double *arr = cvt_to_array(argc - 1, inputv);
+	double *arr = to_array(argc - 1, inputv);
 	sort(arr, argc - 1, sizeof(double), cmp);
 	print(arr, argc - 1);
 	return 0;

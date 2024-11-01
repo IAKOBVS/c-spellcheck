@@ -1,0 +1,2 @@
+"strchr(s,'\n',)" merupakan sebuah pemanggilan fungsi dengan jumlah argumen yang tidak sesuai dengan jumlah parameternya, "strchr(const char *,int)".
+"count_lines(input,input)" merupakan sebuah pemanggilan fungsi dengan jumlah argumen yang tidak sesuai dengan jumlah parameternya, "count_lines(char *)".

@@ -1,0 +1,37 @@
+#!/bin/sh
+dirs=$(find . -type d | grep -v '^.$')
+for dir in $dirs; do
+	files=$(find "$dir" -type f | grep -F '.rtime' | sort)
+	num_of_files=$(echo "$files" | wc -l)
+	i=1
+	n=0
+	d=0
+	g=0
+	t=0
+	while [ $i -lt "$num_of_files" ]; do
+		dld=$(cat "$(echo "$files" | head -$i | tail -1)")
+		gabungan=$(cat "$(echo "$files" | head -$((i + 1)) | tail -1)")
+		trie=$(cat "$(echo "$files" | head -$((i + 2)) | tail -1)")
+		out_dld=$(echo "scale=4; $dld/$dld" | bc)
+		out_gabungan=$(echo "scale=4; $gabungan/$dld" | bc)
+		out_trie=$(echo "scale=4; $trie/$dld" | bc)
+		# echo "dld     : $out_dld"
+		# echo "gabungan: $out_gabungan"
+		# echo "trie    : $out_trie"
+		i=$((i + 3))
+		n=$((n + 1))
+		d=$(echo "scale=4; $d + $out_dld" | bc)
+		g=$(echo "scale=4; $g + $out_gabungan" | bc)
+		t=$(echo "scale=4; $t + $out_trie" | bc)
+	done
+	d=$(echo "scale=4; $d / $n" | bc)
+	g=$(echo "scale=4; $g / $n" | bc)
+	t=$(echo "scale=4; $t / $n" | bc)
+	echo
+	echo "Runtime comparison"
+	echo "dir: $dir"
+	echo "dld: $d"
+	echo "gabungan: $g"
+	echo "trie: $t"
+	echo
+done

@@ -1,0 +1,2 @@
+"isupp(*s,*s)" merupakan sebuah pemanggilan fungsi dengan jumlah argumen yang tidak sesuai dengan jumlah parameternya, "isupp(char)".
+"lower_str()" merupakan sebuah pemanggilan fungsi dengan variabel argumen, "", dengan tipe argumen yang salah (char, seharusnya char *).

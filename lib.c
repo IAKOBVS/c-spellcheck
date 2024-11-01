@@ -1235,9 +1235,8 @@ do_autosuggest(fnlist_ty **cal_head, fnlist_ty *decl_head, fnlist_ty *notfound_h
 dld:;
 			int lev;
 			fnlist_ty similar_fn_name_stack;
-			fnlist_ty *similar_fn_name;
+			fnlist_ty *similar_fn_name = NULL;
 			if (algo == ALGO_TRIE || algo == ALGO_GABUNGAN) {
-				similar_fn_name = NULL;
 				trie_node = jtrie_starts(trie_head, cal_node->fn_name);
 				if (trie_node) {
 					is_prefix = 1;

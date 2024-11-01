@@ -1,0 +1,10 @@
+#!/bin/sh
+dirs=$(find . -type d | grep -v '^.$')
+for dir in $dirs; do
+	files=$(find "$dir" -type f | grep -v '\.out' | grep -v '\.time' | grep '\/_')
+	for file in $files; do
+		{ time c-spellcheck "$file" --trie > "$file-trie.out"; } 2> "$file-trie.time"
+		{ time c-spellcheck "$file" --dld > "$file-dld.out"; } 2> "$file-dld.time"
+		{ time c-spellcheck "$file" --gabungan > "$file-gabungan.out"; } 2> "$file-gabungan.time"
+	done
+done

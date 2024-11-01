@@ -22,7 +22,7 @@ char norm(char c)
 }
 
 size_t
-is_eq_icase(char *s, char *t)
+is_eq(char *s, char *t)
 {
 	while (*s) {
 		if (norm(*s) != norm(*t))
@@ -40,6 +40,6 @@ main(int argc, char **argv)
 		return 1;
 	char *input1 = argv[1];
 	char *input2 = argv[2];
-	printf("%s\n", is_eq_icase(input1, input2) ? "true" : "false");
+	printf("%s\n", is_eq(input1, input2) ? "true" : "false");
 	return 0;
 }

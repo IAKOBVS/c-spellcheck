@@ -1,0 +1,3 @@
+"strlen(substr,substr)" merupakan sebuah pemanggilan fungsi dengan jumlah argumen yang tidak sesuai dengan jumlah parameternya, "strlen(const char *)".
+"strstr(s,substr,)" merupakan sebuah pemanggilan fungsi dengan jumlah argumen yang tidak sesuai dengan jumlah parameternya, "strstr(const char *,const char *)".
+"count_sub()" merupakan sebuah pemanggilan fungsi dengan jumlah argumen yang tidak sesuai dengan jumlah parameternya, "count_sub(char *,char *)".

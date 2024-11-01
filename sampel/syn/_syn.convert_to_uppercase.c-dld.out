@@ -1,0 +1,2 @@
+"islow(*s,)" merupakan sebuah pemanggilan fungsi dengan jumlah argumen yang tidak sesuai dengan jumlah parameternya, "islow(char)".
+"upper_str(output,)" merupakan sebuah pemanggilan fungsi dengan jumlah argumen yang tidak sesuai dengan jumlah parameternya, "upper_str(char *)".

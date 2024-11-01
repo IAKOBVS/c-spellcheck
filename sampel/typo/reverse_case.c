@@ -27,7 +27,7 @@ tolow(char c)
 }
 
 void
-reverse_case(char *s)
+rvrs_case(char *s)
 {
 	while (*s) {
 		if (isupp(*s))
@@ -45,7 +45,7 @@ main(int argc, char **argv)
 		return 1;
 	char *input = argv[1];
 	char *output = input;
-	reverse_case(output);
+	rvrs_case(output);
 	printf("%s\n", output);
 	return 0;
 }
