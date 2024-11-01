@@ -1,5 +1,17 @@
 #include <stdio.h>
 
+int islow(char c)
+{
+	if (c >= 'a' && c <= 'z')
+		return 1;
+	return 0;
+}
+
+char toupp(char c)
+{
+	return c - 'a' + 'A';
+}
+
 int
 isupp(char c)
 {
@@ -15,11 +27,13 @@ tolow(char c)
 }
 
 void
-lower_str(char *s)
+reverse_case(char *s)
 {
 	while (*s) {
 		if (isupp(*s))
 			*s = tolow(*s);
+		else if (islow(*s))
+			*s = toupp(*s);
 		++s;
 	}
 }
@@ -31,7 +45,7 @@ main(int argc, char **argv)
 		return 1;
 	char *input = argv[1];
 	char *output = input;
-	lower_str(output);
+	reverse_case(output);
 	printf("%s\n", output);
 	return 0;
 }

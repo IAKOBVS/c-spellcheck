@@ -1,27 +1,21 @@
 #include <stdio.h>
 
-int
-isupp(char c)
+int islow(char c)
 {
-	if (c >= 'A' && c <= 'Z')
+	if (c >= 'a' && c <= 'z')
 		return 1;
 	return 0;
 }
 
-char
-tolow(char c)
+char toupp(char c)
 {
-	return c - 'A' + 'a';
+	return c - 'a' + 'A';
 }
 
 void
-lower_str(char *s)
+capitalize(char *s)
 {
-	while (*s) {
-		if (isupp(*s))
-			*s = tolow(*s);
-		++s;
-	}
+	*s = islow(*s) ? toupp(*s) : *s;
 }
 
 int
@@ -31,7 +25,7 @@ main(int argc, char **argv)
 		return 1;
 	char *input = argv[1];
 	char *output = input;
-	lower_str(output);
+	capitalize(output);
 	printf("%s\n", output);
 	return 0;
 }

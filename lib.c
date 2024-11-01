@@ -938,7 +938,7 @@ get_most_similar_fn_name_string(fnlist_ty *decl_head, const char *s, int max_lev
 			V(printf("Calculating DLD of %s and %s.\n", s, node->fn_name));
 			if (cfreq_diff(s, node->fn_name) > 4)
 				continue;
-			lev = dld(node->fn_name, s, val_len, s_len);
+			lev = dld(node->fn_name, (char *)s, val_len, s_len);
 			if (lev < min_lev) {
 found_similar:
 				min_lev = lev;
@@ -1520,7 +1520,7 @@ autosuggest(const char *fname)
 				const char *p = strrchr(ep->d_name, '.');
 				/* Ignore non *.c and *.h files.
 				 * Also ignore "." and "..". */
-				if (!p || (tolower(*(p + 1)) != 'c' && tolower(*(p + 1)) != 'h') || *(p + 2) != '\0')
+				if (!p || (*(p + 1) != 'c' && *(p + 1) != 'h') || *(p + 2) != '\0')
 					continue;
 				char *fulpath = malloc(strlen(dirof_file) + 1 + strlen(ep->d_name) + 1);
 				assert(fulpath);
