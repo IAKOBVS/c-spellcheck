@@ -1329,6 +1329,7 @@ calc_dld:
 							    || !strcmp(c_n->value, "stdin")
 							    || !strcmp(c_n->value, "stdout")
 							    || !strcmp(c_n->value, "stderr")
+							    || !strcmp(c_n->value, "NULL")
 							    || *(c_n->value + strcspn(c_n->value, "*&+-=,.'\"?:()[]0123456789")))
 								continue;
 							type_ty *type_node;
