@@ -34,9 +34,6 @@ int VERBOSE;
 
 #define V(x) ((VERBOSE) ? x : (void)0)
 
-#define JTRIE_ASCII_SIZE       (('Z' - 'A') + ('z' - 'a') + ('9' - '0') + '1')
-#define JTRIE_ASCII_IDX_GET(c) get_compressed_idx((unsigned char)c)
-
 enum status_ty {
 	STATUS_NOSKIP = 0,
 	STATUS_SKIP,
