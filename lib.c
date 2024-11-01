@@ -858,13 +858,10 @@ cfreq_diff(const char *s, const char *t)
 	return diff;
 }
 
-int number_of_ops = 0;
-
 int
-dld(char *s, char *t, int i, int j)
+old_dld(char *s, char *t, int i, int j)
 {
-#if 0
-#	define MIN3(x, y, z) (((x) < (y)) ? ((x) < (z) ? (x) : (z)) : ((y) < (z) ? (y) : (z)))
+#define MIN3(x, y, z) (((x) < (y)) ? ((x) < (z) ? (x) : (z)) : ((y) < (z) ? (y) : (z)))
 	int tbl[j + 1][i + 1];
 	tbl[0][0] = 0;
 	int ii, jj;
@@ -880,8 +877,12 @@ dld(char *s, char *t, int i, int j)
 			/* 	tbl[ii][jj] = MIN(tbl[ii][jj], tbl[ii - 2][jj - 2] + sub_cost); */
 		}
 	return tbl[j][i];
-#	undef MIN3
-#else
+#undef MIN3
+}
+
+int
+dld(char *s, char *t, int i, int j)
+{
 	char old_s = s[i];
 	char old_t = t[j];
 	V(s[i] = '\0');
@@ -889,30 +890,24 @@ dld(char *s, char *t, int i, int j)
 	V(printf("i:%d, j:%d, s: %s, t: %s\n", i, j, s, t));
 	V(s[i] = old_s);
 	V(t[j] = old_t);
+
 	int min = INT_MAX;
 	/* base case */
-	if (i == 0 && j == 0) {
-		V(++number_of_ops);
+	if (i == 0 && j == 0)
 		return 0;
-	}
 	/* deletion */
 	if (i > 0)
-		V(++number_of_ops),
 		min = MIN(min, dld(s, t, i - 1, j) + 1);
 	/* insertion */
 	if (j > 0)
-		V(++number_of_ops),
 		min = MIN(min, dld(s, t, i, j - 1) + 1);
 	/* substitution */
 	if (i > 0 && j > 0)
-		V(++number_of_ops),
 		min = MIN(min, dld(s, t, i - 1, j - 1) + (tolower(s[i - 1]) != tolower(t[j - 1])));
 	/* transposition */
 	if (i > 1 && j > 1 && s[i - 1] == t[j - 2] && s[i - 2] == t[j - 1])
-		V(++number_of_ops),
 		min = MIN(min, dld(s, t, i - 2, j - 2) + (tolower(s[i - 1]) != tolower(t[j - 1])));
 	return min;
-#endif
 }
 
 fnlist_ty *
