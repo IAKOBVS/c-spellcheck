@@ -50,7 +50,6 @@ main(int argc, char **argv)
 		return 1;
 	char **inputv = argv + 1;
 	double *arr = cvt_to_arr(argc - 1, inputv);
-	double ouput = max(arr, argc - 1);
 	printf("%f\n", max(arr, argc - 1));
 	return 0;
 }
