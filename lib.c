@@ -1221,6 +1221,7 @@ do_autosuggest(fnlist_ty **cal_head, fnlist_ty *decl_head, fnlist_ty *notfound_h
 		if (algo == ALGO_DLD)
 			goto dld;
 		jtrie_ty *trie_node;
+		jtrie_ty trie_node_stack;
 		/* Check trie for exact match. If a match is found,
 		 * either the called function is declared or it has
 		 * been checked. */
@@ -1275,6 +1276,11 @@ calc_dld:
 				if (lev > 0)
 					/* Mark that a typo is found. */
 					cal_node->is_typo = 1;
+				if (similar_fn_name && lev == 0 && first_pass) {
+					trie_node = &trie_node_stack;
+					trie_node->fn_args = similar_fn_name->fn_args;
+					goto check_args;
+				}
 			}
 			if (similar_fn_name) {
 				free(cal_node->similar_fn_name);
@@ -1300,6 +1306,7 @@ calc_dld:
 			}
 		} else {
 			if (first_pass) {
+check_args:;
 				int cal_argc = fn_args_count(cal_node->fn_args);
 				int decl_argc = fn_args_count(trie_node->fn_args);
 				int is_variadic = 0;
