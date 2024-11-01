@@ -1287,8 +1287,6 @@ calc_dld:
 			if (similar_fn_name) {
 				free(cal_node->similar_fn_name);
 				cal_node->similar_fn_name = xstrdup(similar_fn_name->fn_name);
-				if (similar_fn_name == &similar_fn_name_stack)
-					free(similar_fn_name->fn_name);
 				if (!first_pass) {
 					if (algo != ALGO_TRIE && !is_prefix && lev < cal_node->lev) {
 						free(cal_node->found_at);
@@ -1301,6 +1299,8 @@ calc_dld:
 						cal_node->status = STATUS_SKIP;
 					}
 				}
+				if (similar_fn_name == &similar_fn_name_stack)
+					free(similar_fn_name->fn_name);
 			} else if (first_pass) {
 				/* Add called functions whose declaration we can not find in the current file. */
 				notfound_node->lev = INT_MAX;
