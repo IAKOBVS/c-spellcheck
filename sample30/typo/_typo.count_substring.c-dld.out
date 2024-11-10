@@ -1,0 +1,7 @@
+"strstk" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "strstr"?
+"cqnt_sub" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "cnt_sub"?
+TP: 2
+TN: 2
+FP: 0
+FN: 0
+ACC: 1.000000

@@ -1,0 +1,8 @@
+"open" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "fopen"?
+"close" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "fclose"?
+"Rdable" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "rdable"?
+TP: 3
+TN: 1
+FP: 0
+FN: 0
+ACC: 1.000000

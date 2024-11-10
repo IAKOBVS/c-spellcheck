@@ -1,0 +1,8 @@
+"open" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "open_memstream"?
+"close" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "fclose"?
+"Rdable" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "rdable"?
+TP: 2
+TN: 1
+FP: 1
+FN: 0
+ACC: 0.750000

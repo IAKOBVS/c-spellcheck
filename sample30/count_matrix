@@ -1,0 +1,69 @@
+#!/bin/sh
+dirs=$(find . -type d | grep -v '^.$' | grep typo)
+for dir in $dirs; do
+	f_dld=$(find "$dir" -type f | grep -F '.out' | grep -v palind | sort | grep 'dld')
+	f_gabungan=$(find "$dir" -type f | grep -F '.out' | grep -v palind | sort | grep 'gabungan')
+	f_trie=$(find "$dir" -type f | grep -F '.out' | grep -v palind | sort | grep 'trie')
+	n=$(find "$dir" -type f | grep -F '.out' | grep -v palind | sort | grep 'trie' | wc -l)
+
+	tp_dld=$(grep 'TP:' $f_dld | sed 's/^.*:[ \t]*//')
+	fp_dld=$(grep 'FP:' $f_dld | sed 's/^.*:[ \t]*//')
+	tn_dld=$(grep 'TN:' $f_dld | sed 's/^.*:[ \t]*//')
+	fn_dld=$(grep 'FN:' $f_dld | sed 's/^.*:[ \t]*//')
+	acc_dld=$(grep 'ACC:' $f_dld | sed 's/^.*:[ \t]*//')
+
+	tp_gabungan=$(grep 'TP:' $f_gabungan | sed 's/^.*:[ \t]*//')
+	fp_gabungan=$(grep 'FP:' $f_gabungan | sed 's/^.*:[ \t]*//')
+	tn_gabungan=$(grep 'TN:' $f_gabungan | sed 's/^.*:[ \t]*//')
+	fn_gabungan=$(grep 'FN:' $f_gabungan | sed 's/^.*:[ \t]*//')
+	acc_gabungan=$(grep 'ACC:' $f_gabungan | sed 's/^.*:[ \t]*//')
+
+	tp_trie=$(grep 'TP:' $f_trie | sed 's/^.*:[ \t]*//')
+	fp_trie=$(grep 'FP:' $f_trie | sed 's/^.*:[ \t]*//')
+	tn_trie=$(grep 'TN:' $f_trie | sed 's/^.*:[ \t]*//')
+	fn_trie=$(grep 'FN:' $f_trie | sed 's/^.*:[ \t]*//')
+	acc_trie=$(grep 'ACC:' $f_trie | sed 's/^.*:[ \t]*//')
+
+	tot_tp_dld=$(echo $tp_dld | sed 's/ / + /g' | bc)
+	tot_fp_dld=$(echo $fp_dld | sed 's/ / + /g' | bc)
+	tot_tn_dld=$(echo $tn_dld | sed 's/ / + /g' | bc)
+	tot_fn_dld=$(echo $fn_dld | sed 's/ / + /g' | bc)
+	# tot_acc_dld=$(echo $acc_dld | sed 's/ / + /g' | bc)
+	tot_acc_dld=$(echo "scale=4; ($tot_tp_dld + $tot_tn_dld)/($tot_tp_dld + $tot_tn_dld + $tot_fp_dld + $tot_fn_dld)" | bc)
+	
+	tot_tp_gabungan=$(echo $tp_gabungan | sed 's/ / + /g' | bc)
+	tot_fp_gabungan=$(echo $fp_gabungan | sed 's/ / + /g' | bc)
+	tot_tn_gabungan=$(echo $tn_gabungan | sed 's/ / + /g' | bc)
+	tot_fn_gabungan=$(echo $fn_gabungan | sed 's/ / + /g' | bc)
+	# tot_acc_gabungan=$(echo $acc_gabungan | sed 's/ / + /g' | bc)
+	tot_acc_gabungan=$(echo "scale=4; ($tot_tp_gabungan + $tot_tn_gabungan)/($tot_tp_gabungan + $tot_tn_gabungan + $tot_fp_gabungan + $tot_fn_gabungan)" | bc)
+
+	tot_tp_trie=$(echo $tp_trie | sed 's/ / + /g' | bc)
+	tot_fp_trie=$(echo $fp_trie | sed 's/ / + /g' | bc)
+	tot_tn_trie=$(echo $tn_trie | sed 's/ / + /g' | bc)
+	tot_fn_trie=$(echo $fn_trie | sed 's/ / + /g' | bc)
+	# tot_acc_trie=$(echo $acc_trie | sed 's/ / + /g' | bc)
+	tot_acc_trie=$(echo "scale=4; ($tot_tp_trie + $tot_tn_trie)/($tot_tp_trie + $tot_tn_trie + $tot_fp_trie + $tot_fn_trie)" | bc)
+
+	# echo "dld: $(echo "scale=4; $tot_acc_dld / $n" | bc)"
+	# echo "gabungan: $(echo "scale=4; $tot_acc_gabungan / $n" | bc)"
+	# echo "trie: $(echo "scale=4; $tot_acc_trie / $n" | bc)"
+	echo "dld: $(echo "scale=4; $tot_acc_dld" | bc)"
+	echo "gabungan: $(echo "scale=4; $tot_acc_gabungan" | bc)"
+	echo "trie: $(echo "scale=4; $tot_acc_trie" | bc)"
+
+	echo "tp dld: $tot_tp_dld"
+	echo "tn dld: $tot_tn_dld"
+	echo "fp dld: $tot_fp_dld"
+	echo "fn dld: $tot_fn_dld"
+
+	echo "tp gabungan: $tot_tp_gabungan"
+	echo "tn gabungan: $tot_tn_gabungan"
+	echo "fp gabungan: $tot_fp_gabungan"
+	echo "fn gabungan: $tot_fn_gabungan"
+
+	echo "tp trie: $tot_tp_trie"
+	echo "tn trie: $tot_tn_trie"
+	echo "fp trie: $tot_fp_trie"
+	echo "fn trie: $tot_fn_trie"
+done

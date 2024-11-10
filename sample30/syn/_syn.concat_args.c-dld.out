@@ -1,0 +1,2 @@
+"strcat(s)" merupakan sebuah pemanggilan fungsi dengan jumlah argumen yang tidak sesuai dengan jumlah parameternya, "strcat(char *__restrict,const char *__restrict)".
+"concat(output)" merupakan sebuah pemanggilan fungsi dengan jumlah argumen yang tidak sesuai dengan jumlah parameternya, "concat(char *,char **)".
