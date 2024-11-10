@@ -48,6 +48,7 @@ enum algo_ty {
 } algo_ty;
 
 int algo = ALGO_GABUNGAN;
+int modify = 0;
 
 static int
 get_compressed_idx(int c)
@@ -1561,11 +1562,13 @@ autosuggest(const char *fname)
 		(void)acc;
 	}
 	type_free(types);
-#if 0
-	file_const = autocorrect(file_const, cal_head);
-	puts("\nPengoreksian:\n");
-	puts(file_const);
-#endif
+	if (modify) {
+		file_const = autocorrect(file_const, cal_head);
+		FILE *fp = fopen(fname, "w");
+		assert(fp);
+		fputs(file_const, fp);
+		assert(fclose(fp) == 0);
+	}
 	free(file_const);
 	free(file_includes);
 	free(file_target);
