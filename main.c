@@ -12,7 +12,14 @@ int
 main(int argc, char **argv)
 {
 	if (!argv[1] || !argv[1][0])
-		die_print("Usage: %s <filename>\n", argv[0]);
+		die_print("Usage: %s <filename> <flags>\n"
+				"\n"
+				"Flags:\n"
+				"--dld: gunakan metode dld\n"
+				"--trie: gunakan metode trie\n"
+				"--gabungan: gunakan metode gabungan\n"
+				"-i: autokoreksi\n"
+				, argv[0]);
 	const char *ext = strrchr(argv[1], '.');
 	if (!ext)
 		die_print("The first argument, %s, is not a C file.\n", argv[1]);
