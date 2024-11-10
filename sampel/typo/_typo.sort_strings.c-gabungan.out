@@ -1,4 +1,10 @@
+"Strlen" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "strlen"?
 "maloc" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "malloc"?
 "alloc" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "alloca"?
 "strup" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "strdup"?
 "sor" merupakan sebuah fungsi yang belum dideklarasi.
+TP: 2
+TN: 3
+FP: 3
+FN: 0
+ACC: 0.625000

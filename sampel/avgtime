@@ -1,4 +1,5 @@
 #!/bin/sh
+./rtime
 dirs=$(find . -type d | grep -v '^.$')
 for dir in $dirs; do
 	files=$(find "$dir" -type f | grep -F '.rtime' | grep -v palind | sort)

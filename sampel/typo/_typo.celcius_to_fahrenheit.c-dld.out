@@ -1,2 +1,7 @@
 "str_to_f" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "strtof"?
-"ceToFa" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "ce_to_fa"?
+"ceToFa" merupakan sebuah fungsi yang belum dideklarasi.
+TP: 1
+TN: 1
+FP: 1
+FN: 0
+ACC: 0.666667

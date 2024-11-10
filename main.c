@@ -18,6 +18,10 @@ main(int argc, char **argv)
 		die_print("The first argument, %s, is not a C file.\n", argv[1]);
 	if (access(argv[1], R_OK) != 0)
 		die_print("%s can not be read.", argv[1]);
+#define FNAME argv[1]
+	char tmp[4096];
+	char tmp2[4096];
+	assert(strlen(FNAME) < 4096);
 	for (int i = 2; i < argc; ++i)
 		if (!strcmp("--dld", argv[i]))
 			algo = ALGO_DLD;
@@ -27,11 +31,10 @@ main(int argc, char **argv)
 			algo = ALGO_GABUNGAN;
 		else if (!strcmp("-v", argv[i]))
 			VERBOSE = 1;
-		else
-			filename_target = argv[i];
-#define FNAME argv[1]
-	char tmp[4096];
-	assert(strlen(FNAME) < 4096);
+		else {
+			assert(strlen(argv[i]) < 4096);
+			filename_target = basename(argv[i]);
+		}
 	strcpy(tmp, FNAME);
 	chdir(dirname(tmp));
 	strcpy(tmp, FNAME);

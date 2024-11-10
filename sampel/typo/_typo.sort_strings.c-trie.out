@@ -3,3 +3,8 @@
 "maloc" merupakan sebuah fungsi yang belum dideklarasi.
 "strup" merupakan sebuah fungsi yang belum dideklarasi.
 "sor" merupakan sebuah fungsi yang belum dideklarasi.
+TP: 0
+TN: 3
+FP: 5
+FN: 0
+ACC: 0.375000

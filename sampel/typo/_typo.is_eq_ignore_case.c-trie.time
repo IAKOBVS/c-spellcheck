@@ -2,6 +2,6 @@
   124 | # include_next <limits.h>
       |   ^~~~~~~~~~~~
 
-real	0m0.730s
-user	0m0.492s
-sys	0m0.236s
+real	0m0.565s
+user	0m0.397s
+sys	0m0.164s

@@ -4,3 +4,8 @@
 "stlen" merupakan sebuah fungsi yang belum dideklarasi.
 "len" merupakan sebuah fungsi yang belum dideklarasi.
 "reAlloc" merupakan sebuah fungsi yang belum dideklarasi.
+TP: 1
+TN: 8
+FP: 5
+FN: 0
+ACC: 0.642857

@@ -30,6 +30,7 @@
 #include <ctype.h>
 #include <libgen.h>
 #include <float.h>
+#include <time.h>
 
 int VERBOSE;
 
@@ -91,7 +92,7 @@ typedef struct fnlist_ty {
 	char *fn_name;
 	char *similar_fn_name;
 	char *found_at;
-	float lev;
+	int lev;
 	int fn_id;
 	int is_typo;
 	int is_typo_syn;
@@ -881,17 +882,9 @@ old_dld(char *s, char *t, int i, int j)
 #undef MIN3
 }
 
-float
+int
 dld(char *s, char *t, int i, int j)
 {
-	char old_s = s[i];
-	char old_t = t[j];
-	V(s[i] = '\0');
-	V(t[j] = '\0');
-	V(printf("i:%d, j:%d, s: %s, t: %s\n", i, j, s, t));
-	V(s[i] = old_s);
-	V(t[j] = old_t);
-
 	int min = INT_MAX;
 	/* base case */
 	if (i == 0 && j == 0)
@@ -903,26 +896,21 @@ dld(char *s, char *t, int i, int j)
 	if (j > 0)
 		min = MIN(min, dld(s, t, i, j - 1) + 1);
 	/* substitution */
-	float sub_cost;
-	if (i > 0 && j > 0) {
-		sub_cost = s[i - 1] != t[j - 1];
-		if (sub_cost)
-			sub_cost = (tolower(s[i - 1]) != tolower(t[j - 1])) ? 0.5 : 1;
-		min = MIN(min, dld(s, t, i - 1, j - 1) + (tolower(s[i - 1]) != tolower(t[j - 1])));
-	}
+	if (i > 0 && j > 0)
+		min = MIN(min, dld(s, t, i - 1, j - 1) + (s[i - 1] != t[j - 1]));
 	/* transposition */
 	if (i > 1 && j > 1 && s[i - 1] == t[j - 2] && s[i - 2] == t[j - 1])
-		min = MIN(min, dld(s, t, i - 2, j - 2) + (tolower(s[i - 1]) != tolower(t[j - 1])));
+		min = MIN(min, dld(s, t, i - 2, j - 2) +  + (s[i - 1] != t[j - 1]));
 	return min;
 }
 
 fnlist_ty *
-get_most_similar_fn_name_string(fnlist_ty *decl_head, const char *s, float max_lev, float *dist)
+get_most_similar_fn_name_string(fnlist_ty *decl_head, const char *s, int max_lev, int *dist)
 {
 	fnlist_ty *node, *min_node;
-	float min_lev = FLT_MAX;
+	int min_lev = INT_MAX;
 	int s_len = strlen(s);
-	float lev;
+	int lev;
 	for (node = decl_head, min_node = decl_head; node->next; fnlist_next(node)) {
 		int val_len = (int)strlen(node->fn_name);
 		if (val_len == s_len && !memcmp(s, node->fn_name, s_len)) {
@@ -1239,7 +1227,7 @@ do_autosuggest(fnlist_ty **cal_head, fnlist_ty *decl_head, fnlist_ty *notfound_h
 			 * of the same function will only be checked once. */
 			/* assert(jtrie_insert(trie_head, cal_node->fn_name)); */
 dld:;
-			float lev;
+			int lev;
 			fnlist_ty similar_fn_name_stack;
 			fnlist_ty *similar_fn_name = NULL;
 			if (algo == ALGO_TRIE || algo == ALGO_GABUNGAN) {
@@ -1484,6 +1472,7 @@ accuracy(confusion_matrix_ty *confusion_matrix)
 void
 autosuggest(const char *fname)
 {
+
 	char *file = file_preprocess_alloc(fname);
 	char *file_const = file_alloc(fname);
 	char *file_includes = file_preprocess_includes(fname, 1);
@@ -1498,6 +1487,9 @@ autosuggest(const char *fname)
 	var_get(file_and_includes, types);
 	free(file_and_includes);
 	V(var_print(types));
+
+	time_t startTime = (float)clock()/CLOCKS_PER_SEC;
+
 	int ret = do_autosuggest(&cal_head, decl_head, notfound_head, trie_head, file, file_includes, fname, 1);
 	free(file);
 	if (ret) {
@@ -1510,7 +1502,7 @@ autosuggest(const char *fname)
 				if (!ret)
 					break;
 			}
-		if (ret) {
+		if (0) {
 			/* If the notfound linked list is still not empty, search for similar matches
 			 * in the files in the directory of FNAME. */
 			assert(strlen(fname) < 4096);
@@ -1552,6 +1544,11 @@ autosuggest(const char *fname)
 				printf("\"%s\" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah \"%s\" yang didefinisikan pada \"%s\"?\n", node->fn_name, node->similar_fn_name, node->found_at);
 		}
 	}
+
+/* 	time_t endTime = (float)clock()/CLOCKS_PER_SEC; */
+/* 	time_t timeElapsed = endTime - startTime; */
+/* 	printf("time_elapsed: %f\n", timeElapsed); */
+
 	if (filename_target) {
 		confusion_matrix_ty confusion_matrix;
 		confusion_make(&confusion_matrix, cal_head, cal_target_head);
