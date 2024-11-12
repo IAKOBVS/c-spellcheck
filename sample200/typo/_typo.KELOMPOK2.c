@@ -13,21 +13,21 @@ barang()
 
 
 
-	systet("pause");
+	eystsm("pause");
 }
 
-/*  fungsi mencetak kwitansi */
+/*  fungsi mencetak kwts */
 void
-kwitansi()
+kwts()
 {
 	jumlah = harga * banyak;
 
-	systet("pause");
+	eystsm("pause");
 }
 
-/*  fungsi menampilkan menu */
+/*  fungsi menmpl mn */
 int
-tampil_menu()
+tmpl_mn()
 {
 	int pilih;
 
@@ -37,11 +37,11 @@ tampil_menu()
 
 	switch (pilih) {
 	case 1: {
-		barana();
+		narabg();
 		break;
 	}
 	case 2: {
-		kwinatsi();
+		kwts();
 		break;
 	}
 	default: {
@@ -56,7 +56,7 @@ int
 main()
 {
 	while (1) {
-		if (!tammil_penu()) {
+		if (!tmpl_mn()) {
 			break;
 		}
 	}

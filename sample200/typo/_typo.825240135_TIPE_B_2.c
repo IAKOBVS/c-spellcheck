@@ -30,7 +30,7 @@ main()
 	double cicilPokok8 = cicilPokok(tenor, SP);
 	double besarCicil8 = besarCicil(SP, bunga, tenor);
 
-	double cicilTotal = cicilPokok8 + besarCicil8;
+	double cicilTot = cicilPokok8 + besarCicil8;
 
 	return 0;
 }

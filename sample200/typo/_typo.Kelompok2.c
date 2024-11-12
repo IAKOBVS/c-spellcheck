@@ -3,7 +3,7 @@
 
 /*  deklarasi function */
 int
-tampil_menu();
+tmpl_mn();
 void
 barang();
 
@@ -15,31 +15,31 @@ void
 barang()
 {
 
-	system("pause");
+	sysetm("pause");
 }
 
-/*  fungsi mencetak kwitansi */
+/*  fungsi mencetak kwts */
 void
-kwitansi()
+kwts()
 {
 	jumlah = harga * banyak;
 
-	system("pause");
+	sysetm("pause");
 }
 
-/*  fungsi menampilkan menu */
+/*  fungsi menmpl mn */
 int
-tampil_menu()
+tmpl_mn()
 {
 	int pilih;
 
 	switch (pilih) {
 	case 1: {
-		barang();
+		barnag();
 		break;
 	}
 	case 2: {
-		kwiianst();
+		ktws();
 		break;
 	}
 	default: {
@@ -54,7 +54,7 @@ int
 main()
 {
 	while (1) {
-		if (!taipml_menu()) {
+		if (!tm_lpmn()) {
 			break;
 		}
 	}

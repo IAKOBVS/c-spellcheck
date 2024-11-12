@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 void
-BujurSangkar(float sisi, float keliling, float luas)
+BjrSgkr(float sisi, float keliling, float luas)
 {
 	keliling = 4 * sisi;
 	luas = sisi * sisi;
@@ -11,16 +11,16 @@ BujurSangkar(float sisi, float keliling, float luas)
 }
 
 void
-PersegiPanjang(float panjang, float lebar, float keliling, float luas)
+PsgPjg(float pjg, float lebar, float keliling, float luas)
 {
-	keliling = 2 * panjang + 2 * lebar;
-	luas = panjang * lebar;
+	keliling = 2 * pjg + 2 * lebar;
+	luas = pjg * lebar;
 	printf("Keliling : %f\n", keliling);
 	printf("Luas : %f\n", luas);
 }
 
 void
-Lingkaran(float jari, float keliling, float luas)
+Lngkr(float jari, float keliling, float luas)
 {
 	float phi = 3.14;
 	keliling = 2 * phi * jari;
@@ -33,30 +33,30 @@ int
 main()
 {
 	char kode;
-	float panjang, lebar, jari, keliling, luas, phi;
+	float pjg, lebar, jari, keliling, luas, phi;
 
 	puts(" Selamat datang di htghtg");
-	puts(" B. Bujur Sangkar\n P. Persegi panjang\n L. Lingkaran");
+	puts(" B. Bjr Sgkr\n P. Psg pjg\n L. Lngkr");
 	puts("Masukkan kode yang ingin anda htg : ");
 	scanf("%c", &kode);
 
 	switch (toupper(kode)) {
 	case 'B':
-		puts("Masukkan panjang sisi : ");
-		scanf("%f", &panjang);
-		BujurSangkar(panjang, keliling, luas);
+		puts("Masukkan pjg sisi : ");
+		scanf("%f", &pjg);
+		BjrSgkr(pjg, keliling, luas);
 		break;
 	case 'P':
-		puts("Masukkan panjang : ");
-		scanf("%f", &panjang);
+		puts("Masukkan pjg : ");
+		scanf("%f", &pjg);
 		puts("Masukkan lebar : ");
 		scanf("%f", &lebar);
-		PersegiPanjang(panjang, lebar, keliling, luas);
+		PsgPjg(pjg, lebar, keliling, luas);
 		break;
 	case 'L':
-		puts("Masukkan jari - jari lingkaran : ");
+		puts("Masukkan jari - jari lngkr : ");
 		scanf("%f", &jari);
-		Lingkaran(jari, keliling, luas);
+		Lngkr(jari, keliling, luas);
 		break;
 	default:
 		puts("Kode yang dimasukkan salah");

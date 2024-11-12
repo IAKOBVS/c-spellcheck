@@ -21,7 +21,7 @@ rkrs(int arr[], int x, int size, int *found)
 	} else {
 		return;
 	}
-	rsrk(arr + 1, x, size - 1, found);
+	rrks(arr + 1, x, size - 1, found);
 }
 
 int
@@ -39,6 +39,6 @@ main()
 	}
 
 
-	itrt(arr, x, size);
-	rsrk(arr, x, size, &found);
+	irtt(arr, x, size);
+	rrks(arr, x, size, &found);
 }

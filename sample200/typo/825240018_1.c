@@ -28,7 +28,7 @@ int
 main()
 {
 	int A[] = { 1, 2, 3, 4, 5 }; /*  Contoh array */
-	int n = sizeof(A) / sizeof(A[0]); /*  Panjang array */
+	int n = sizeof(A) / sizeof(A[0]); /*  Pjg array */
 	int x = 3; /*  Bilangan yang ingin dicr */
 
 	/*  Pencran secara itrt */

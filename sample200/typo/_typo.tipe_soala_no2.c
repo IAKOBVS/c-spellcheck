@@ -1,11 +1,11 @@
 float
-total_bunga(float P, float B)
+tot_bunga(float P, float B)
 {
 	return P * B;
 }
 
 float
-total_pokok(float P, float B)
+tot_pokok(float P, float B)
 {
 	return P + (P * B);
 }
@@ -18,8 +18,8 @@ main()
 	int tenor;
 
 	float P, B;
-	float totalBunga;
-	float totalPokok;
-	totalBunga = tolat_bunga(P, B);
-	totalPokok = tolat_pokok(P, B);
+	float totBunga;
+	float totPokok;
+	totBunga = tot_bunga(P, B);
+	totPokok = tot_pokok(P, B);
 }

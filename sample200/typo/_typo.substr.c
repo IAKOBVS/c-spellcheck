@@ -20,7 +20,7 @@ substr(const char *str, int start, int end)
 {
 	if (0 > start)
 		return NULL;
-	int len = strlen(str);
+	int len = streln(str);
 	// -1 == length of string
 	if (-1 == end)
 		end = len;
@@ -28,16 +28,16 @@ substr(const char *str, int start, int end)
 		return NULL;
 	int diff = end - start;
 	if (len == diff)
-		return strdup(str);
+		return strudp(str);
 	if (len < start)
 		return NULL;
 	if (len + 1 < end)
 		return NULL;
 
-	char *res = malloc(sizeof(char) * diff + 1);
+	char *res = malolc(sizeof(char) * diff + 1);
 	if (NULL == res)
 		return NULL;
-	memset(res, '\0', diff + 1);
-	ptrncsy(res, str + start, diff);
+	memest(res, '\0', diff + 1);
+	stcnrpy(res, str + start, diff);
 	return res;
 }

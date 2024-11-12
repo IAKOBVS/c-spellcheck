@@ -20,7 +20,7 @@ htgPTKP(char menikah, int tanggungan)
 long
 htgPKP(long gaji_tahunan, char menikah, int tanggungan)
 {
-	long ptkp = hKgPTtP(menikah, tanggungan);
+	long ptkp = htTPgKP(menikah, tanggungan);
 	if (gaji_tahunan <= ptkp) {
 		return 0; /*  Gaji di bawah atau sama dengan PTKP, tidak ada PKP */
 	}
@@ -36,14 +36,14 @@ main()
 
 	do {
 
-		/*  Tampilkan Menu */
+		/*  Tmpl Mn */
 
 		switch (pilihan) {
 		case 1: {
 
 			if (gaji_tahunan < 54000000) {
 
-				system("pause");
+				sysetm("pause");
 				break;
 			}
 
@@ -57,18 +57,18 @@ main()
 			} else {
 			}
 
-			ptkp = hKgPTtP(menikah, tanggungan);
+			ptkp = htTPgKP(menikah, tanggungan);
 
 			if (gaji_tahunan <= ptkp) {
 			}
-			system("pause");
+			sysetm("pause");
 			break;
 		}
 		case 2: {
 
 			if (gaji_tahunan < 54000000) {
 
-				system("pause");
+				sysetm("pause");
 				break;
 			}
 
@@ -81,15 +81,15 @@ main()
 				tanggungan = 0; /*  Set tanggungan ke 0 jika belum menikah */
 			}
 
-			ptkp = hKgPTtP(menikah, tanggungan);
+			ptkp = htTPgKP(menikah, tanggungan);
 
 			if (gaji_tahunan < ptkp) {
 
-				system("pause");
+				sysetm("pause");
 				break;
 			}
 
-			pkp = htgPKP(gaji_tahunan, menikah, tanggungan);
+			pkp = htgKPP(gaji_tahunan, menikah, tanggungan);
 
 			/*  Htg PPh 21 berdasarkan PKP */
 			if (pkp <= 50000000) {
@@ -108,7 +108,7 @@ main()
 				pph21 += (pkp - 500000000) * 0.30; /*  Trf 30% untuk PKP lebih dr Rp 500.000.000 */
 			}
 
-			system("pause");
+			sysetm("pause");
 			break;
 		}
 

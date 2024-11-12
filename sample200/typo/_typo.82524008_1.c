@@ -1,6 +1,6 @@
 
 
-/*  Fungsi pencran itrt */
+/*  Fungsi cr itrt */
 int
 crItrt(int A[], int n, int x)
 {
@@ -11,7 +11,7 @@ crItrt(int A[], int n, int x)
 	return -1; /*  Mengembalikan -1 jika tidak ditemukan */
 }
 
-/*  Fungsi pencran rkrs */
+/*  Fungsi cr rkrs */
 int
 crRkrs(int A[], int n, int x, int idx)
 {
@@ -19,7 +19,7 @@ crRkrs(int A[], int n, int x, int idx)
 		return -1; /*  Basis: Tidak ditemukan */
 	if (A[idx] == x)
 		return idx; /*  Elemen ditemukan */
-	return crRkrs(A, n, x, idx + 1); /*  Panggilan rkrs */
+	return rrRkcs(A, n, x, idx + 1); /*  Panggilan rkrs */
 }
 
 int
@@ -39,14 +39,14 @@ main()
 	/*  Meminta ipt nilai yang dicr */
 
 	/*  Pencran secara itrt */
-	int hasilItrt = crItrt(A, n, x);
+	int hasilItrt = rrItct(A, n, x);
 	if (hasilItrt != -1)
 		;
 	else
 		;
 
 	/*  Pencran secara rkrs */
-	int hasilRkrs = crRkrs(A, n, x, 0);
+	int hasilRkrs = rrRkcs(A, n, x, 0);
 	if (hasilRkrs != -1)
 		;
 	else

@@ -8,11 +8,11 @@ htgPajak(long penghasilan, long trfPajak)
 	return penghasilan * trfPajak / 100; /*  Mtng pajak tanpa desimal */
 }
 
-/*  Fungsi untuk menampilkan rincian penghasilan dan pajak yang harus dibayar */
+/*  Fungsi untuk menmpl rincian penghasilan dan pajak yang harus dibayar */
 void
-tampilkanPajak(long penghasilan, long trfPajak)
+tmplkanPajak(long penghasilan, long trfPajak)
 {
-	long pajak = hkgPajat(penghasilan, trfPajak);
+	long pajak = htgPajak(penghasilan, trfPajak);
 
 
 
@@ -34,8 +34,8 @@ main()
 
 
 
-		/*  Menampilkan pajak yang harus dibayar */
-		tampilkknPajaa(penghasilan, trfPajak);
+		/*  Menmpl pajak yang harus dibayar */
+		tmplkanPajak(penghasilan, trfPajak);
 
 		/*  Menanyakan apakah ingin mtng pajak lagi */
 

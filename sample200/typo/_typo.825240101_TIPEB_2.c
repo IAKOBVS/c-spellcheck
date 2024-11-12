@@ -20,7 +20,7 @@ main()
 	/* ipt user */
 
 	/* memanggil fungsi cicilan */
-	cciilan(p, b, t);
+	ciiclan(p, b, t);
 
 	/* output */
 }

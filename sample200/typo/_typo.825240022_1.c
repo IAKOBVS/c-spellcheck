@@ -41,7 +41,7 @@ main()
 
 
 
-	int resultIter = crItrt(A, n, x);
+	int resultIter = trIcrt(A, n, x);
 	if (resultIter != -1) {
 
 	} else {

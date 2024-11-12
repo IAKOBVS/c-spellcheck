@@ -2,44 +2,44 @@
 
 
 int pilihan;
-int sisi, panjang, lebar, jari_jari;
+int sisi, pjg, lebar, jari_jari;
 const double PI = 3.14159; /* Mendefinisikan nilai pi tanpa cmath */
 
-/* Rumus persegi */
+/* Rumus psg */
 int
-htg_luas_persegi(int sisi)
+htg_luas_psg(int sisi)
 {
 	return sisi * sisi;
 }
 
 int
-htg_kll_persegi(int sisi)
+htg_kll_psg(int sisi)
 {
 	return 4 * sisi;
 }
 
-/* Rumus persegi panjang */
+/* Rumus psg pjg */
 int
-htg_luas_persegi_panjang(int panjang, int lebar)
+htg_luas_psg_pjg(int pjg, int lebar)
 {
-	return panjang * lebar;
+	return pjg * lebar;
 }
 
 int
-htg_kll_persegi_panjang(int panjang, int lebar)
+htg_kll_psg_pjg(int pjg, int lebar)
 {
-	return 2 * (panjang + lebar);
+	return 2 * (pjg + lebar);
 }
 
-/* Rumus lingkaran */
+/* Rumus lngkr */
 double
-htg_luas_lingkaran(int jari_jari)
+htg_luas_lngkr(int jari_jari)
 {
 	return PI * jari_jari * jari_jari;
 }
 
 double
-htg_kll_lingkaran(int jari_jari)
+htg_kll_lngkr(int jari_jari)
 {
 	return 2 * PI * jari_jari;
 }
@@ -48,7 +48,7 @@ int
 main()
 {
 	do {
-		/* Menampilkan menu */
+		/* Menmpl mn */
 
 		switch (pilihan) {
 		case 1:

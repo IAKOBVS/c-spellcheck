@@ -12,18 +12,18 @@ barang()
 	system("pause");
 }
 
-/*  fungsi mencetak kwitansi */
+/*  fungsi mencetak kwts */
 void
-kwitansi()
+kwts()
 {
 	jumlah = harga * banyak;
 
 	system("pause");
 }
 
-/*  fungsi menampilkan menu */
+/*  fungsi menmpl mn */
 int
-tampil_menu()
+tmpl_mn()
 {
 	int pilih;
 
@@ -33,7 +33,7 @@ tampil_menu()
 		break;
 	}
 	case 2: {
-		kwitansi();
+		kwts();
 		break;
 	}
 	default: {
@@ -48,7 +48,7 @@ int
 main()
 {
 	while (1) {
-		if (!tampil_menu()) {
+		if (!tmpl_mn()) {
 			break;
 		}
 	}

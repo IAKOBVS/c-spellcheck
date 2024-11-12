@@ -17,8 +17,8 @@ crItrt(int A[], int n, int x)
 int
 crRkrs(int A[], int n, int x, int index )
 {
-	if (index >= n) { /*  Jika idx melampaui panjang array */
-		return -1; /*  Kembalikan -1 (x tidak ditemukan) */
+	if (index >= n) { /*  Jika idx melampaui pjg array */
+		return -1; /*  Kembalikan -1  */
 	}
 	if (A[index] == x) { /*  Jika elemen pada idx cocok dengan x */
 		return index; /*  Kembalikan idx */
@@ -30,7 +30,7 @@ int
 main()
 {
 	int A[] = { 5, 3, 7, 9, 11, 15 }; /*  Array contoh */
-	int n = sizeof(A) / sizeof(A[0]); /*  Mtng panjang array */
+	int n = sizeof(A) / sizeof(A[0]); /*  Mtng pjg array */
 	int x;
 
 

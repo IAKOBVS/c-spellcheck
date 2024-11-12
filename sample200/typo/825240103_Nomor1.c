@@ -16,7 +16,7 @@ crItrt(int A[], int n, int x, int start)
 int
 crRkrs(int A[], int n, int x, int start)
 {
-	/*  kalau sudah habis idxnya (basis kasus) */
+	/*  kalau sudah habis idxnya */
 	if (start >= n) {
 		return -1; /*  nggak ketemu, kembalikan -1 */
 	}
@@ -29,14 +29,14 @@ crRkrs(int A[], int n, int x, int start)
 		return result;
 	}
 
-	/*  kalau belum ketemu, lanjutkan pencran di idx berikutnya */
+	/*  kalau belum ketemu, lanjutkan cr di idx berikutnya */
 	return crRkrs(A, n, x, start + 1);
 }
 
 int
 main()
 {
-	/*  inisialisasi array dan vrabel pencran */
+	/*  inisialisasi array dan vrabel cr */
 	int A[] = { 3, 8, 1, 7, 9, 2 }; /*  array contoh */
 	int n = sizeof(A) / sizeof(A[0]); /*  ukuran array */
 	int x;
@@ -46,7 +46,7 @@ main()
 	/*  cr angka tersebut dengan gabungan rkrs dan itrt */
 	int idx = crRkrs(A, n, x, 0);
 
-	/*  tampilkan hasil pencran */
+	/*  tmplkan hasil cr */
 	if (idx != -1) {
 
 	} else {

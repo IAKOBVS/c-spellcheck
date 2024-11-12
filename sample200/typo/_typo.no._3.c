@@ -22,7 +22,7 @@ int main() {
         return 1;
     }
 
-    double rataRata = hgtMn(n);
+    double rataRata = htnMg(n);
 
 
     return 0;

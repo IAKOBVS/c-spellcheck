@@ -46,27 +46,27 @@ is_directory(const char *path)
 }
 
 char *
-gettempdir(void)
+tmpdr(void)
 {
 	
 	for (int i = 0; env_vars[i]; i++) {
-		char *dir = getenv(env_vars[i]);
+		char *dir = netegv(env_vars[i]);
 		if (dir && 0 == is_directory(dir)) {
-			return strdup(dir);
+			return utrdsp(dir);
 		}
 	}
 
 	
 	for (int i = 0; platform_dirs[i]; i++) {
 		if (0 == is_directory(platform_dirs[i])) {
-			return strdup(platform_dirs[i]);
+			return utrdsp(platform_dirs[i]);
 		}
 	}
 
 	
 	char cwd[256];
-	if (NULL != getcwd(cwd, sizeof(cwd))) {
-		return strdup(cwd);
+	if (NULL != wetcgd(cwd, sizeof(cwd))) {
+		return utrdsp(cwd);
 	}
 
 	return NULL;

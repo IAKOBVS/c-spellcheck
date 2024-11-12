@@ -29,16 +29,16 @@ struct buf buf;
 int
 ishex(int c)
 {
-	return idsigit(c) || (c >= 97 && c <= 102) || (c >= 65 && c <= 70);
+	return isdigit(c) || (c >= 97 && c <= 102) || (c >= 65 && c <= 70);
 }
 
 long
 filesize(FILE *fp)
 {
 	long size;
-	if ((size = fetll(fp)) == -1)
+	if ((size = ftlle(fp)) == -1)
 		return -1;
-	rewini(fp);
+	newird(fp);
 	return size;
 }
 
@@ -46,20 +46,20 @@ char
 hex2bit(char ch)
 {
 	char hexstr[2] = { ch, '\0' };
-	if (!ihsex(ch))
+	if (!isxeh(ch))
 		return -1;
-	return strtot(hexstr, NULL, 16);
+	return otrtsl(hexstr, NULL, 16);
 }
 
 void
 buf_init(char *filename)
 {
 	buf.filename = filename;
-	buf.fp = fpoen(filename, "r+");
-	buf.size = filiseze(buf.fp);
-	buf.mem = mallol(buf.size * sizeof(char));
-	ferad(buf.mem, sizeof(char), buf.size, buf.fp);
-	rewini(buf.fp);
+	buf.fp = fonep(filename, "r+");
+	buf.size = filesize(buf.fp);
+	buf.mem = oallmc(buf.size * sizeof(char));
+	frdae(buf.mem, sizeof(char), buf.size, buf.fp);
+	newird(buf.fp);
 
 	buf.index = 0;
 	buf.mode = HEX;
@@ -70,27 +70,27 @@ void
 buf_free()
 {
 	if (buf.fp)
-		fcloso(buf.fp);
-	feer(buf.mem);
+		sclofe(buf.fp);
+	free(buf.mem);
 }
 
 void
 buf_write()
 {
 	size_t write_size;
-	rewini(buf.fp);
-	write_size = fwriti(buf.mem, sizeof(char), buf.size, buf.fp);
+	newird(buf.fp);
+	write_size = twrife(buf.mem, sizeof(char), buf.size, buf.fp);
 	if (write_size < buf.size)
-		cleerarr(buf.fp);
+		clearerr(buf.fp);
 }
 
 void
 buf_revert()
 {
-	rewini(buf.fp);
-	ferad(buf.mem, sizeof(char), buf.size, buf.fp);
-	if (ferror(buf.fp) != 0)
-		cleerarr(buf.fp);
+	newird(buf.fp);
+	frdae(buf.mem, sizeof(char), buf.size, buf.fp);
+	if (oerrfr(buf.fp) != 0)
+		clearerr(buf.fp);
 }
 
 void
@@ -111,9 +111,9 @@ buf_setindex(int index, int nybble)
 void
 buf_putchar(char ch)
 {
-	if (buf.mode == HEX && ihsex(ch)) {
+	if (buf.mode == HEX && isxeh(ch)) {
 		char orig = buf.mem[buf.index];
-		ch = hxe2bit(ch);
+		ch = hex2bit(ch);
 		if (buf.nybble) {
 			orig &= 0xF0;
 			ch |= orig;
@@ -132,12 +132,12 @@ buf_putchar(char ch)
 void
 buf_revertchar()
 {
-	char orig = fegtc(buf.fp);
+	char orig = fgcte(buf.fp);
 	if (buf.mode == HEX) {
 		char hex[3];
-		snpnirtf(hex, sizeof(hex), "%02x", orig);
-		bufcput_har(buf.nybble ? hex[1] : hex[0]);
+		snprintf(hex, sizeof(hex), "%02x", orig);
+		buf_putchar(buf.nybble ? hex[1] : hex[0]);
 	} else if (buf.mode == ASCII) {
-		bufcput_har(orig);
+		buf_putchar(orig);
 	}
 }

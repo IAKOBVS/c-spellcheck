@@ -11,7 +11,7 @@ hasilkali(int submatrix[], int matrixA[], int matrixB[], int row)
 }
 
 void
-cetakArray(int matrix[], int row)
+ctkAry(int matrix[], int row)
 {
 	for (int i = 0; i < row; i++) {
 	}
@@ -43,11 +43,11 @@ main()
 
 	hasilkali(hasilindex, matrixA, matrixB, row);
 
-	/* tampil hasil semua */
+	/* tmpl hasil semua */
 
-	cetakArray(matrixA, row);
+	ctkAry(matrixA, row);
 
-	cetakArray(matrixB, row);
+	ctkAry(matrixB, row);
 
-	cetakArray(hasilindex, row);
+	ctkAry(hasilindex, row);
 }

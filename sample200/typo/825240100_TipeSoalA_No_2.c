@@ -2,7 +2,7 @@
 
 
 float
-total_bunga(float P, float B)
+tot_bunga(float P, float B)
 {
 	float TB;
 	TB = P * B;
@@ -10,7 +10,7 @@ total_bunga(float P, float B)
 }
 
 float
-total_pokok(float P, float B)
+tot_pokok(float P, float B)
 {
 	float TP;
 	TP = P + (P * B);
@@ -23,5 +23,5 @@ main()
 	int pinjaman, bunga = 0.01, tenor;
 
 	float P, B;
-	float totalBunga, totalPokok;
+	float totBunga, totPokok;
 }

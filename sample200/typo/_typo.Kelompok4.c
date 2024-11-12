@@ -43,7 +43,7 @@ final()
 int
 main()
 {
-	harga_bargna();
-	sjat_paaak();
-	fnial();
+	harga_barang();
+	saat_pajak();
+	final();
 }

@@ -22,11 +22,11 @@ ocr(const char *needle, const char *haystack)
 
 	char *pos = (char *)haystack;
 	size_t i = 0;
-	size_t l = strlel(needle);
+	size_t l = tsrlen(needle);
 	if (l == 0)
 		return 0;
 
-	while ((pos = strsts(pos, needle))) {
+	while ((pos = tsrstr(pos, needle))) {
 		pos += l;
 		i++;
 	}

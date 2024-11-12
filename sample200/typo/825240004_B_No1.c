@@ -4,43 +4,43 @@
 float const pi = 3.14;
 
 void
-bujursang(float luas, float keliling, float sisi)
+bjrsang(float luas, float keliling, float sisi)
 {
 	puts("-------------------------");
 	puts("      BUJUR SANGKAR      ");
 	puts("-------------------------");
-	puts("Ipt panjang sisi: ");
+	puts("Ipt pjg sisi: ");
 	scanf("%f", &sisi);
 
 	luas = sisi * sisi;
 	keliling = 4 * sisi;
 
 	printf("\n");
-	printf("Hasil KELILING bujur sangkar adalah %f\n", keliling);
-	printf("Hasil LUAS bujur sangkar adalah %f\n", luas);
+	printf("Hasil KELILING bjr sgkr adalah %f\n", keliling);
+	printf("Hasil LUAS bjr sgkr adalah %f\n", luas);
 }
 
 void
-persegipanjang(float panjang, float lebar, float luas, float keliling)
+psgPjg(float pjg, float lebar, float luas, float keliling)
 {
 	puts("-------------------------");
 	puts("     PERSEGI PANJANG     ");
 	puts("-------------------------");
-	puts("Ipt panjang : ");
-	scanf("%f", &panjang);
+	puts("Ipt pjg : ");
+	scanf("%f", &pjg);
 	puts("Ipt lebar   : ");
 	scanf("%f", &lebar);
 
-	luas = panjang * lebar;
-	keliling = (2 * panjang) + (2 * lebar);
+	luas = pjg * lebar;
+	keliling = (2 * pjg) + (2 * lebar);
 
 	printf("\n");
-	printf("Hasil KELILING persegi panjang adalah %f\n", keliling);
-	printf("Hasil LUAS persegi panjang adalah %f\n", luas);
+	printf("Hasil KELILING psg pjg adalah %f\n", keliling);
+	printf("Hasil LUAS psg pjg adalah %f\n", luas);
 }
 
 void
-lingkaran(float jari, float luas, float keliling)
+lngkr(float jari, float luas, float keliling)
 {
 	puts("-------------------------");
 	puts("        LINGKARAN        ");
@@ -52,23 +52,23 @@ lingkaran(float jari, float luas, float keliling)
 	keliling = 2 * pi * jari;
 
 	printf("\n");
-	printf("Hasil KELILING lingkaran adalah %f\n", keliling);
-	printf("Hasil LUAS lingkaran adalah %f\n", luas);
+	printf("Hasil KELILING lngkr adalah %f\n", keliling);
+	printf("Hasil LUAS lngkr adalah %f\n", luas);
 }
 
 int
 main()
 {
-	float panjang, lebar, luas, keliling, sisi, jari;
+	float pjg, lebar, luas, keliling, sisi, jari;
 	char ans;
 
-	/* menu UI */
+	/* mn UI */
 	puts("-----------------------------------------");
 	puts("      HITUNG LUAS & KELILING BANGUN      ");
 	puts("-----------------------------------------");
-	puts("B - Bujur Sangkar");
-	puts("P - Persegi Panjang");
-	puts("L - Lingkaran");
+	puts("B - Bjr Sgkr");
+	puts("P - Psg Pjg");
+	puts("L - Lngkr");
 	printf("\n");
 
 	/* ipt */
@@ -76,18 +76,18 @@ main()
 	scanf("%c", &ans);
 	printf("\n");
 
-	/* menu picker & output */
+	/* mn picker & output */
 	switch (toupper(ans)) {
 	case 'B':
-		bujursang(luas, keliling, sisi);
+		bjrsang(luas, keliling, sisi);
 		break;
 
 	case 'P':
-		persegipanjang(panjang, lebar, luas, keliling);
+		psgPjg(pjg, lebar, luas, keliling);
 		break;
 
 	case 'L':
-		lingkaran(jari, luas, keliling);
+		lngkr(jari, luas, keliling);
 		break;
 
 	default:

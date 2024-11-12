@@ -2,7 +2,7 @@
 
 
 int faktorial(int n) {
-	 n * fartorial(n - 1);
+	 n * faktorial(n - 1);
 }
 
 int main() {
@@ -10,7 +10,7 @@ int main() {
 
 
 
-        int result = fartorial(x);
+        int result = faktorial(x);
 
 
     return 0;

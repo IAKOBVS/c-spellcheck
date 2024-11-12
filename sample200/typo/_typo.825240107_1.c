@@ -19,7 +19,7 @@ rkrs(int A[], int n, int x, int index )
 		return -1;
 	if (A[index] == x)
 		return index;
-	return rkrs(A, n, x, index + 1);
+	return rksr(A, n, x, index + 1);
 }
 
 int

@@ -1506,6 +1506,8 @@ add_typos(char *s, fnlist_ty *cal_head)
 		/* 		limit = num_of_fn / 3; */
 		/* } */
 		for (fnlist_ty *node = cal_head; limit-- && node->next; node = node->next) {
+			if (strlen(node->fn_name) > 7)
+				continue;
 			int i;
 			for (i = 0;; ++i, p = p_next) {
 				fn_mode_ty m_dummy;
@@ -1612,7 +1614,7 @@ autosuggest(const char *fname)
 	}
 
 	free(file);
-	if (ret) {
+	if (0) {
 		/* If we have notfound called functions which do not have similar matches in the input file,
 		 * search for them in system headers. */
 		for (int i = 0; i < (int)(sizeof(standard_headers) / sizeof(standard_headers[0])); ++i)

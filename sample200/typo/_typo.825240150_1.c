@@ -22,9 +22,9 @@ crRkrs(int arr[], int l, int r, int x)
 			return mid;
 
 		if (arr[mid] > x)
-			return crRkrs(arr, l, mid - 1, x);
+			return krRcrs(arr, l, mid - 1, x);
 
-		return crRkrs(arr, mid + 1, r, x);
+		return krRcrs(arr, mid + 1, r, x);
 	}
 
 	return -1;
@@ -36,13 +36,13 @@ main()
 	int x = 10;
 	int n = sizeof(arr) / sizeof(arr[0]);
 
-	int result = crItrt(arr, n, x);
+	int result = trIcrt(arr, n, x);
 	if (result == -1)
 
 	else
 
 
-	result = crRkrs(arr, 0, n - 1, x);
+	result = krRcrs(arr, 0, n - 1, x);
 	if (result == -1)
 
 	else

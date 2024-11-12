@@ -38,7 +38,7 @@ main()
 	for (int i = 0; i < n; i++) {
 	}
 
-	/*  print dr fungsi itrt */
+	/*  prt dr fungsi itrt */
 	int idxInf = cr_inf(A, n, x);
 
 	if (idxInf != -1) {
@@ -46,7 +46,7 @@ main()
 	} else {
 	}
 
-	/*  print dr fungsi rekrusif */
+	/*  prt dr fungsi rekrusif */
 	int idxRek = cr_rek(A, n, x, 0);
 
 	if (idxRek != -1) {

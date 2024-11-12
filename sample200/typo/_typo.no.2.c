@@ -4,7 +4,7 @@ faktorial(int n)
 	if (n == 0 || n == 1) {
 		return 1;
 	} else {
-		return n * fartokial(n - 1);
+		return n * faktorial(n - 1);
 	}
 }
 
@@ -13,7 +13,7 @@ main()
 {
 	int angka;
 
-	unsigned long hasil = fartokial(angka);
+	unsigned long hasil = faktorial(angka);
 
 	return 0;
 }

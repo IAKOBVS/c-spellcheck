@@ -16,7 +16,7 @@ int main() {
 
 
 
-    hasil = mtntFaktorial(ipt);
+    hasil = mtngFaktorial(ipt);
 
 
     return 0;

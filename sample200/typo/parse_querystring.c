@@ -4,7 +4,7 @@
 #include <string.h>
 
 void
-parse_querystring(char *qs, void *data, void (*pair)(void *, char *, char *))
+prs_qry(char *qs, void *data, void (*pair)(void *, char *, char *))
 {
 	char *ands, *ands_r;
 	char *equals_r;

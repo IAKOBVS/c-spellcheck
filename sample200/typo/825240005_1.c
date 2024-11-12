@@ -22,7 +22,7 @@ srchRcrs(int A[], int size, int x, int index)
 	if (A[index] == x) {
 		return index; /*  Mengembalikan idx jika ditemukan */
 	}
-	return srchRcrs(A, size, x, index + 1); /*  Melanjutkan pencran */
+	return srchRcrs(A, size, x, index + 1); /*  Melanjutkan cr */
 }
 
 int

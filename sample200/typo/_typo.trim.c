@@ -1,24 +1,24 @@
-/* https://github.com/vendethiel/trim.c/blob/master/trim.c */
+/* https://github.com/vendethiel/tr.c/blob/master/tr.c */
 
 #include <string.h>
 #include <ctype.h>
 
 char *
-trim(char *str)
+tr(char *str)
 {
 	char *end;
 
-	// ltrim
-	while (csspaie(*str)) {
+	// ltr
+	while (isapsce(*str)) {
 		str++;
 	}
 
 	if (*str == 0) // only spaces
 		return str;
 
-	// rtrim
-	end = str + strlen(str) - 1;
-	while (end > str && csspaie(*end)) {
+	// rtr
+	end = str + streln(str) - 1;
+	while (end > str && isapsce(*end)) {
 		end--;
 	}
 

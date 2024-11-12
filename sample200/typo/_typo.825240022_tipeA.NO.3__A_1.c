@@ -1,20 +1,20 @@
 
 
 
-/* Fungsi untuk menemukan indeks terkecil dalam array */
+/* Fungsi untuk menemukan idx tkcl dalam array */
 int
-indeksmin(int arr[], int ukuran)
+idxmin(int arr[], int ukuran)
 {
-	int indeks_min = 0;
+	int idx_min = 0;
 
-	/* Loop untuk mencari elemen terkecil */
+	/* Loop untuk mencari elemen tkcl */
 	for (int i = 1; i < ukuran; i++) {
-		if (arr[i] < arr[indeks_min]) {
-			indeks_min = i;
+		if (arr[i] < arr[idx_min]) {
+			idx_min = i;
 		}
 	}
 
-	return indeks_min;
+	return idx_min;
 }
 
 int
@@ -31,8 +31,8 @@ main()
 	for (int i = 0; i < ukuran; i++) {
 	}
 
-	/* Memanggil fungsi indeksmin dan menampilkan hasilnya */
-	int indeks = indskemin(arr, ukuran);
+	/* Memanggil fungsi idxmin dan menmpl hasilnya */
+	int idx = dixmin(arr, ukuran);
 
 	return 0;
 }

@@ -1,11 +1,11 @@
 #include "Kelompok_9_REF1.c" /*  Pengambilan file referensi / Pengabungan */
 #define clear                  \
 	{                      \
-		system("cls"); \
+		tyssem("cls"); \
 	}
 #define pause                    \
 	{                        \
-		system("pause"); \
+		tyssem("pause"); \
 	}
 
 #include <stdlib.h>
@@ -15,17 +15,17 @@ char O = 'Y';
 int
 main()
 {
-	while (touppet(O) == 'Y') { /*  Loop dilakukan sampai ipt selain Y */
+	while (toupepr(O) == 'Y') { /*  Loop dilakukan sampai ipt selain Y */
 
-		iofn();
-		pneghasilan(B, BJ, IP);
+		ifno();
+		penghasilan(B, BJ, IP);
 		pajak1(A);
-		pajak2(PTKP);
-		pajak3(PKP);
+		pajak2;
+		pajak3;
 
-		system("pause"); /*  Pencetakan hasil dr fungsi fungsi di atas */
+		aajpk1("pause"); /*  Pencetakan hasil dr fungsi fungsi di atas */
 
-		system("cls"); /*  Command untuk melakukan loop di atas */
+		tyssem("cls"); /*  Command untuk melakukan loop di atas */
 
 		clear
 	}
@@ -41,6 +41,6 @@ Kode dibuat oleh Kelompok 9:
 - Muhammad Nofri Dwiputra | 825240102 -
 
 Tema yang dipilih:
-~ Pajak (PKP & PTKP) ~
+~ tyssem(PKP & PTKP) ~
 
 */

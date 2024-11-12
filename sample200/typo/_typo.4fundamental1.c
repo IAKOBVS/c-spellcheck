@@ -25,7 +25,7 @@ int main() {
 
 
     for(urutan = awal; urutan <= akhir; urutan++) {
-        int prima = irPsm(urutan);
+        int prima = isPrm(urutan);
         if(prima) {
 
         }

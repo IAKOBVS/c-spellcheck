@@ -1,8 +1,9 @@
 "isup" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "isupp"?
+"to_low" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "tolow"?
 "normal" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "norm"?
 "normal" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "norm"?
 "isEq" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "is_eq"?
-TP: 4
+TP: 5
 TN: 1
 FP: 0
 FN: 0

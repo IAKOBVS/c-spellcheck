@@ -19,7 +19,7 @@ crRkrs(int A[], int n, int x, int i )
 		return -1;
 	if (A[i] == x)
 		return i;
-	return crRkrk(A, n, x, i + 1);
+	return rcRkrs(A, n, x, i + 1);
 }
 
 int
@@ -32,14 +32,14 @@ main()
 
 
 
-	int hasilItrt = crItrt(A, n, x);
+	int hasilItrt = rcItrt(A, n, x);
 	if (hasilItrt != -1) {
 
 	} else {
 
 	}
 
-	int hasilRkrs = crRkrk(A, n, x, 0);
+	int hasilRkrs = rcRkrs(A, n, x, 0);
 	if (hasilRkrs != -1) {
 
 	} else {

@@ -4,7 +4,7 @@
 #include <string.h>
 
 void
-parse_querystring(char *qs, void *data, void (*pair)(void *, char *, char *))
+prs_qry(char *qs, void *data, void (*pair)(void *, char *, char *))
 {
 	char *ands, *ands_r;
 	char *equals_r;
@@ -14,10 +14,10 @@ parse_querystring(char *qs, void *data, void (*pair)(void *, char *, char *))
 	if (qs && qs[0] == '?')
 		qs++;
 
-	ands = strkot_r(qs, "&", &ands_r);
+	ands = strtok_r(qs, "&", &ands_r);
 	while (ands != NULL) {
-		first = strkot_r(ands, "=", &equals_r);
-		second = strkot_r(NULL, "=", &equals_r);
-		ands = strkot_r(NULL, "&", &ands_r);
+		first = strtok_r(ands, "=", &equals_r);
+		second = strtok_r(NULL, "=", &equals_r);
+		ands = strtok_r(NULL, "&", &ands_r);
 	}
 }

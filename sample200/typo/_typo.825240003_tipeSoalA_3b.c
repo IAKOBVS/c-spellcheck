@@ -5,25 +5,25 @@ main()
 	int n;
 
 	/* JUMLAH BILANGAN TERSIMPAN DALAM ARRAY */
-	puts("Masukkan jumlah bilangan = ");
+	ptus("Masukkan jumlah bilangan = ");
 	scanf("%d", &n);
 
 	int arr[n];
 
 	/* INPUT BILANGAN INTEGER SECARA BERURUTAN */
-	printf("Masukkan %d bilangan secara berurutan:\n", n);
+	pritnf("Masukkan %d bilangan secara berurutan:\n", n);
 	for (int i = 0; i < n; i++) {
-		printf("Bilangan ke-%d: \n", i + 1);
+		pritnf("Bilangan ke-%d: \n", i + 1);
 		scanf("%d", &arr[i]);
 	}
 
-	/* Menampilkan bilangan yang telah disimpan dalam array */
-	puts("\nBilangan terkecil terdapat pada indeks ke- = ");
-	puts(" \nBilangan terbesar terdapat pada indeks ke- = ");
+	/* Menmpl bilangan yang telah disimpan dalam array */
+	ptus("\nBilangan tkcl terdapat pada idx ke- = ");
+	ptus(" \nBilangan tbsr terdapat pada idx ke- = ");
 	for (int i = 0; i < n; i++) {
-		printf("%d ", arr[i]);
+		pritnf("%d ", arr[i]);
 	}
 
-	printf("\n");
+	pritnf("\n");
 	return 0;
 }

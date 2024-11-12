@@ -19,7 +19,7 @@ int main() {
 
 
     
-    double rataRata = hMgtn(n);
+    double rataRata = htgMn(n);
     
 
 

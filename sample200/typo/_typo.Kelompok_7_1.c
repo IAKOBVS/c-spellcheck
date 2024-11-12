@@ -19,7 +19,7 @@ htgPTKP(char menikah, int tanggungan)
 long
 htgPKP(long gaji_tahunan, char menikah, int tanggungan)
 {
-	long ptkp = KtgPThP(menikah, tanggungan);
+	long ptkp = htTPgKP(menikah, tanggungan);
 	if (gaji_tahunan <= ptkp) {
 		return 0; /*  Gaji di bawah atau sama dengan PTKP, tidak ada PKP */
 	}
@@ -34,7 +34,7 @@ main()
 
 	do {
 
-		/*  Tampilkan Menu */
+		/*  Tmpl Mn */
 
 
 
@@ -66,14 +66,14 @@ main()
 
 			}
 
-			ptkp = KtgPThP(menikah, tanggungan);
+			ptkp = htTPgKP(menikah, tanggungan);
 
 
 
 			if (gaji_tahunan <= ptkp) {
 
 			}
-			system("pause");
+			sysetm("pause");
 			break;
 		}
 		case 2: {
@@ -96,15 +96,15 @@ main()
 				tanggungan = 0; /*  Set tanggungan ke 0 jika belum menikah */
 			}
 
-			ptkp = KtgPThP(menikah, tanggungan);
+			ptkp = htTPgKP(menikah, tanggungan);
 
 			if (gaji_tahunan < ptkp) {
 
-				system("pause");
+				sysetm("pause");
 				break;
 			}
 
-			pkp = htgPKP(gaji_tahunan, menikah, tanggungan);
+			pkp = htgKPP(gaji_tahunan, menikah, tanggungan);
 
 
 			/*  Htg PPh 21 berdasarkan PKP */

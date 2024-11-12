@@ -20,7 +20,7 @@ main()
 	int x, y;
 
 	for (int i = x; i <= y; i++) {
-		if (iPsrm(i)) {
+		if (isPrm(i)) {
 		}
 	}
 

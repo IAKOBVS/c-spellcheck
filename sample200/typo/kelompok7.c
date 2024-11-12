@@ -36,7 +36,7 @@ main()
 
 	do {
 
-		/*  Tampilkan Menu */
+		/*  Tmpl Mn */
 
 		switch (pilihan) {
 		case 1: {

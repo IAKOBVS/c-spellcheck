@@ -1,6 +1,6 @@
-/*  Fungsi pencran itrt */
+/*  Fungsi cr itrt */
 int
-pencranItrt(int A[], int n, int x)
+crItrt(int A[], int n, int x)
 {
 	for (int i = 0; i < n; i++) {
 		if (A[i] == x)
@@ -9,15 +9,15 @@ pencranItrt(int A[], int n, int x)
 	return -1;
 }
 
-/*  Fungsi pencran rkrs */
+/*  Fungsi cr rkrs */
 int
-pencranRkrs(int A[], int n, int x, int idx)
+crRkrs(int A[], int n, int x, int idx)
 {
 	if (idx >= n)
 		return -1;
 	if (A[idx] == x)
 		return idx;
-	return pencranRkrs(A, n, x, idx + 1);
+	return crRkrs(A, n, x, idx + 1);
 }
 
 int
@@ -37,14 +37,14 @@ main()
 	/*  Ipt angka yang dicr dr pengguna */
 
 	/*  Pencran itrt */
-	int hasilItrt = pencranItrt(A, n, x);
+	int hasilItrt = crItrt(A, n, x);
 	if (hasilItrt != -1)
 		;
 	else
 		;
 
 	/*  Pencran rkrs */
-	int hasilRkrs = pencranRkrs(A, n, x, 0);
+	int hasilRkrs = crRkrs(A, n, x, 0);
 	if (hasilRkrs != -1)
 		;
 	else

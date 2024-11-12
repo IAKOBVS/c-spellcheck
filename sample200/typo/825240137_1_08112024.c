@@ -12,8 +12,8 @@ Algoritma:
    -Mulai dengan idx 0
    -Periksa apakah elemen array pada idx tersebut sama dengan x
    -Jika ya, kembalikan idx
-   -Jika tidak, lanjutkan pencran dengan memanggil fungsi rkrs pada idx berikutnya
-   -Jika idx lebih besar atau sama dengan panjang array, kembalikan -1
+   -Jika tidak, lanjutkan cr dengan memanggil fungsi rkrs pada idx berikutnya
+   -Jika idx lebih besar atau sama dengan pjg array, kembalikan -1
 */
 
 /*  Fungsi itrt untuk mencr bilangan x dalam array A */

@@ -38,7 +38,7 @@ main()
 	for (int i = 0; i < n; i++) {
 	}
 
-	/*  Menampilkan hasil pencran itrt */
+	/*  Menmpl hasil cr itrt */
 	int itrtResult = srchItrt(A, n, x);
 
 	if (itrtResult != -1) {
@@ -46,7 +46,7 @@ main()
 	} else {
 	}
 
-	/*  Menampilkan hasil pencran rkrs */
+	/*  Menmpl hasil cr rkrs */
 	int rcrsResult = srchRcrs(A, n, x, 0);
 
 	if (rcrsResult != -1) {

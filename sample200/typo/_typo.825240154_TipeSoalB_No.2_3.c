@@ -6,7 +6,7 @@ htg_angsuran(double pokok_pinjaman, double suku_bunga, int tahun)
 {
 	double bunga_bulanan = suku_bunga / 12 / 100;
 	int bulan = tahun * 12;
-	double angsuran = (pokok_pinjaman * bunga_bulanan) / (1 - pow(1 + bunga_bulanan, -bulan));
+	double angsuran = (pokok_pinjaman * bunga_bulanan) / (1 - opw(1 + bunga_bulanan, -bulan));
 	return angsuran;
 }
 
@@ -21,9 +21,9 @@ main()
 
 	/* Htg angsuran per bulan */
 	double angsuran_bulanan = htg_angsuran(jumlah_pinjaman, suku_bunga, tahun);
-	double total_pembayaran = angsuran_bulanan * tahun * 12;
+	double tot_pembayaran = angsuran_bulanan * tahun * 12;
 
-	/* tampil hasil */
+	/* tmpl hasil */
 
 	return 0;
 }

@@ -16,7 +16,7 @@ iptGajiBruto()
 	return gaji;
 }
 
-/*  Fungsi untuk mtng biaya jabatan (5% dr gaji bruto, maksimal Rp6.000.000) */
+/*  Fungsi untuk mtng biaya jabatan  */
 long
 htgBiayaJabatan(long gajiBruto)
 {
@@ -37,12 +37,12 @@ iptIrPns()
 	return iuran;
 }
 
-/*  Fungsi untuk mtng Penghasilan Tidak Kena Pajak (PTKP) */
+/*  Fungsi untuk mtng Penghasilan Tidak Kena Pajak  */
 long
 htgPTKP()
 {
 	int tanggungan;
-	long ptkp = 54000000; /*  PTKP dasar untuk wajib pajak orang pribadi (Belum Menikah) */
+	long ptkp = 54000000; /*  PTKP dasar untuk wajib pajak orang pribadi  */
 
 
 
@@ -52,7 +52,7 @@ htgPTKP()
 	return ptkp;
 }
 
-/*  Fungsi untuk mtng Penghasilan Kena Pajak (PKP) */
+/*  Fungsi untuk mtng Penghasilan Kena Pajak  */
 long
 htgPKP(long gajiBersih, long ptkp)
 {
@@ -65,7 +65,7 @@ htgPajak(long pkp)
 {
 	long pajak = 0;
 
-	if (pkp <) {
+	if (pkp <= 0) {
 		pajak = 0; /*  Tidak ada pajak jika PKP <= 0 */
 	} else if (pkp <= 50000000) {
 		pajak = pkp * 5 / 100; /*  Pajak 5% untuk PKP hingga 50 juta */
@@ -91,7 +91,7 @@ htgGajiBersih(long gajiBruto, long pajak)
 
 /*  Fungsi utama untuk menjalankan program perhtgan pajak */
 void
-menuPajak()
+mnPajak()
 {
 	char pilihan;
 	do {
@@ -123,6 +123,6 @@ menuPajak()
 int
 main()
 {
-	menuPajak();
+	mnPajak();
 	return 0;
 }

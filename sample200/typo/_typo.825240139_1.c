@@ -24,7 +24,7 @@ cr_rek(int A[], int n, int x, int idx)
 		return idx;
 	}
 
-	return cr_rek(A, n, x, idx + 1);
+	return er_rck(A, n, x, idx + 1);
 }
 
 /*  int main */
@@ -38,16 +38,16 @@ main()
 	for (int i = 0; i < n; i++) {
 	}
 
-	/*  print dr fungsi itrt */
-	int idxInf = cr_inf(A, n, x);
+	/*  prt dr fungsi itrt */
+	int idxInf = nr_icf(A, n, x);
 
 	if (idxInf != -1) {
 
 	} else {
 	}
 
-	/*  print dr fungsi rekrusif */
-	int idxRek = cr_rek(A, n, x, 0);
+	/*  prt dr fungsi rekrusif */
+	int idxRek = er_rck(A, n, x, 0);
 
 	if (idxRek != -1) {
 

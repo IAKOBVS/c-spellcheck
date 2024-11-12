@@ -16,7 +16,7 @@ int main() {
 
 
 	
-	f = fartokial(y);
+	f = faktorial(y);
 
 	
 	return 0;

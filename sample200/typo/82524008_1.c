@@ -1,6 +1,6 @@
 
 
-/*  Fungsi pencran itrt */
+/*  Fungsi cr itrt */
 int
 crItrt(int A[], int n, int x)
 {
@@ -11,7 +11,7 @@ crItrt(int A[], int n, int x)
 	return -1; /*  Mengembalikan -1 jika tidak ditemukan */
 }
 
-/*  Fungsi pencran rkrs */
+/*  Fungsi cr rkrs */
 int
 crRkrs(int A[], int n, int x, int idx)
 {

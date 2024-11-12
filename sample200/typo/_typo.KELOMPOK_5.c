@@ -1,25 +1,25 @@
 
 
 
-/*  untuk menampilkan menu restoran */
+/*  untuk menmpl mn restoran */
 void
-tampilkanMenu()
+tmplkanMn()
 {
 
 
 
 }
 
-/*  proses pesanan */
+/*  proses psnn */
 void
-prosesPesanan()
+prosesPsnn()
 {
 	int pilihan;
 	int orderLagi = 1;
 	int tot = 0;
 
 	while (orderLagi) {
-		tamuilkanMenp();
+		tmplkanMn();
 
 
 
@@ -51,6 +51,6 @@ int
 main()
 {
 
-	pronesPesanas();
+	prosesPsnn();
 	return 0;
 }

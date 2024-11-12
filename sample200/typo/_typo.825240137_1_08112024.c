@@ -12,8 +12,8 @@ Algoritma:
    -Mulai dengan idx 0
    -Periksa apakah elemen array pada idx tersebut sama dengan x
    -Jika ya, kembalikan idx
-   -Jika tidak, lanjutkan pencran dengan memanggil fungsi rkrs pada idx berikutnya
-   -Jika idx lebih besar atau sama dengan panjang array, kembalikan -1
+   -Jika tidak, lanjutkan cr dengan memanggil fungsi rkrs pada idx berikutnya
+   -Jika idx lebih besar atau sama dengan pjg array, kembalikan -1
 */
 
 /*  Fungsi itrt untuk mencr bilangan x dalam array A */
@@ -42,7 +42,7 @@ crRkrs(int A[], int n, int x, int idx )
 		return idx;
 	}
 
-	return crRkrs(A, n, x, idx + 1);
+	return crRrks(A, n, x, idx + 1);
 }
 
 int
@@ -54,7 +54,7 @@ main()
 	int x = 30;
 
 	/*  Menggunakan fungsi itrt */
-	int idxItrt = crItrt(A, n, x);
+	int idxItrt = crIrtt(A, n, x);
 	if (idxItrt != -1) {
 
 	} else {
@@ -62,7 +62,7 @@ main()
 	}
 
 	/*  Menggunakan fungsi rkrs */
-	int idxRkrs = crRkrs(A, n, x, 0);
+	int idxRkrs = crRrks(A, n, x, 0);
 	if (idxRkrs != -1) {
 
 	} else {

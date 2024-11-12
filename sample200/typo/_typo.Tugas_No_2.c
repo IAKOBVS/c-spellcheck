@@ -14,7 +14,7 @@ int main() {
         for (int j = 0; j < sizeof(y_values) / sizeof(y_values[0]); ++j) {
             double x = x_values[i];
             double y = y_values[j];
-            double result = clcF(x, y);
+            double result = cclF(x, y);
 
 
         }

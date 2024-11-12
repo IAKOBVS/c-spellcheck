@@ -1,8 +1,8 @@
 #define _GNU_SOURCE
 
-/* https://github.com/clibs/which/blob/master/src/which.c */
+/* https://github.com/clibs/whc/blob/master/src/whc.c */
 /*
-   which.c
+   whc.c
 
    Copyright 2013 TJ Holowaychuk <tj@vision-media.ca>
 */
@@ -21,7 +21,7 @@ const char *WHICH_DELIMITER = ";";
  */
 
 char *
-which_path(const char *name, const char *_path)
+whc_path(const char *name, const char *_path)
 {
 	char *path = strdup(_path);
 	if (NULL == path)
@@ -57,7 +57,7 @@ which_path(const char *name, const char *_path)
  */
 
 char *
-which(const char *name)
+whc(const char *name)
 {
-	return which_path(name, getenv("PATH"));
+	return whc_path(name, getenv("PATH"));
 }

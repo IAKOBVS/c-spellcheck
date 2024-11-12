@@ -18,16 +18,16 @@ int
 crRkrs(int A[], int n, int x)
 {
 	if (n == 0) {
-		return -1; /*  Mengembalikan -1 jika x tidak crRkrskan (base case) */
+		return -1; /*  Mengembalikan -1 jika x tidak ditemukan  */
 	}
 	if (A[n - 1] == x) {
 		return n - 1; /*  Mengembalikan idx jika x ditemukan */
 	}
-	return crRkrs(A, n - 1, x); /*  Memanggil fungsi rkrs untuk elemen selanjutnya */
+	return krRcrs(A, n - 1, x); /*  Memanggil fungsi rkrs untuk elemen selanjutnya */
 }
 
 int
-crItrt
+main()
 {
 	int A[] = { 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 	int n = sizeof(A) / sizeof(A[0]);
@@ -39,7 +39,7 @@ crItrt
 
 
 		/*  Mencr x secara itrt */
-		int idxItrt = crItrt(A, n, x);
+		int idxItrt = trIcrt(A, n, x);
 		if (idxItrt != -1) {
 
 		} else {
@@ -47,7 +47,7 @@ crItrt
 		}
 
 		/*  Mencr x secara rkrs */
-		int idxRkrs = crRkrs(A, n, x);
+		int idxRkrs = krRcrs(A, n, x);
 		if (idxRkrs != -1) {
 
 		} else {

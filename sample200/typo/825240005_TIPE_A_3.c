@@ -2,33 +2,33 @@
 
 
 int
-indeksTerkecil(int array[], int ukuran)
+idxTkcl(int array[], int ukuran)
 {
-	int terkecil = array[0];
-	int indeks = 0;
+	int tkcl = array[0];
+	int idx = 0;
 
 	for (int i = 1; i < ukuran; i++) {
-		if (array[i] < terkecil) {
-			terkecil = array[i];
-			indeks = i;
+		if (array[i] < tkcl) {
+			tkcl = array[i];
+			idx = i;
 		}
 	}
-	return indeks;
+	return idx;
 }
 
 int
-indeksTerbesar(int array[], int ukuran)
+idxTbsr(int array[], int ukuran)
 {
-	int terbesar = array[0];
-	int indeks = 0;
+	int tbsr = array[0];
+	int idx = 0;
 
 	for (int i = 1; i < ukuran; i++) {
-		if (array[i] > terbesar) {
-			terbesar = array[i];
-			indeks = i;
+		if (array[i] > tbsr) {
+			tbsr = array[i];
+			idx = i;
 		}
 	}
-	return indeks;
+	return idx;
 }
 
 int
@@ -41,8 +41,8 @@ main()
 	for (int i = 0; i < ukuran; i++) {
 	}
 
-	int indeksKecil = indeksTerkecil(array, ukuran);
-	int indeksBesar = indeksTerbesar(array, ukuran);
+	int idxKecil = idxTkcl(array, ukuran);
+	int idxBesar = idxTbsr(array, ukuran);
 
 	return 0;
 }

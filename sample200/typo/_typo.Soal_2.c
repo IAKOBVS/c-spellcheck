@@ -22,7 +22,7 @@ int main () {
 	if (n<0) { 
 
 	} else { 
-		long result = fartocial (n); 
+		long result = factorial (n); 
 
 	}
 	return 0; 

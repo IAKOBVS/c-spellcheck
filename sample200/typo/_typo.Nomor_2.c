@@ -7,7 +7,7 @@ int faktorial(int x){
 		return 1;
 	}
 	else{
-		return x * fartokial (x-1);
+		return x * faktorial (x-1);
 	}
 }
 
@@ -16,7 +16,7 @@ int main(){
 
 
 	
-	int result = fartokial(angka);
+	int result = faktorial(angka);
 
 	return 0;
 }

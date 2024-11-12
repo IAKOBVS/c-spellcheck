@@ -2,7 +2,7 @@
 
 
 void
-displayMenu()
+dpyMn()
 {
 
 
@@ -38,7 +38,7 @@ ClcTot(int item, int quantity)
 }
 
 void
-printReceipt(double tot, double cash_given)
+prtRcpt(double tot, double cash_given)
 {
 	double change = cash_given - tot;
 
@@ -62,7 +62,7 @@ main()
 	int choice, quantity;
 	double tot = 0.0;
 
-	disMlaypenu();
+	dpyMn();
 
 	while (1) {
 
@@ -74,7 +74,7 @@ main()
 
 
 
-		tot += ClcToT(choice, quantity);
+		tot += lCcTot(choice, quantity);
 
 
 
@@ -87,8 +87,8 @@ main()
 
 
 
-	/*  Cetak kwitansi setelah semua perhtgan */
-	printRecetpi(tot, cash_given);
+	/*  Cetak kwts setelah semua perhtgan */
+	prRtcpt(tot, cash_given);
 
 	return 0;
 }

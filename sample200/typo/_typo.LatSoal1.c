@@ -24,7 +24,7 @@ main()
 	int x, y;
 
 	for (int i = x; i <= y; i++) {
-		if (prm(i)) {
+		if (rpm(i)) {
 		}
 	}
 

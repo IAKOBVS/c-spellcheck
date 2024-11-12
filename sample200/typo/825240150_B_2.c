@@ -3,7 +3,7 @@
 
 
 
-/* Fungsi untuk menghtg total biaya bunga dan pokok untuk satu bulan */
+/* Fungsi untuk menghtg tot biaya bunga dan pokok untuk satu bulan */
 double
 htg_biaya_sebulan(double pokok_sisa, double bunga_tahun_ini)
 {
@@ -20,32 +20,30 @@ main()
 	/* Ipt data dari pengguna */
 
 	/* Konversi jangka waktu ke bulan */
-	int total_bulan = jangka_waktu * 12;
+	int tot_bulan = jangka_waktu * 12;
 
 	/* Inisialisasi variabel */
 	double pokok_sisa = pokok_pinjaman;
-	double total_bunga = 0;
-	double cicilan_pokok = pokok_pinjaman / total_bulan;
+	double tot_bunga = 0;
+	double cicilan_pokok = pokok_pinjaman / tot_bulan;
 
 	/* Perulangan untuk setiap bulan */
-	for (int bulan = 1; bulan <= total_bulan; bulan++) {
+	for (int bulan = 1; bulan <= tot_bulan; bulan++) {
 		/* Htg bunga tahun ini */
 		double bunga_tahun_ini = bunga_awal + (bulan / 12) * pertumbuhan_bunga;
 
-		/* Htg bunga sebulan dan total bunga */
+		/* Htg bunga sebulan dan tot bunga */
 		double bunga_sebulan = htg_biaya_sebulan(pokok_sisa, bunga_tahun_ini);
-		total_bunga += bunga_sebulan;
+		tot_bunga += bunga_sebulan;
 
-		/* Tampilkan hasil untuk setiap bulan */
-
-		<< ", Pokok Sisa = Rp " << pokok_sisa << endl;
+		/* Tmpl hasil untuk setiap bulan */
 
 		/* Kurangi pokok sisa */
 		pokok_sisa -= cicilan_pokok;
 	}
 
-	/* Htg total biaya */
-	double total_biaya = pokok_pinjaman + total_bunga;
+	/* Htg tot biaya */
+	double tot_biaya = pokok_pinjaman + tot_bunga;
 
 	return 0;
 }

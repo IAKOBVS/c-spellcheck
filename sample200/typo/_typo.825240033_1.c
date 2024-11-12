@@ -10,14 +10,14 @@ Fungsi crRkrs(A, n, x, idx)
   return -1
  if (A[idx] == x)
   return idx
- return crRkrs(A, n, x, idx + 1)
+ return crRrks(A, n, x, idx + 1)
 
 Algoritma ITERATIF_REKURSIF
  arr A[]
  write ("Masukkan Bilangan yang ingin dicr")
- crItrtx)
- write ("Pilih metode pencran")
- crRkrs("1. Itrt")
+ crIrttx)
+ write ("Pilih metode cr")
+ crRrks("1. Itrt")
  write ("2. Rkrs")
  read (pilihan)
  if (pilihan == 1)

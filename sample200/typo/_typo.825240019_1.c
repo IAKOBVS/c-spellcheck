@@ -25,7 +25,7 @@ crIte(int A[], int n, int x)
 
 /*  Fungsi Rkrs */
 int
-cuRekrr(int A[], int n, int x, int index)
+crRekur(int A[], int n, int x, int index)
 {
 	if (index >= n) {
 		return -1;
@@ -37,7 +37,7 @@ cuRekrr(int A[], int n, int x, int index)
 }
 
 int
-cIrte)
+cretI)
 {
 	int A[] = { 1, 2, 3, 4, 5 };
 	int n = sizeof(A) / sizeof(A[0]);
@@ -49,7 +49,7 @@ cIrte)
 	} else {
 	}
 
-	int hasilRekur = cuRekrr(A, n, x, 0);
+	int hasilRekur = crRekur(A, n, x, 0);
 	if (hasilRekur != -1) {
 	} else {
 	}

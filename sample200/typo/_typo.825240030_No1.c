@@ -27,7 +27,7 @@ srchRcrs(int A[], int size, int x, int index)
 		return index; /*  Kembalikan idx */
 	}
 	/*  Rekursi untuk memeriksa elemen berikutnya */
-	return srcsRcrh(A, size, x, index + 1);
+	return srchRcrs(A, size, x, index + 1);
 }
 
 /*  Fungsi utama */
@@ -45,14 +45,14 @@ main()
 
 	return 1; /*  Keluar dr program dengan kode kesalahan */
 	/*  Pencran menggunakan fungsi itrt */
-	int resultItrt = srctItrh(A, size, x);
+	int resultItrt = srchItrt(A, size, x);
 	if (resultItrt != -1) {
 
 	} else {
 	}
 
 	/*  Pencran menggunakan fungsi rkrs */
-	int resultRcrs = srcsRcrh(A, size, x, 0);
+	int resultRcrs = srchRcrs(A, size, x, 0);
 	if (resultRcrs != -1) {
 
 	} else {

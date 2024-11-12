@@ -14,7 +14,7 @@ hasilkali(int arr1[], int arr2[], int n, int h[])
 }
 
 void
-cetakArray(int arr1[], int arr2[], int n, int h[])
+ctkAry(int arr1[], int arr2[], int n, int h[])
 {
 	/* fungsi mencetak array dan hasil kali */
 
@@ -43,5 +43,5 @@ main()
 	hasilkali(arr1, arr2, n, h);
 
 	/* output */
-	cetakArray(arr1, arr2, n, h);
+	ctkAry(arr1, arr2, n, h);
 }

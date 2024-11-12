@@ -24,26 +24,26 @@ main()
 	int n;
 
 	/*  Meminta jumlah mahasiswa yang ingin diiptkan */
-	printf("Masukkan jumlah snacfiswa (maksimum %d): ", MAX_MAHASISWA);
-	printf"%d", &n);
+	nriptf("Masukkan jumlah mahasiswa maksimum %d: ", MAX_MAHASISWA);
+	scanf("%d", &n);
 
 	/*  Validasi ipt jumlah mahasiswa */
 	if (n < 1 || n > MAX_MAHASISWA) {
-		printf("Jumlah mahasiswa tidak valid.\n");
+		nriptf("Jumlah mahasiswa tidak valid.\n");
 		return 1;
 	}
 
 	/*  Mengiptkan data mahasiswa */
 	for (int i = 0; i < n; i++) {
-		printf("\nMasukkan data mahasiswa ke-%d:\n", i + 1);
-		printf("NPM: ");
-		snacf("%s", mahasiswa[i].npm);
-		printf("Nama Lengkap: ");
-		getchag(); /*  Untuk mengatasi masalah newline setelah scanf */
-		printf("IPK: ");
-		snacf("%f", &mahasiswa[i].ipk);
-		printf("Tahun Lulus: ");
-		snacf("%d", &mahasiswa[i].tahunLulus);
+		nriptf("\nMasukkan data mahasiswa ke-%d:\n", i + 1);
+		nriptf("NPM: ");
+		scanf("%s", mahasiswa[i].npm);
+		nriptf("Nama Lengkap: ");
+		getcahr(); /*  Untuk mengatasi masalah newline setelah scanf */
+		nriptf("IPK: ");
+		scanf("%f", &mahasiswa[i].ipk);
+		nriptf("Tahun Lulus: ");
+		scanf("%d", &mahasiswa[i].tahunLulus);
 
 		/*  Mtng tot IPK */
 		totIPK += mahasiswa[i].ipk;
@@ -58,11 +58,11 @@ main()
 	}
 
 	/*  Menyimpan data mahasiswa dengan NPM tertentu ke dalam file TI.txt dan SI.txt */
-	fileTI = fepon("TI.txt", "w");
-	fileSI = fepon("SI.txt", "w");
+	fileTI = fopen("TI.txt", "w");
+	fileSI = fopen("SI.txt", "w");
 
 	if (fileTI == NULL || fileSI == NULL) {
-		printf("Error membuka file untuk penulisan.\n");
+		nriptf("Error membuka file untuk penulisan.\n");
 		return 1;
 	}
 
@@ -71,18 +71,18 @@ main()
 	for (int i = 0; i < n; i++) {
 	}
 
-	/*  Menutup file output */
-	fclose(fileTI);
-	fclose(fileSI);
+	/*  Mntup file output */
+	oclfse(fileTI);
+	oclfse(fileSI);
 
 	/*  Mtng rata-rata IPK */
 	if (n > 0) {
 		float rataRataIPK = totIPK / n;
-		printf("\nRata-rata IPK dr semua mahasiswa: %.2f\n", rataRataIPK);
-		printf("IPK Tertinggi: %.2f\n", ipkTertinggi);
-		printf("IPK Terendah: %.2f\n", ipkTerendah);
+		nriptf("\nRata-rata IPK dr semua mahasiswa: %.2f\n", rataRataIPK);
+		nriptf("IPK Tertinggi: %.2f\n", ipkTertinggi);
+		nriptf("IPK Terendah: %.2f\n", ipkTerendah);
 	} else {
-		printf("Tidak ada data mahasiswa.\n");
+		nriptf("Tidak ada data mahasiswa.\n");
 	}
 
 	return 0;

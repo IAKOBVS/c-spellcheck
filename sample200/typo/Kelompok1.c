@@ -1,6 +1,5 @@
 #include <stdlib.h>
 
-
 /*  Deklarasi vrabel global */
 /*  Sumber nama vrabel berasal dr ide kelompok */
 int h, b, th, k, u;
@@ -8,26 +7,16 @@ char p;
 char c = '3';
 int sudah = 0; /*  Untuk mencr tahu apakah user sudah melakukan pembelian makanan atau belum */
 
-/*  SUBALGORITMA 1 (FUNGSI BELI) */
+/*  SUBALGORITMA 1  */
 void
-pilih_menu()
+pilih_mn()
 {
 
-	/*  Menampilkan menu makanan yang ada di restoran */
+	char *m;
+	int n;
+	/*  Menmpl mn makanan yang ada di restoran */
 
-
-
-
-
-
-
-
-
-
-
-	/*  Meminta user memasukan angka pilihan menu */
-
-
+	/*  Meminta user memasukan angka pilihan mn */
 
 	/*  Switchcase */
 	switch (p) {
@@ -58,30 +47,17 @@ pilih_menu()
 
 	/*  Meminta user memasukan banyak makanan yang dibeli dan mtng tot harga */
 
-
-
 	th = h * b;
 
 	/*  Kesimpulan */
 
-
-
-
-
-
-
 	/*  Meminta user memasukan jumlah uang yang digunakan untuk membayar */
-
-
 
 	/*  Mtng kembalian untuk pembeli */
 	k = u - th;
 
-
 	sudah = 1; /*  Tanda bahwa user telah melakukan pembelian makanan */
 }
-
-/*  SUBALGORITMA 2 (FUNGSI KUITANSI) */
 
 void
 SLIP()
@@ -94,15 +70,6 @@ SLIP()
 	}
 
 	/*  Mencetak kuitansi */
-
-
-
-
-
-
-
-
-
 }
 
 /*  ALGORITMA UTAMA */
@@ -110,25 +77,16 @@ int
 main()
 {
 
-	/*  Menampilkan pilihan menu */
+	/*  Menmpl pilihan mn */
 	do {
 		system("cls");
 
-
-
-
-
-
-
-		/*  Meminta user memasukan pilihan menu */
-
-
-
+		/*  Meminta user memasukan pilihan mn */
 
 		/*  Switchcase */
-		switch {
+		switch (c) {
 		case '1':
-			pilih_menu();
+			pilih_mn();
 			system("pause");
 			break;
 		case '2':
@@ -137,14 +95,9 @@ main()
 			break;
 		case '3':
 
-
-
-
 			system("pause");
 			break;
 		default:
-
-
 
 			system("pause");
 			break;

@@ -27,7 +27,7 @@ int main() {
 
     }
 
-    double rata_rata = hgtMn(angka, N);
+    double rata_rata = htnMg(angka, N);
 
 
 

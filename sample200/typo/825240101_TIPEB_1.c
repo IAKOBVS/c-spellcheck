@@ -2,9 +2,9 @@
 
 
 void
-menu()
+mn()
 {
-	/* fungsi menu */
+	/* fungsi mn */
 }
 
 int
@@ -15,7 +15,7 @@ main()
 	char P;
 
 	/* proses ipt dan perhtgan */
-	menu();
+	mn();
 
 	switch (P) {
 	case 'B': {

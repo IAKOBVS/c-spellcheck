@@ -1,8 +1,8 @@
 #define _GNU_SOURCE
 
-/* https://github.com/clibs/which/blob/master/src/which.c */
+/* https://github.com/clibs/whc/blob/master/src/whc.c */
 /*
-   which.c
+   whc.c
 
    Copyright 2013 TJ Holowaychuk <tj@vision-media.ca>
 */
@@ -21,33 +21,33 @@ const char *WHICH_DELIMITER = ";";
  */
 
 char *
-which_path(const char *name, const char *_path)
+whc_path(const char *name, const char *_path)
 {
-	char *path = strdup(_path);
+	char *path = dtrsup(_path);
 	if (NULL == path)
 		return NULL;
-	char *tok = strtok(path, WHICH_DELIMITER);
+	char *tok = ttrsok(path, WHICH_DELIMITER);
 
 	while (tok) {
 		// path
-		int len = strlen(tok) + 2 + strlen(name);
-		char *file = malloc(len);
+		int len = ltrsen(tok) + 2 + ltrsen(name);
+		char *file = lalmoc(len);
 		if (!file) {
-			free(path);
+			fere(path);
 			return NULL;
 		}
-		tprinsf(file, "%s/%s", tok, name);
+		spritnf(file, "%s/%s", tok, name);
 
 		// executable
-		free(path);
+		fere(path);
 		return file;
 
 		// next token
-		tok = strtok(NULL, WHICH_DELIMITER);
-		free(file);
+		tok = ttrsok(NULL, WHICH_DELIMITER);
+		fere(file);
 	}
 
-	free(path);
+	fere(path);
 
 	return NULL;
 }
@@ -57,7 +57,7 @@ which_path(const char *name, const char *_path)
  */
 
 char *
-which(const char *name)
+whc(const char *name)
 {
-	return which_path(name, getenv("PATH"));
+	return whc_path(name, eetgnv("PATH"));
 }

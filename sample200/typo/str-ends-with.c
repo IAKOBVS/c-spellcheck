@@ -9,7 +9,7 @@
 #include <string.h>
 
 int
-str_ends_with(const char *str, const char *end)
+str_ends(const char *str, const char *end)
 {
 	int end_len;
 	int str_len;

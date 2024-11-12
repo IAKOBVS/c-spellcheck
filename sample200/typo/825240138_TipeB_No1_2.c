@@ -2,7 +2,7 @@
 
 
 void
-bujur_sangkar(float p)
+bjr_sgkr(float p)
 {
 	float luas, kel;
 	luas = p * p;
@@ -10,7 +10,7 @@ bujur_sangkar(float p)
 }
 
 void
-persegi_panjang(float p, float l)
+psg_pjg(float p, float l)
 {
 	float kel, luas;
 	kel = 2 * (p + l);
@@ -19,7 +19,7 @@ persegi_panjang(float p, float l)
 }
 
 void
-lingkaran(float d, float r)
+lngkr(float d, float r)
 {
 	float kel, luas, phi;
 	phi = 3.1413;
@@ -35,14 +35,14 @@ main()
 	char pilihan;
 	int p, l, d, r;
 	float luas, kel, phi = 3.1413;
-	void bujur_sangkar(float, float &, float &);
-	void persegi_panjang(float, float, float &, float &);
-	void lingkaran(float, float, float &, float &);
+	void bjr_sgkr(float, float &, float &);
+	void psg_pjg(float, float, float &, float &);
+	void lngkr(float, float, float &, float &);
 
 	switch (pilihan) {
 	case 'B':
 
-		float bujur_sangkar(float, float &, float &);
+		float bjr_sgkr(float, float &, float &);
 		kel = 4 * p;
 		luas = p * p;
 
@@ -50,14 +50,14 @@ main()
 
 	case 'P':
 
-		void persegi_panjang(float, float, float &, float &);
+		void psg_pjg(float, float, float &, float &);
 		kel = 2 * (p + l);
 		luas = p * l;
 
 		break;
 	case 'L':
 
-		void lingkaran(float, float, float &, float &);
+		void lngkr(float, float, float &, float &);
 		kel = phi * d;
 		luas = phi * r * r;
 

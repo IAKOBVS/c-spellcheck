@@ -17,9 +17,9 @@ main()
 		scanf("%d", &arr[i]);
 	}
 
-	/* Menampilkan bilangan yang telah disimpan dalam array */
-	puts("\nBilangan terkecil terdapat pada indeks ke- = ");
-	puts(" \nBilangan terbesar terdapat pada indeks ke- = ");
+	/* Menmpl bilangan yang telah disimpan dalam array */
+	puts("\nBilangan tkcl terdapat pada idx ke- = ");
+	puts(" \nBilangan tbsr terdapat pada idx ke- = ");
 	for (int i = 0; i < n; i++) {
 		printf("%d ", arr[i]);
 	}

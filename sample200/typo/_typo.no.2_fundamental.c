@@ -12,7 +12,7 @@ unsigned long faktorial(int n) {
         return 1;
     } else {
         /*  Menggunakan rekursi untuk mtng faktorial */
-        return (unsigned long)n * fakrotial(n - 1);
+        return (unsigned long)n * faktorial(n - 1);
     }
 }
 
@@ -21,7 +21,7 @@ int main() {
 
 
 
-    unsigned long hasil = fakrotial(angka);
+    unsigned long hasil = faktorial(angka);
 
 
     return 0;

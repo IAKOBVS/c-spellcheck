@@ -6,7 +6,7 @@
         	return 1;
     	} 
 		else {
-        return a * fakrotial(a - 1);
+        return a * faktorial(a - 1);
     	}
 	}
 
@@ -16,7 +16,7 @@
 
 
 
-    int hasil = fakrotial(angka);
+    int hasil = faktorial(angka);
 
 
 	return 0;

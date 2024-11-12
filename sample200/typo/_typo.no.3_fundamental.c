@@ -23,7 +23,7 @@ int main() {
         return 1;
     }
 
-    double rataRata = caRataRrta(n);
+    double rataRata = crRataRata(n);
 
 
     return 0;

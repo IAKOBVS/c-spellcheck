@@ -10,7 +10,7 @@ hasil_kali(int a, int b)
 
 /* Fungsi cetak array */
 void
-cetakArray(int arr[], int ukuran)
+ctkAry(int arr[], int ukuran)
 {
 	for (int i = 0; i < ukuran; i++) {
 	}
@@ -33,18 +33,18 @@ main()
 	for (int i = 0; i < n; i++) {
 	}
 
-	/* htg hasil kali dari elemen yang berindeks sama */
+	/* htg hasil kali dari elemen yang beridx sama */
 	for (int i = 0; i < n; i++) {
 		hasil[i] = hasil_kali(array1[i], array2[i]);
 	}
 
 	/* Tampilan isi dari array 1, array 2, dan hasil kali */
 
-	cetakArray(array1, n);
+	ctkAry(array1, n);
 
-	cetakArray(array2, n);
+	ctkAry(array2, n);
 
-	cetakArray(hasil, n);
+	ctkAry(hasil, n);
 
 	return 0;
 }

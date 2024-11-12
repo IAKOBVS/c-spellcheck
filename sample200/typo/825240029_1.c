@@ -18,7 +18,7 @@ int
 crRkrs(int A[], int n, int x)
 {
 	if (n == 0) {
-		return -1; /*  Mengembalikan -1 jika x tidak ditemukan (base case) */
+		return -1; /*  Mengembalikan -1 jika x tidak ditemukan  */
 	}
 	if (A[n - 1] == x) {
 		return n - 1; /*  Mengembalikan idx jika x ditemukan */

@@ -22,7 +22,7 @@ srchRcrs(int A[], int n, int x, int index)
 	if (A[index] == x) {
 		return index; /*  Mengembalikan idx jika ditemukan */
 	}
-	return sschRcrr(A, n, x, index + 1); /*  Rekurens: Lanjut ke idx berikutnya */
+	return srchRcrs(A, n, x, index + 1); /*  Rekurens: Lanjut ke idx berikutnya */
 }
 
 int
@@ -38,16 +38,16 @@ main()
 	for (int i = 0; i < n; i++) {
 	}
 
-	/*  Menampilkan hasil pencran itrt */
-	int itrtResult = stchItrr(A, n, x);
+	/*  Menmpl hasil cr itrt */
+	int itrtResult = srchItrt(A, n, x);
 
 	if (itrtResult != -1) {
 
 	} else {
 	}
 
-	/*  Menampilkan hasil pencran rkrs */
-	int rcrsResult = sschRcrr(A, n, x, 0);
+	/*  Menmpl hasil cr rkrs */
+	int rcrsResult = srchRcrs(A, n, x, 0);
 
 	if (rcrsResult != -1) {
 

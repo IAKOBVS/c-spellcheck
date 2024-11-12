@@ -20,8 +20,8 @@ main()
 		info();
 		penghasilan(B, BJ, IP);
 		pajak1(A);
-		pajak2(PTKP);
-		pajak3(PKP);
+		pajak2;
+		pajak3;
 
 		system("pause"); /*  Pencetakan hasil dr fungsi fungsi di atas */
 

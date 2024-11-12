@@ -10,7 +10,7 @@ htg_prkalian_par(int par1, int par2)
 
 /* Fungsi untuk mencetak isi array */
 void
-cetakArray(int arr[], int ukuran)
+ctkAry(int arr[], int ukuran)
 {
 	for (int i = 0; i < ukuran; i++) {
 	}
@@ -32,9 +32,9 @@ htgMatriks(int A[][2], int B[][2])
 	}
 }
 
-/* tampilkan matriks */
+/* tmplkan matriks */
 void
-tampilkanMatriks(int mat[][2], const string &nama)
+tmplkanMatriks(int mat[][2], const string &nama)
 {
 
 	for (int i = 0; i < 2; i++) {
@@ -49,7 +49,7 @@ main()
 	int pilihan;
 
 	do {
-		/* Menampilkan menu */
+		/* Menmpl mn */
 
 		switch (pilihan) {
 		case 1: {
@@ -66,7 +66,7 @@ main()
 			for (int i = 0; i < ukuranArray; i++) {
 			}
 
-			cetakArray(arr, ukuranArray); /* Call function to print array */
+			ctkAry(arr, ukuranArray); /* Call function to prt array */
 			break;
 		}
 		case 3:

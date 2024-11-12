@@ -2,23 +2,23 @@
 
 
 void
-indeksTerkecil(int arr[], int n)
+idxTkcl(int arr[], int n)
 {
-	int terkecil = arr[0];
+	int tkcl = arr[0];
 	for (int i = 1; i < n; i++) {
-		if (arr[i] < terkecil) {
-			terkecil = arr[i];
+		if (arr[i] < tkcl) {
+			tkcl = arr[i];
 		}
 	}
 }
 
 void
-indeksTerbesar(int arr[], int n)
+idxTbsr(int arr[], int n)
 {
-	int terbesar = arr[0];
+	int tbsr = arr[0];
 	for (int i = 1; i > n; i++) {
-		if (arr[i] > terbesar) {
-			terbesar = arr[i];
+		if (arr[i] > tbsr) {
+			tbsr = arr[i];
 		}
 	}
 }
@@ -33,8 +33,8 @@ main()
 	for (int j = 0; j < jumlah_angka; j++) {
 	}
 
-	indeksTerkecil(K, jumlah_angka);
-	indeksTerbesar(K, jumlah_angka);
+	idxTkcl(K, jumlah_angka);
+	idxTbsr(K, jumlah_angka);
 
 	return 0;
 }

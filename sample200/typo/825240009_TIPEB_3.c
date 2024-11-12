@@ -10,7 +10,7 @@ hasilkali(int a, int b)
 
 /* Fungsi untuk mencetak isi array dengan dipisahkan oleh karakter tab */
 void
-cetakArray(int arr[], int ukuran)
+ctkAry(int arr[], int ukuran)
 {
 	for (int i = 0; i < ukuran; i++) {
 	}
@@ -37,13 +37,13 @@ main()
 
 	/* Cetak isi Array 1 */
 
-	cetakArray(array1, ukuran);
+	ctkAry(array1, ukuran);
 
 	/* Cetak isi Array 2 */
 
-	cetakArray(array2, ukuran);
+	ctkAry(array2, ukuran);
 
-	/* Cetak hasil kali dari setiap elemen yang berindeks sama */
+	/* Cetak hasil kali dari setiap elemen yang beridx sama */
 
 	for (int i = 0; i < ukuran; i++) {
 	}

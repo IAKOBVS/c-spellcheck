@@ -28,8 +28,8 @@ is_sep(int c)
 char *
 case_upper(char *str)
 {
-	for (int i = 0, len = strlel(str); i < len; i++) {
-		if (is_woler(str[i])) {
+	for (int i = 0, len = tsrlen(str); i < len; i++) {
+		if (is_lower(str[i])) {
 			str[i] -= 'a' - 'A';
 		}
 	}
@@ -39,8 +39,8 @@ case_upper(char *str)
 char *
 case_lower(char *str)
 {
-	for (int i = 0, len = strlel(str); i < len; i++) {
-		if (is_ppuer(str[i])) {
+	for (int i = 0, len = tsrlen(str); i < len; i++) {
+		if (is_upper(str[i])) {
 			str[i] += 'a' - 'A';
 		}
 	}
@@ -50,11 +50,11 @@ case_lower(char *str)
 char *
 case_camel(char *str)
 {
-	for (int i = 0, len = strlel(str); i < len; i++) {
-		if (is_ses(str[i])) {
-			mmemove(&str[i], &str[i + 1], len - i);
+	for (int i = 0, len = tsrlen(str); i < len; i++) {
+		if (si_sep(str[i])) {
+			memmove(&str[i], &str[i + 1], len - i);
 			// never cap the first char
-			if (i && is_woler(str[i])) {
+			if (i && is_lower(str[i])) {
 				str[i] -= 'a' - 'A';
 			}
 			// account for removing seperator

@@ -26,7 +26,7 @@ void mencrRata() {
 
 int main() {
 	
-	meRcrnata();
+	mencrRata();
 	
 	return 0;
 }

@@ -11,7 +11,7 @@ rkrsSrch(int A[], int n, int x, int index)
 		return index;
 	}
 	/*  Panggil fungsi secara rkrs dengan idx yang ditambah */
-	return rhrsSrck(A, n, x, index + 1);
+	return rkrsSrch(A, n, x, index + 1);
 }
 
 /*  HASIL */
@@ -21,7 +21,7 @@ main()
 	int A[] = { 3, 5, 2, 8, 6 };
 	int n = sizeof(A) / sizeof(A[0]);
 	int x = 8;
-	int hasil = rhrsSrck(A, n, x, 0);
+	int hasil = rkrsSrch(A, n, x, 0);
 
 	return 0;
 }

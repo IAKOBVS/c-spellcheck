@@ -6,8 +6,8 @@
 double
 htgPTKP(char status)
 {
-	const double PTKP_SINGLE = 54000000; /*  PTKP untuk status "S" (Single) */
-	const double PTKP_MENIKAH = 58500000; /*  PTKP untuk status "M" (Menikah) */
+	const double PTKP_SINGLE = 54000000; /*  PTKP untuk status "S"  */
+	const double PTKP_MENIKAH = 58500000; /*  PTKP untuk status "M"  */
 
 	if (status == 'S' || status == 's') {
 		return PTKP_SINGLE;
@@ -60,7 +60,7 @@ main()
 		ptkp = htgPTKP(status);
 		pkp = penghasilan - ptkp;
 
-		/*  Menampilkan hasil */
+		/*  Menmpl hasil */
 
 
 

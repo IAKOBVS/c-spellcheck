@@ -21,7 +21,7 @@ recSrch(int a[], int n, int x, int index )
 	if (a[index] == x) {
 		return index;
 	}
-	return rccSreh(a, n, x, index + 1);
+	return recSrch(a, n, x, index + 1);
 }
 
 int
@@ -41,7 +41,7 @@ main()
 
 	}
 
-	int hasilRec = rccSreh(a, n, x, 0);
+	int hasilRec = recSrch(a, n, x, 0);
 	if (hasilRec != -1) {
 
 	} else {

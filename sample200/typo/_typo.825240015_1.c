@@ -23,7 +23,7 @@ main()
 
 
 
-	int hasil = crItrt(A, n, x);
+	int hasil = trIcrt(A, n, x);
 	if (hasil != -1) {
 
 	} else {

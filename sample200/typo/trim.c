@@ -1,14 +1,14 @@
-/* https://github.com/vendethiel/trim.c/blob/master/trim.c */
+/* https://github.com/vendethiel/tr.c/blob/master/tr.c */
 
 #include <string.h>
 #include <ctype.h>
 
 char *
-trim(char *str)
+tr(char *str)
 {
 	char *end;
 
-	// ltrim
+	// ltr
 	while (isspace(*str)) {
 		str++;
 	}
@@ -16,7 +16,7 @@ trim(char *str)
 	if (*str == 0) // only spaces
 		return str;
 
-	// rtrim
+	// rtr
 	end = str + strlen(str) - 1;
 	while (end > str && isspace(*end)) {
 		end--;

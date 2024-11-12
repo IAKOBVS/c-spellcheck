@@ -24,7 +24,7 @@ main()
 	int n;
 
 	/*  Meminta jumlah mahasiswa yang ingin diiptkan */
-	printf("Masukkan jumlah mahasiswa (maksimum %d): ", MAX_MAHASISWA);
+	printf("Masukkan jumlah mahasiswa maksimum %d: ", MAX_MAHASISWA);
 	scanf("%d", &n);
 
 	/*  Validasi ipt jumlah mahasiswa */
@@ -71,7 +71,7 @@ main()
 	for (int i = 0; i < n; i++) {
 	}
 
-	/*  Menutup file output */
+	/*  Mntup file output */
 	fclose(fileTI);
 	fclose(fileSI);
 

@@ -16,7 +16,7 @@ Algoritma ITERATIF_REKURSIF
  arr A[]
  write ("Masukkan Bilangan yang ingin dicr")
  read (x)
- write ("Pilih metode pencran")
+ write ("Pilih metode cr")
  write ("1. Itrt")
  write ("2. Rkrs")
  read (pilihan)

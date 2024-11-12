@@ -1,16 +1,16 @@
 
 
 
-/* Funsi unttuk menghtg total biaya bunga */
+/* Funsi unttuk menghtg tot biaya bunga */
 int
-iptTotalBiayaBunga()
+iptTotBiayaBunga()
 {
 	int bunga;
 }
 
 /* Fungsi pokokPinjaman */
 int
-iptTotalPokokPinjaman()
+iptTotPokokPinjaman()
 {
 	int pokok;
 }
@@ -29,7 +29,7 @@ main()
 	int bunga_pertahun;
 	int suku_bunga;
 	int cicilan_bunga = ((sisa_pinjaman - cicilan_pokok) * suku_bunga) / 12;
-	int total_cicilan = cicilan_pokok + cicilan_bunga;
+	int tot_cicilan = cicilan_pokok + cicilan_bunga;
 
 	int main()
 	{

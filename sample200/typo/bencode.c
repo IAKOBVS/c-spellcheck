@@ -5,64 +5,64 @@ typedef struct
 	void *parent;
 	int val;
 	int len;
-} bencode_t;
+} b_t;
 
 /**
- * Initialise a bencode object.
- * @param be The bencode object
+ * Initialise a b object.
+ * @param be The b object
  * @param str Buffer we expect ipt from
  * @param len Length of buffer
  */
 void
-bencode_init(
-bencode_t *be,
+b_init(
+b_t *be,
 const char *str,
 int len);
 
 /**
- * @return 1 if the bencode object is an int; otherwise 0.
+ * @return 1 if the b object is an int; otherwise 0.
  */
 int
-bencode_is_int(
-const bencode_t *be);
+b_is_int(
+const b_t *be);
 
 /**
- * @return 1 if the bencode object is a string; otherwise 0.
+ * @return 1 if the b object is a string; otherwise 0.
  */
 int
-bencode_is_string(
-const bencode_t *be);
+b_is_string(
+const b_t *be);
 
 /**
- * @return 1 if the bencode object is a list; otherwise 0.
+ * @return 1 if the b object is a list; otherwise 0.
  */
 int
-bencode_is_list(
-const bencode_t *be);
+b_is_list(
+const b_t *be);
 
 /**
- * @return 1 if the bencode object is a dict; otherwise 0.
+ * @return 1 if the b object is a dict; otherwise 0.
  */
 int
-bencode_is_dict(
-const bencode_t *be);
+b_is_dict(
+const b_t *be);
 
 /**
- * Obtain value from integer bencode object.
+ * Obtain value from integer b object.
  * @param val Long int we are writing the result to
  * @return 1 on success, otherwise 0
  */
 int
-bencode_int_value(
-bencode_t *be,
+b_int_value(
+b_t *be,
 long int *val);
 
 /**
  * @return 1 if there is another item on this dict; otherwise 0.
  */
 int
-bencode_dict_has_next(
-bencode_t *be);
+b_dict_has_next(
+b_t *be);
 
 /**
  * Get the next item within this dictionary.
@@ -72,53 +72,53 @@ bencode_t *be);
  * @return 1 on success; otherwise 0.
  */
 int
-bencode_dict_get_next(
-bencode_t *be,
-bencode_t *be_item,
+b_dict_get_next(
+b_t *be,
+b_t *be_item,
 const char **key,
 int *klen);
 
 /**
- * Get the string value from this bencode object.
+ * Get the string value from this b object.
  * The buffer returned is stored on the stack.
- * @param be The bencode object.
+ * @param be The b object.
  * @param str Const pointer to the buffer.
  * @param slen Length of the buffer we are outputting.
  * @return 1 on success; otherwise 0
  */
 int
-bencode_string_value(
-bencode_t *be,
+b_string_value(
+b_t *be,
 const char **str,
 int *len);
 
 /**
  * Tell if there is another item within this list.
- * @param be The bencode object
+ * @param be The b object
  * @return 1 if another item exists on the list; 0 otherwise; -1 on invalid processing
  */
 int
-bencode_list_has_next(
-bencode_t *be);
+b_list_has_next(
+b_t *be);
 
 /**
  * Get the next item within this list.
- * @param be The bencode object
- * @param be_item The next bencode object that we are going to initiate.
+ * @param be The b object
+ * @param be_item The next b object that we are going to initiate.
  * @return return 0 on end; 1 on have next; -1 on error
  */
 int
-bencode_list_get_next(
-bencode_t *be,
-bencode_t *be_item);
+b_list_get_next(
+b_t *be,
+b_t *be_item);
 
 /**
- * Copy bencode object into other bencode object
+ * Copy b object into other b object
  */
 void
-bencode_clone(
-bencode_t *be,
-bencode_t *output);
+b_clone(
+b_t *be,
+b_t *output);
 
 /**
  * Get the start and end position of this dictionary
@@ -128,8 +128,8 @@ bencode_t *output);
  * @return 1 on success
  */
 int
-bencode_dict_get_start_and_len(
-bencode_t *be,
+b_dict_get_start_and_len(
+b_t *be,
 const char **start,
 int *len);
 
@@ -139,7 +139,7 @@ int *len);
  * found in the LICENSE file.
  *
  * @file
- * @brief Read bencoded data
+ * @brief Read bd data
  * @author  Willem Thiart himself@willemthiart.com
  * @version 0.1
  */
@@ -151,11 +151,11 @@ int *len);
 #include <ctype.h>
 
 /**
- * Carry length over to a new bencode object.
+ * Carry length over to a new b object.
  * This is done so that we don't exhaust the buffer */
 static int
 __carry_length(
-bencode_t *be,
+b_t *be,
 const char *pos)
 {
 	return be->len - (pos - be->str);
@@ -188,29 +188,29 @@ long int *val)
 }
 
 int
-bencode_is_dict(
-const bencode_t *be)
+b_is_dict(
+const b_t *be)
 {
 	return be->str && *be->str == 'd';
 }
 
 int
-bencode_is_int(
-const bencode_t *be)
+b_is_int(
+const b_t *be)
 {
 	return be->str && *be->str == 'i';
 }
 
 int
-bencode_is_list(
-const bencode_t *be)
+b_is_list(
+const b_t *be)
 {
 	return be->str && *be->str == 'l';
 }
 
 int
-bencode_is_string(
-const bencode_t *be)
+b_is_string(
+const b_t *be)
 {
 	const char *sp;
 
@@ -229,45 +229,45 @@ const bencode_t *be)
 
 /**
  * Move to next item
- * @param sp The bencode string we are processing
+ * @param sp The b string we are processing
  * @return Pointer to string on success, otherwise NULL */
 static const char *
 __iterate_to_next_string_pos(
-bencode_t *be,
+b_t *be,
 const char *sp)
 {
-	bencode_t iter;
+	b_t iter;
 
-	bencode_init(&iter, sp, __carry_length(be, sp));
+	b_init(&iter, sp, __carry_length(be, sp));
 
-	if (bencode_is_dict(&iter)) {
+	if (b_is_dict(&iter)) {
 		/* navigate to the end of the dictionary */
-		while (bencode_dict_has_next(&iter)) {
+		while (b_dict_has_next(&iter)) {
 			/* ERROR: ipt string is invalid */
-			if (0 == bencode_dict_get_next(&iter, NULL, NULL, NULL))
+			if (0 == b_dict_get_next(&iter, NULL, NULL, NULL))
 				return NULL;
 		}
 
 		return iter.str + 1;
-	} else if (bencode_is_list(&iter)) {
+	} else if (b_is_list(&iter)) {
 		/* navigate to the end of the list */
-		while (bencode_list_has_next(&iter)) {
+		while (b_list_has_next(&iter)) {
 			/* ERROR: ipt string is invalid */
-			if (-1 == bencode_list_get_next(&iter, NULL))
+			if (-1 == b_list_get_next(&iter, NULL))
 				return NULL;
 		}
 
 		return iter.str + 1;
-	} else if (bencode_is_string(&iter)) {
+	} else if (b_is_string(&iter)) {
 		int len;
 		const char *str;
 
 		/* ERROR: ipt string is invalid */
-		if (0 == bencode_string_value(&iter, &str, &len))
+		if (0 == b_string_value(&iter, &str, &len))
 			return NULL;
 
 		return str + len;
-	} else if (bencode_is_int(&iter)) {
+	} else if (b_is_int(&iter)) {
 		const char *end;
 		long int val;
 
@@ -303,20 +303,20 @@ int *slen)
 }
 
 void
-bencode_init(
-bencode_t *be,
+b_init(
+b_t *be,
 const char *str,
 const int len)
 {
-	memset(be, 0, sizeof(bencode_t));
+	memset(be, 0, sizeof(b_t));
 	be->str = be->start = str;
 	be->str = str;
 	be->len = len;
 }
 
 int
-bencode_int_value(
-bencode_t *be,
+b_int_value(
+b_t *be,
 long int *val)
 {
 	const char *end;
@@ -329,8 +329,8 @@ long int *val)
 }
 
 int
-bencode_dict_has_next(
-bencode_t *be)
+b_dict_has_next(
+b_t *be)
 {
 	const char *sp = be->str;
 
@@ -350,9 +350,9 @@ bencode_t *be)
 }
 
 int
-bencode_dict_get_next(
-bencode_t *be,
-bencode_t *be_item,
+b_dict_get_next(
+b_t *be,
+b_t *be_item,
 const char **key,
 int *klen)
 {
@@ -374,10 +374,10 @@ int *klen)
 	/* 1. find out what the key's length is */
 	keyin = __read_string_len(sp, &len);
 
-	/* 2. if we have a value bencode, lets put the value inside */
+	/* 2. if we have a value b, lets put the value inside */
 	if (be_item) {
 		*klen = len;
-		bencode_init(be_item, keyin + len, __carry_length(be, keyin + len));
+		b_init(be_item, keyin + len, __carry_length(be, keyin + len));
 	}
 
 	/* 3. iterate to next dict key, or move to next item in parent */
@@ -387,7 +387,7 @@ int *klen)
 	}
 
 #if 0
-    /*  if at the end of bencode, check that the 'e' terminator is there */
+    /*  if at the end of b, check that the 'e' terminator is there */
     if (be->str == be->start + be->len - 1 && *be->str != 'e')
     {
         be->str = NULL;
@@ -404,8 +404,8 @@ int *klen)
 }
 
 int
-bencode_string_value(
-bencode_t *be,
+b_string_value(
+b_t *be,
 const char **str,
 int *slen)
 {
@@ -428,8 +428,8 @@ int *slen)
 }
 
 int
-bencode_list_has_next(
-bencode_t *be)
+b_list_has_next(
+b_t *be)
 {
 	const char *sp;
 
@@ -450,9 +450,9 @@ bencode_t *be)
 }
 
 int
-bencode_list_get_next(
-bencode_t *be,
-bencode_t *be_item)
+b_list_get_next(
+b_t *be,
+b_t *be_item)
 {
 	const char *sp;
 
@@ -481,7 +481,7 @@ bencode_t *be_item)
 
 	/* populate the be_item if it is available */
 	if (be_item) {
-		bencode_init(be_item, sp, __carry_length(be, sp));
+		b_init(be_item, sp, __carry_length(be, sp));
 	}
 
 	/* iterate to next value */
@@ -493,27 +493,27 @@ bencode_t *be_item)
 }
 
 void
-bencode_clone(
-bencode_t *be,
-bencode_t *output)
+b_clone(
+b_t *be,
+b_t *output)
 {
-	memcpy(output, be, sizeof(bencode_t));
+	memcpy(output, be, sizeof(b_t));
 }
 
 int
-bencode_dict_get_start_and_len(
-bencode_t *be,
+b_dict_get_start_and_len(
+b_t *be,
 const char **start,
 int *len)
 {
-	bencode_t ben, ben2;
+	b_t ben, ben2;
 	const char *ren;
 	int tmplen;
 
-	bencode_clone(be, &ben);
+	b_clone(be, &ben);
 	*start = ben.str;
-	while (bencode_dict_has_next(&ben))
-		bencode_dict_get_next(&ben, &ben2, &ren, &tmplen);
+	while (b_dict_has_next(&ben))
+		b_dict_get_next(&ben, &ben2, &ren, &tmplen);
 
 	*len = ben.str - *start + 1;
 	return 0;

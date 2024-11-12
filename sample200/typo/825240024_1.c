@@ -1,7 +1,7 @@
 
 
 
-/*  ini fungsi pencran secara itrt */
+/*  ini fungsi cr secara itrt */
 int
 crItrt(int A[], int n, int x)
 {
@@ -12,7 +12,7 @@ crItrt(int A[], int n, int x)
 	return -1;
 }
 
-/*  kalo ini fungsi pencran secara rkrs */
+/*  kalo ini fungsi cr secara rkrs */
 int
 crRkrs(int A[], int n, int x, int index )
 {
@@ -30,14 +30,14 @@ main()
 	int n = sizeof(A) / sizeof(A[0]);
 	int x = 7;
 
-	/*  pencran secara itrt */
+	/*  cr secara itrt */
 	int hasilItrt = crItrt(A, n, x);
 	if (hasilItrt != -1)
 		;
 	else
 		;
 
-	/*  pencran secara rkrs */
+	/*  cr secara rkrs */
 	int hasilRkrs = crRkrs(A, n, x, 0);
 	if (hasilRkrs != -1)
 		;

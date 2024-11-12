@@ -1,23 +1,21 @@
 
 
-
-
-/* func() menghtg biaya bunga dan pokok dari pinjaman */
+/* menghtg biaya bunga dan pokok dari pinjaman */
 void
-kalkulasiTotalBiayaBudi(double pokokPinjamanBudi, double bungaTahunanBudi, int tenorBudi, double &totalBungaEllen, double &totalPembayaranEllen, int bulanBudi)
+kalTotBud(double pokokPinjamanBudi, double bungaTahunanBudi, int tenorBudi, double *totBungaEllen, double *totPembayaranEllen, int bulanBudi)
 {
 	double sisaPinjamanBudi = pokokPinjamanBudi;
-	totalBungaEllen = 0;
-	totalPembayaranEllen = 0;
+	*totBungaEllen = 0;
+	*totPembayaranEllen = 0;
 
 	for (int bulanEllen = 1; bulanEllen <= bulanBudi; bulanEllen++) {
 		double cicilanPokokBudi = pokokPinjamanBudi / tenorBudi;
 		double cicilanBungaBudi = sisaPinjamanBudi * (bungaTahunanBudi / 12);
-		double totalCicilanPerBulanBudi = cicilanPokokBudi + cicilanBungaBudi;
+		double totCclPerBulanBudi = cicilanPokokBudi + cicilanBungaBudi;
 
 		sisaPinjamanBudi -= cicilanPokokBudi;
-		totalBungaEllen += cicilanBungaBudi;
-		totalPembayaranEllen += totalCicilanPerBulanBudi;
+		*totBungaEllen += cicilanBungaBudi;
+		*totPembayaranEllen += totCclPerBulanBudi;
 	}
 }
 
@@ -29,14 +27,12 @@ main()
 
 	/* budi mengipt data */
 
-	/* menghtg dan menampilkan total biaya bunga dan pokok dari pinjaman tiap bulan */
+	/* menghtg dan menmpl tot biaya bunga dan pokok dari pinjaman tiap bulan */
 	for (int bulanBudi = 1; bulanBudi <= tenorBudi; bulanBudi++) {
-		double totalBungaEllen, totalPembayaranEllen;
-		kalkulasiTotalBiayaBudi(pokokPinjamanBudi, bungaTahunanBudi, tenorBudi, totalBungaEllen, totalPembayaranEllen, bulanBudi);
+		double totBungaEllen, totPembayaranEllen;
+		kalTotBud(pokokPinjamanBudi, bungaTahunanBudi, tenorBudi, &totBungaEllen, &totPembayaranEllen, bulanBudi);
 
-		/* tampilkan dari hasil bulan ke bulan */
-
-		<< endl;
+		/* tmplkan dari hasil bulan ke bulan */
 	}
 
 	return 0;

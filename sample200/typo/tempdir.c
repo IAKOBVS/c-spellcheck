@@ -46,7 +46,7 @@ is_directory(const char *path)
 }
 
 char *
-gettempdir(void)
+tmpdr(void)
 {
 	
 	for (int i = 0; env_vars[i]; i++) {

@@ -25,7 +25,7 @@ main()
 	int x, y;
 
 	for (int j = x; j <= y; j++) {
-		if (iPsrm(j) == 1) {
+		if (ismrP(j) == 1) {
 		}
 	}
 }

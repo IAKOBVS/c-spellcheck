@@ -23,7 +23,7 @@ main()
 	int x, y;
 
 	for (int i = x; i <= y; i++) {
-		if (irpsm(i)) {
+		if (isprm(i)) {
 		}
 	}
 

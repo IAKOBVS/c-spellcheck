@@ -23,7 +23,7 @@ crRkrs(int A[], int n, int x, int index )
 	if (A[index] == x) {
 		return index; /*  Mengembalikan idx jika ditemukan */
 	}
-	return crRkrs(A, n, x, index + 1); /*  Melanjutkan pencran dengan elemen berikutnya */
+	return crRrks(A, n, x, index + 1); /*  Melanjutkan cr dengan elemen berikutnya */
 }
 
 int
@@ -45,7 +45,7 @@ main()
 
 
 	/*  Pencran secara itrt */
-	int hasilItrt = crItrt(A, n, x);
+	int hasilItrt = crIrtt(A, n, x);
 	if (hasilItrt != -1) {
 
 	} else {
@@ -53,7 +53,7 @@ main()
 	}
 
 	/*  Pencran secara rkrs */
-	int hasilRkrs = crRkrs(A, n, x, 0);
+	int hasilRkrs = crRrks(A, n, x, 0);
 	if (hasilRkrs != -1) {
 
 	} else {

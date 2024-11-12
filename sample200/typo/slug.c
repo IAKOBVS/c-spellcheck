@@ -33,7 +33,7 @@ alphanum(char *str)
 }
 
 char *
-trim_left(char *str)
+tr_left(char *str)
 {
 	int len = strlen(str);
 	char *cur = str;
@@ -51,7 +51,7 @@ trim_left(char *str)
 }
 
 char *
-trim_right(char *str)
+tr_right(char *str)
 {
 	int len = strlen(str);
 	char *cur = str + len - 1;
@@ -67,10 +67,10 @@ trim_right(char *str)
 }
 
 char *
-trim(char *str)
+tr(char *str)
 {
-	trim_right(str);
-	trim_left(str);
+	tr_right(str);
+	tr_left(str);
 	return str;
 }
 
@@ -79,7 +79,7 @@ slug(char *str)
 {
 	str = case_lower(str);
 	str = alphanum(str);
-	str = trim(str);
+	str = tr(str);
 
 	return str;
 }

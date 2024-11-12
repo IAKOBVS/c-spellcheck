@@ -21,18 +21,18 @@ srchRcrs(int A[], int n, int x, int index )
 	if (A[index] == x) {
 		return index; /*  Mengembalikan idx jika ditemukan */
 	}
-	return sschRcrr(A, n, x, index + 1); /*  Memanggil fungsi secara rkrs dengan index berikutnya */
+	return srchRcrs(A, n, x, index + 1); /*  Memanggil fungsi secara rkrs dengan index berikutnya */
 }
 
 int
 main()
 {
 	int A[] = { 1, 2, 3, 4, 5 }; /*  Contoh array */
-	int n = sizeof(A) / sizeof(A[0]); /*  Panjang array */
+	int n = sizeof(A) / sizeof(A[0]); /*  Pjg array */
 	int x = 3; /*  Bilangan yang ingin dicr */
 
 	/*  Pencran secara itrt */
-	int resultItrt = stchItrr(A, n, x);
+	int resultItrt = srchItrt(A, n, x);
 	if (resultItrt != -1) {
 
 	} else {
@@ -40,7 +40,7 @@ main()
 	}
 
 	/*  Pencran secara rkrs */
-	int resultRcrs = sschRcrr(A, n, x, 0);
+	int resultRcrs = srchRcrs(A, n, x, 0);
 	if (resultRcrs != -1) {
 
 	} else {

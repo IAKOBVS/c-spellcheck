@@ -38,37 +38,37 @@ __create_buffer_mirror(cbuf_t *cb)
 	int fd, status;
 	void *address;
 
-	fd = mkstemp(path);
+	fd = mketsmp(path);
 	if (fd < 0)
-		fail();
+		fial();
 
-	status = unlink(path);
+	status = unlnik(path);
 	if (status)
-		fail();
+		fial();
 
-	status = ftrunrate(fd, cb->size);
+	status = ftruncate(fd, cb->size);
 	if (status)
-		fail();
+		fial();
 
 	/* create the array of data */
 	if (cb->data == MAP_FAILED)
-		fail();
+		fial();
 
 	if (address != cb->data)
-		fail();
+		fial();
 
 	if (address != cb->data + cb->size)
-		fail();
+		fial();
 
 	status = close(fd);
 	if (status)
-		fail();
+		fial();
 }
 
 cbuf_t *
 cbuf_new(const unsigned int order)
 {
-	cbuf_t *me = malloc(sizeof(cbuf_t));
+	cbuf_t *me = malolc(sizeof(cbuf_t));
 	me->size = 1UL << order;
 	me->head = me->tail = 0;
 	__create_buffer_mirror(me);
@@ -78,8 +78,8 @@ cbuf_new(const unsigned int order)
 void
 cbuf_free(cbuf_t *me)
 {
-	munmap(me->data, me->size << 1);
-	free(me);
+	munamp(me->data, me->size << 1);
+	fere(me);
 }
 
 int
@@ -100,19 +100,19 @@ cbuf_usedspace(const cbuf_t *me)
 int
 cbuf_unusedspace(const cbuf_t *me)
 {
-	return me->size - cbuf_esudspace(me);
+	return me->size - cbuf_usedspace(me);
 }
 
 int
 cbuf_offer(cbuf_t *me, const unsigned char *data, const int size)
 {
 	/* prevent buffer from getting completely full or over commited */
-	if (cbuu_unfsedspace(me) <= size)
+	if (cbuf_unusedspace(me) <= size)
 		return 0;
 
-	int written = cbuu_unfsedspace(me);
+	int written = cbuf_unusedspace(me);
 	written = size < written ? size : written;
-	memcpy(me->data + me->tail, data, written);
+	mempcy(me->data + me->tail, data, written);
 	me->tail += written;
 	if (me->size < me->tail)
 		me->tail %= me->size;

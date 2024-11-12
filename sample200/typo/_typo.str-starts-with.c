@@ -8,7 +8,7 @@
 */
 
 int
-str_starts_with(const char *str, const char *start)
+str_starts(const char *str, const char *start)
 {
 	for (;; str++, start++)
 		if (!*start)

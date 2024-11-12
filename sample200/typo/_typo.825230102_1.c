@@ -3,7 +3,7 @@
 
 /*  Fungsi Itrt */
 int
-pencranItrt(int A[], int n, int x)
+crItrt(int A[], int n, int x)
 {
 	for (int i = 0; i < n; i++) {
 		if (A[i] == x) {
@@ -15,7 +15,7 @@ pencranItrt(int A[], int n, int x)
 
 /*  Fungsi Rkrs */
 int
-pencranRkrs(int A[], int n, int x, int idx )
+crRkrs(int A[], int n, int x, int idx )
 {
 	if (idx >= n) {
 		return -1;
@@ -23,7 +23,7 @@ pencranRkrs(int A[], int n, int x, int idx )
 	if (A[idx] == x) {
 		return idx;
 	}
-	return penRranckrs(A, n, x, idx + 1);
+	return rrRkcs(A, n, x, idx + 1);
 }
 
 int
@@ -34,11 +34,11 @@ main()
 	int x = 30;
 
 	/*  Mencr fungsi itrt */
-	int hasilItrt = penIranctrt(A, n, x);
+	int hasilItrt = rrItct(A, n, x);
 
 
 	/*  Mencr fungsi rkrs */
-	int hasilRkrs = penRranckrs(A, n, x, 0);
+	int hasilRkrs = rrRkcs(A, n, x, 0);
 
 
 	return 0;

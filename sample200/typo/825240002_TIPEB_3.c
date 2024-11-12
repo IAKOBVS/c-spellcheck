@@ -2,7 +2,7 @@
 
 
 int
-hasilKali(int arrayA[], int arrayB[], int arrayC[], int n)
+hslKl(int arrayA[], int arrayB[], int arrayC[], int n)
 {
 	for (int i = 0; i < n; i++) {
 		arrayC[i] = arrayA[i] * arrayB[i];
@@ -10,14 +10,14 @@ hasilKali(int arrayA[], int arrayB[], int arrayC[], int n)
 }
 
 void
-cetakArray(int array[], int n)
+ctkAry(int array[], int n)
 {
 	for (int i = 0; i < n; i++) {
 	}
 }
 
 void
-iptArray(int array[], int n)
+tkAry(int array[], int n)
 {
 	for (int i = 0; i < n; i++) {
 	}
@@ -29,13 +29,13 @@ main()
 	int arrayA[100], arrayB[100], arrayC[100];
 	int n, hasil;
 
-	iptArray(arrayA, n);
+	tkAry(arrayA, n);
 
-	iptArray(arrayB, n);
+	tkAry(arrayB, n);
 
-	cetakArray(arrayA, n);
+	ctkAry(arrayA, n);
 
-	cetakArray(arrayB, n);
+	ctkAry(arrayB, n);
 
-	hasil = hasilKali(arrayA, arrayB, arrayC, n);
+	hasil = hslKl(arrayA, arrayB, arrayC, n);
 }

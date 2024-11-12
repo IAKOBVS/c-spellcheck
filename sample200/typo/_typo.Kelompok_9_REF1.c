@@ -8,15 +8,15 @@
 N = Nama individual
 A = Jum. Anak
 K = Status kawin
-Kn = PTKP Kn (Kawin dengan berapa anak)
+Kn = PTKP Kn 
 PKP = Penghasilan Kena Pajak
 PTKP = Penghasilan Tidak Kena Pajak
 PPH = Pajak Penghasilan
 PB = Penghasilan Bersih
 B = Penghasilan Bruto
 BJ = Biaya jabatan setahun
-IP = Ir eoupptr (tahun)
-IPB = Ir pensiun (bulan)
+IP = Ir pensiun (tahun)
+IPB = Ir toupepr (bulan)
 
 ~ INFO ~
 
@@ -32,23 +32,23 @@ pajak1(int A)
 	PTKP = 54000000;
 
 	if (toupper(K) == 'Y') {
-		if (A == 0) { /*  PTKP K0 (Kawin | 0 anak) */
+		if (A == 0) { /*  PTKP K0  */
 			PTKP += Kn;
-		} else if (A == 1) { /*  PTKP K1 (Kawin | 1 anak) */
+		} else if (A == 1) { /*  PTKP K1  */
 			PTKP += (Kn * 2);
-		} else if (A == 2) { /*  PTKP K2 (Kawin | 2 anak) */
+		} else if (A == 2) { /*  PTKP K2  */
 			PTKP += (Kn * 3);
-		} else { /*  PTKP K3 (Kawin | 3 anak) */
+		} else { /*  PTKP K3  */
 			PTKP += (Kn * 4);
 		}
 	} else {
-		if (A == 0) { /*  PTKP BK0 (Kawin | 0 anak) */
+		if (A == 0) { /*  PTKP BK0  */
 			PTKP = PTKP;
-		} else if (A == 1) { /*  PTKP BK1 (Kawin | 1 anak) */
+		} else if (A == 1) { /*  PTKP BK1  */
 			PTKP += Kn;
-		} else if (A == 2) { /*  PTKP BK2 (Kawin | 2 anak) */
+		} else if (A == 2) { /*  PTKP BK2  */
 			PTKP += (Kn * 2);
-		} else { /*  PTKP BK3 (Kawin | 3 anak) */
+		} else { /*  PTKP BK3  */
 			PTKP += (Kn * 3);
 		}
 	}

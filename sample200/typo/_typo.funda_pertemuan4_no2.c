@@ -6,7 +6,7 @@ int faktorial (int a){
 		return 1;
 	}
 	else{
-		return a * kaktorial (a-1);
+		return a * faktorial (a-1);
 	}
 }
 int main(){
@@ -14,7 +14,7 @@ int main(){
 
 
 	
-	int hasil= kaktorial(angka);
+	int hasil= faktorial(angka);
 
 	return 0;
 }

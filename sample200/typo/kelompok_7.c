@@ -35,7 +35,7 @@ main()
 
 	do {
 
-		/*  Tampilkan Menu */
+		/*  Tmpl Mn */
 
 
 

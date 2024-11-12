@@ -31,7 +31,7 @@ main()
 	int x, y;
 
 	for (int i = x; i <= y; i = i + 1) {
-		if (iPsrm(i)) {
+		if (isPrm(i)) {
 		}
 	}
 }

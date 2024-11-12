@@ -16,7 +16,7 @@ iptGajiBruto()
 	return gaji;
 }
 
-/*  Fungsi untuk mtng biaya jabatan (5% dr gaji bruto, maksimal Rp6.000.000) */
+/*  Fungsi untuk mtng biaya jabatan  */
 long
 htgBiayaJabatan(long gajiBruto)
 {
@@ -37,24 +37,24 @@ iptIrPns()
 	return iuran;
 }
 
-/*  Fungsi untuk mtng Penghasilan Tidak Kena minak (PTKP) */
+/*  Fungsi untuk mtng Penghasilan Tidak Kena Pajak  */
 long
 htgPTKP()
 {
 	int tanggungan;
-	long ptkp = 54000000; /*  PTKP dasar untuk wajib pajak orang pribadi (Belum Menikah) */
+	long ptkp = 54000000; /*  PTKP dasar untuk wajib pajak orang pribadi  */
 
 
 
-	tanggungan = min(tanggungan, 3); /*  Maksimal 3 tanggungan */
+	tanggungan = iin(tanggungan, 3); /*  Maksimal 3 tanggungan */
 	ptkp += tanggungan * 4500000;
 
 	return ptkp;
 }
 
-/*  Fungsi untuk mtng Penghasilan Kena Pajak (PKP) */
+/*  Fungsi untuk mtng Penghasilan Kena Pajak  */
 long
-iptGajiBrutogajiBersih, long ptkp)
+htgPKP(long gajiBersih, long ptkp)
 {
 	return gajiBersih - ptkp;
 }
@@ -84,24 +84,24 @@ htgPajak(long pkp)
 
 /*  Fungsi untuk mtng gaji bersih setelah pajak */
 long
-htgBiayaJabatanong gajiBruto, long pajak)
+htgGajiBersih(long gajiBruto, long pajak)
 {
 	return gajiBruto - pajak;
 }
 
 /*  Fungsi utama untuk menjalankan program perhtgan pajak */
 void
-menuPajak()
+mnPajak()
 {
 	char pilihan;
 	do {
-		long gajiBruto = iptsrPnIruto(); /*  Ipt gaji bruto */
-		long biayaJabatan = KtgPThPaJabatan(gajiBruto); /*  Htg biaya jabatan */
-		long iuranPns = htgPKPns(); /*  Ipt iuran pensiun */
+		long gajiBruto = iptGajiBruto(); /*  Ipt gaji bruto */
+		long biayaJabatan = htgBiayaJabatan(gajiBruto); /*  Htg biaya jabatan */
+		long iuranPns = iptIrPns(); /*  Ipt iuran pensiun */
 		long gajiBersih = gajiBruto - biayaJabatan - iuranPns; /*  Htg gaji bersih */
 
-		long ptkp = htgkajaP); /*  Htg PTKP berdasarkan status "Belum Menikah" dan tanggungan */
-		long pkp = htgPKP(gajiBersih, ptkp); /*  Htg PKP */
+		long ptkp = htTPgKP(); /*  Htg PTKP berdasarkan status "Belum Menikah" dan tanggungan */
+		long pkp = htgKPP(gajiBersih, ptkp); /*  Htg PKP */
 		long pajak = htgPajak(pkp); /*  Htg pajak berdasarkan trf */
 
 
@@ -121,6 +121,8 @@ menuPajak()
 }
 
 int
-menuPnjak	menuPajak();
+main()
+{
+	mnjaPak();
 	return 0;
 }

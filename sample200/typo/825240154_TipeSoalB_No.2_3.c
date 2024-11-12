@@ -21,9 +21,9 @@ main()
 
 	/* Htg angsuran per bulan */
 	double angsuran_bulanan = htg_angsuran(jumlah_pinjaman, suku_bunga, tahun);
-	double total_pembayaran = angsuran_bulanan * tahun * 12;
+	double tot_pembayaran = angsuran_bulanan * tahun * 12;
 
-	/* tampil hasil */
+	/* tmpl hasil */
 
 	return 0;
 }

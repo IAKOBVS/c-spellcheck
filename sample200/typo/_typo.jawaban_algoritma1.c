@@ -22,7 +22,7 @@ srchRcrs(int A[], int n, int x, int index)
 	if (A[index] == x) {
 		return index; /*  Mengembalikan idx jika ditemukan */
 	}
-	return srccRhrs(A, n, x, index + 1); /*  Rekurens: Lanjut ke idx berikutnya */
+	return srchRcrs(A, n, x, index + 1); /*  Rekurens: Lanjut ke idx berikutnya */
 }
 
 int
@@ -32,8 +32,8 @@ main()
 	int n = sizeof(A) / sizeof(A[0]);
 	int x = 9;
 
-	int itrtResult = srctIhrt(A, n, x);
-	int rcrsResult = srccRhrs(A, n, x, 0);
+	int itrtResult = srchItrt(A, n, x);
+	int rcrsResult = srchRcrs(A, n, x, 0);
 
 	if (itrtResult != -1) {
 

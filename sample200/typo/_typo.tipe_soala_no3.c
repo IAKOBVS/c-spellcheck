@@ -30,9 +30,9 @@ main()
 	for (int j = 0; j < jumlah_angka; j++) {
 	}
 
-	cdxTkil(K, jumlah_angka);
-	sdxTbir(K, jumlah_angka);
-	printf("%d\n", K[0]);
+	idkTxcl(K, jumlah_angka);
+	idbTxsr(K, jumlah_angka);
+	pritnf("%d\n", K[0]);
 
 	return 0;
 }

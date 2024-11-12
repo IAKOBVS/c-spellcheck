@@ -36,13 +36,13 @@ main()
 	for (int i = 0; i < ukuran; i++) {
 	}
 
-	/* Tampilkan isi dari kedua array */
+	/* Tmpl isi dari kedua array */
 
 	cetakarray(array1, ukuran);
 
 	cetakarray(array2, ukuran);
 
-	/* Tampilkan hasil kali elemen yang indeks nya sama */
+	/* Tmpl hasil kali elemen yang idx nya sama */
 
 	for (int i = 0; i < ukuran; i++) {
 	}

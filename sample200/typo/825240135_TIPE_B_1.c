@@ -6,7 +6,7 @@ int
 main()
 {
 	/* deklarasi */
-	float sisi, panjang, lebar, jari, PI;
+	float sisi, pjg, lebar, jari, PI;
 	float luas, keliling;
 	char kode;
 	/* nilai PI */
@@ -16,7 +16,7 @@ main()
 	system("cls");
 
 	switch (kode) {
-	/* bujur sangkar */
+	/* bjr sgkr */
 	case 'B': {
 
 		luas = sisi * sisi;
@@ -25,16 +25,16 @@ main()
 
 		break;
 	}
-	/* persegi panjang */
+	/* psg pjg */
 	case 'P': {
 
-		luas = panjang * lebar;
-		keliling = 2 * (panjang + lebar);
+		luas = pjg * lebar;
+		keliling = 2 * (pjg + lebar);
 		/* output */
 
 		break;
 	}
-	/* lingkaran */
+	/* lngkr */
 	case 'L': {
 
 		luas = PI * jari * jari;

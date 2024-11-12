@@ -23,7 +23,7 @@ crRkrs(int A[], int n, int x, int index )
 	if (A[index] == x) {
 		return index; /*  Mengembalikan idx jika ditemukan */
 	}
-	return crRkrs(A, n, x, index + 1); /*  Melanjutkan pencran dengan elemen berikutnya */
+	return crRkrs(A, n, x, index + 1); /*  Melanjutkan cr dengan elemen berikutnya */
 }
 
 int

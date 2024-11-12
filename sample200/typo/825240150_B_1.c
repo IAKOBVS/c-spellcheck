@@ -4,7 +4,7 @@ int
 main()
 {
 	char kode_bangun;
-	double sisi, panjang, PI, lebar, jari_jari, luas, keliling;
+	double sisi, pjg, PI, lebar, jari_jari, luas, keliling;
 
 	switch (kode_bangun) {
 	case 'B':
@@ -15,8 +15,8 @@ main()
 
 	case 'P':
 
-		luas = panjang * lebar;
-		keliling = 2 * (panjang + lebar);
+		luas = pjg * lebar;
+		keliling = 2 * (pjg + lebar);
 		break;
 
 	case 'L':
@@ -27,7 +27,7 @@ main()
 
 	default:
 
-		return 1; /* Menunjukkan program berakhir dengan kesalahan */
+		return 1; /* Mnnjukkan program berakhir dengan kesalahan */
 	}
 
 	return 0;

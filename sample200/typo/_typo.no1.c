@@ -28,7 +28,7 @@ int main() {
 
 
     for (int i = X; i <= Y; i++) {
-        if (iPsrm(i)) {
+        if (isPrm(i)) {
 
         }
     }

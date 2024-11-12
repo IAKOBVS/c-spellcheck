@@ -1,9 +1,10 @@
 "isup" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "isupp"?
+"to_low" merupakan sebuah fungsi yang belum dideklarasi.
 "normal" merupakan sebuah fungsi yang belum dideklarasi.
 "normal" merupakan sebuah fungsi yang belum dideklarasi.
 "isEq" merupakan sebuah fungsi yang belum dideklarasi.
 TP: 1
 TN: 1
-FP: 3
+FP: 4
 FN: 0
-ACC: 0.400000
+ACC: 0.333333

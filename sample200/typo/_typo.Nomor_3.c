@@ -32,7 +32,7 @@ int main() {
 
     }
 
-    double rataRata = hgtMn(data, n);
+    double rataRata = htnMg(data, n);
 
 
     return 0;
