@@ -1,0 +1,8 @@
+"print" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "printf"?
+"isSpace" merupakan sebuah fungsi yang belum dideklarasi.
+"rmvSpc" merupakan sebuah fungsi yang belum dideklarasi.
+TP: 1
+TN: 0
+FP: 2
+FN: 0
+ACC: 0.333333
