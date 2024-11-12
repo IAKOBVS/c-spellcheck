@@ -32,6 +32,9 @@
 #include <float.h>
 #include <time.h>
 
+#define MAX(x, y) ((x > y) ? x : y)
+#define MIN(x, y) ((x < y) ? x : y)
+
 int VERBOSE;
 
 #define V(x) ((VERBOSE) ? x : (void)0)
@@ -643,8 +646,29 @@ fn_get_type(const char *s, const char *end)
 {
 	--end;
 	for (; s <= end && (xiswhite(*end) || *end == '*'); --end) {}
-	if (s <= end && is_fn_char(*end))
+	if (s <= end && is_fn_char(*end)) {
+		if ((s <= end && *end == 'n')
+		    && (s <= end - 1 && *(end - 1) == 'r')
+		    && (s <= end - 2 && *(end - 2) == 'u')
+		    && (s <= end - 3 && *(end - 3) == 't')
+		    && (s <= end - 4 && *(end - 4) == 'e')
+		    && (s <= end - 5 && *(end - 5) == 'r'))
+			return FN_CALLED;
+		const char *end_p = end + 1;
+		while (s < end && is_fn_char(*end))
+			--end;
+		if (!is_fn_char(*end))
+			++end;
+		V(puts("type:"));
+		V(fwrite(end, 1, MIN(strlen(end), 5), stdout));
+		V(puts(""));
+		char *return_type = xmemdupz(end, end_p - end);
+		int is_type = type_find(types, return_type) != NULL;
+		free(return_type);
+		if (!is_type)
+			return FN_CALLED;
 		return FN_DECLARED;
+	}
 	return FN_CALLED;
 }
 
@@ -818,6 +842,10 @@ loop:
 						assert(node);
 						node->id = fn_id;
 						node->fn_args = node_dst.fn_args;
+						V(printf("fn_name:\n%s\n", node_dst.fn_name));
+						V(puts("args:"));
+						V(fn_args_print(node->fn_args));
+						V(puts(""));
 					}
 				}
 				fnlist_insert_tail(&decl_node, node_dst.fn_name, node_dst.fn_args, fn_id);
@@ -843,9 +871,6 @@ next:
 		goto loop;
 	}
 }
-
-#define MAX(x, y) ((x > y) ? x : y)
-#define MIN(x, y) ((x < y) ? x : y)
 
 int
 cfreq_diff(const char *s, const char *t)
@@ -901,7 +926,7 @@ dld(char *s, char *t, int i, int j)
 		min = MIN(min, dld(s, t, i - 1, j - 1) + (s[i - 1] != t[j - 1]));
 	/* transposition */
 	if (i > 1 && j > 1 && s[i - 1] == t[j - 2] && s[i - 2] == t[j - 1])
-		min = MIN(min, dld(s, t, i - 2, j - 2) +  + (s[i - 1] != t[j - 1]));
+		min = MIN(min, dld(s, t, i - 2, j - 2) + +(s[i - 1] != t[j - 1]));
 	return min;
 }
 
@@ -1489,7 +1514,7 @@ autosuggest(const char *fname)
 	free(file_and_includes);
 	V(var_print(types));
 
-	time_t startTime = (float)clock()/CLOCKS_PER_SEC;
+	time_t startTime = (float)clock() / CLOCKS_PER_SEC;
 
 	int ret = do_autosuggest(&cal_head, decl_head, notfound_head, trie_head, file, file_includes, fname, 1);
 	free(file);
@@ -1546,9 +1571,9 @@ autosuggest(const char *fname)
 		}
 	}
 
-/* 	time_t endTime = (float)clock()/CLOCKS_PER_SEC; */
-/* 	time_t timeElapsed = endTime - startTime; */
-/* 	printf("time_elapsed: %f\n", timeElapsed); */
+	/* 	time_t endTime = (float)clock()/CLOCKS_PER_SEC; */
+	/* 	time_t timeElapsed = endTime - startTime; */
+	/* 	printf("time_elapsed: %f\n", timeElapsed); */
 
 	if (filename_target) {
 		confusion_matrix_ty confusion_matrix;

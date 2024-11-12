@@ -27,6 +27,7 @@ for dir in $dirs; do
 		d=$(echo "scale=4; $d + $out_dld" | bc)
 		g=$(echo "scale=4; $g + $out_gabungan" | bc)
 		t=$(echo "scale=4; $t + $out_trie" | bc)
+		echo "|| $(echo "$files" | head -$((i)) | tail -1 | sed 's/.*_typo\.//; s/\.rtime//; s/-.*//')	$out_dld	$out_trie	$out_gabungan"
 	done
 	d=$(echo "scale=4; $d / $n" | bc)
 	g=$(echo "scale=4; $g / $n" | bc)

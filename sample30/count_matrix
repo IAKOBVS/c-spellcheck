@@ -1,10 +1,10 @@
 #!/bin/sh
 dirs=$(find . -type d | grep -v '^.$' | grep typo)
 for dir in $dirs; do
-	f_dld=$(find "$dir" -type f | grep -F '.out' | grep -v palind | sort | grep 'dld')
-	f_gabungan=$(find "$dir" -type f | grep -F '.out' | grep -v palind | sort | grep 'gabungan')
-	f_trie=$(find "$dir" -type f | grep -F '.out' | grep -v palind | sort | grep 'trie')
-	n=$(find "$dir" -type f | grep -F '.out' | grep -v palind | sort | grep 'trie' | wc -l)
+	f_dld=$(find "$dir" -type f | grep -F '.out' | sort | grep 'dld')
+	f_gabungan=$(find "$dir" -type f | grep -F '.out' |  sort | grep 'gabungan')
+	f_trie=$(find "$dir" -type f | grep -F '.out' |  sort | grep 'trie')
+	n=$(find "$dir" -type f | grep -F '.out' |  sort | grep 'trie' | wc -l)
 
 	tp_dld=$(grep 'TP:' $f_dld | sed 's/^.*:[ \t]*//')
 	fp_dld=$(grep 'FP:' $f_dld | sed 's/^.*:[ \t]*//')
