@@ -35,7 +35,8 @@
 #define MAX(x, y) ((x > y) ? x : y)
 #define MIN(x, y) ((x < y) ? x : y)
 
-int VERBOSE;
+int VERBOSE = 0;
+int TYPO = 0;
 
 #define V(x) ((VERBOSE) ? x : (void)0)
 
@@ -1237,6 +1238,9 @@ do_autosuggest(fnlist_ty **cal_head, fnlist_ty *decl_head, fnlist_ty *notfound_h
 	for (cal_node = *cal_head; cal_node->next; fnlist_next(cal_node)) {
 		if (cal_node->status == STATUS_SKIP)
 			continue;
+		V(puts("cal_fn_name:"));
+		V(puts(cal_node->fn_name));
+		V(printf("%d\n", cal_node->fn_id));
 		int is_prefix = 0;
 		if (algo == ALGO_DLD)
 			goto dld;
@@ -1486,6 +1490,80 @@ autocorrect(char *s, fnlist_ty *cal_head)
 	return p;
 }
 
+char *
+add_typos(char *s, fnlist_ty *cal_head)
+{
+	char *p = s;
+	char *p_next;
+	int num_of_fn = 0;
+	for (fnlist_ty *node = cal_head; node->next; node = node->next)
+		++num_of_fn;
+	if (num_of_fn > 0) {
+		int limit = num_of_fn;
+		/* if (num_of_fn > 3) { */
+		/* 	srand(time(NULL)); */
+		/* 	if (rand() % 2 == 0) */
+		/* 		limit = num_of_fn / 3; */
+		/* } */
+		for (fnlist_ty *node = cal_head; limit-- && node->next; node = node->next) {
+			int i;
+			for (i = 0;; ++i, p = p_next) {
+				fn_mode_ty m_dummy;
+				fnlist_ty *fnlist_dummy = fnlist_alloc();
+				p = fn_get(p, (const char **)&p_next, &m_dummy, fnlist_dummy, s);
+				fnlist_free(fnlist_dummy);
+				assert(p);
+				if (i == node->fn_id)
+					break;
+			}
+			char *x = p;
+			V(printf("i:%d\n", i));
+			V(printf("fn_id:%d\n", node->fn_id));
+			V(puts("found_at:"));
+			for (; *x != '\n'; ++x)
+				V(putchar(*x));
+			V(putchar('\n'));
+			char *modified = xstrdup(node->fn_name);
+			int min = 0;
+			int max = MAX(strlen(node->fn_name) - 1, 0);
+			srand(time(NULL));
+			int rand_num = rand() % (max - min + 1) + min;
+			srand(time(NULL) + 1);
+			int rand_num2 = rand() % (max - min + 1) + min;
+			int rand_c = *(modified + rand_num);
+			int rand_c2 = *(modified + rand_num2);
+			V(printf("rand_num:%d\n", rand_num));
+			V(printf("rand_num2:%d\n", rand_num2));
+			V(printf("rand_c:%c\n", rand_c));
+			V(printf("rand_c2:%c\n", rand_c2));
+			max = MAX(2, strlen(node->fn_name));
+			srand(time(NULL));
+			int num_of_typos = rand() % (max - min + 1) + min;
+			if (num_of_typos >= 1) {
+				/* srand(time(NULL)); */
+				/* if (rand() % 2 == 0) { */
+				*(modified + rand_num) = rand_c2;
+				/* } else { */
+				/* } */
+			}
+			if (num_of_typos >= 2) {
+				/* srand(time(NULL)); */
+				/* if (rand() % 2 == 0) { */
+				*(modified + rand_num2) = rand_c;
+				/* } else { */
+				/* 	*(modified + rand_num) = '\0'; */
+				/* } */
+			}
+			V(printf("fn_name:%s.\n", node->fn_name));
+			V(printf("modified:%s.\n", modified));
+			s = replaceat(s, (size_t)(p - s), modified, strlen(node->fn_name));
+			p = s;
+			free(modified);
+		}
+	}
+	return p;
+}
+
 double
 accuracy(confusion_matrix_ty *confusion_matrix)
 {
@@ -1498,11 +1576,12 @@ accuracy(confusion_matrix_ty *confusion_matrix)
 void
 autosuggest(const char *fname)
 {
-
 	char *file = file_preprocess_alloc(fname);
 	char *file_const = file_alloc(fname);
 	char *file_includes = file_preprocess_includes(fname, 1);
 	char *file_and_includes = file_preprocess_includes(fname, 0);
+	char *file_to_modify = xstrdup(file_const);
+
 	jtrie_ty *trie_head = (algo == ALGO_TRIE || algo == ALGO_GABUNGAN) ? jtrie_alloc() : NULL;
 	fnlist_ty *decl_head = fnlist_alloc(), *cal_head = fnlist_alloc(), *notfound_head = fnlist_alloc();
 	if (filename_target) {
@@ -1517,6 +1596,21 @@ autosuggest(const char *fname)
 	time_t startTime = (float)clock() / CLOCKS_PER_SEC;
 
 	int ret = do_autosuggest(&cal_head, decl_head, notfound_head, trie_head, file, file_includes, fname, 1);
+
+	if (TYPO) {
+		file_to_modify = add_typos(file_to_modify, cal_head);
+		char *new_fname = malloc(strlen(fname) + 1 + strlen("_typo."));
+		strcpy(new_fname, "_typo.");
+		strcpy(new_fname + strlen("_typo."), fname);
+		FILE *fp = fopen(new_fname, "w");
+		assert(fp);
+		fputs(file_to_modify, fp);
+		V(puts(file_to_modify));
+		assert(fclose(fp) == 0);
+		free(new_fname);
+		return;
+	}
+
 	free(file);
 	if (ret) {
 		/* If we have notfound called functions which do not have similar matches in the input file,
@@ -1591,6 +1685,7 @@ autosuggest(const char *fname)
 		file_const = autocorrect(file_const, cal_head);
 		FILE *fp = fopen(fname, "w");
 		assert(fp);
+		V(puts(file_const));
 		fputs(file_const, fp);
 		assert(fclose(fp) == 0);
 	}

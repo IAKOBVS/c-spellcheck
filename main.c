@@ -40,6 +40,8 @@ main(int argc, char **argv)
 			modify = 1;
 		else if (!strcmp("-v", argv[i]))
 			VERBOSE = 1;
+		else if (!strcmp("--ADD-TYPOS", argv[i]))
+			TYPO = 1;
 		else {
 			assert(strlen(argv[i]) < 4096);
 			filename_target = basename(argv[i]);
