@@ -1,0 +1,8 @@
+"tsrlen" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "strlen"?
+"tsrlen" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "strlen"?
+"tsrcmp" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "strcmp"?
+TP: 3
+TN: 0
+FP: 0
+FN: 0
+ACC: 1.000000

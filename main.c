@@ -42,6 +42,9 @@ main(int argc, char **argv)
 			VERBOSE = 1;
 		else if (!strcmp("--ADD-TYPOS", argv[i]))
 			TYPO = 1;
+		else if (!strcmp("--ADD-TYPOS-UNCORRECTABLE", argv[i]))
+			TYPO = 1,
+			TYPO_UNCORRECTABLE = 1;
 		else {
 			assert(strlen(argv[i]) < 4096);
 			filename_target = basename(argv[i]);

@@ -37,12 +37,14 @@ struct llist_ty;
 typedef struct llist_ty llist_ty;
 struct var_ty;
 typedef struct var_ty var_ty;
+typedef struct type_ty type_ty;
 
 typedef struct jtrie_ty {
 	struct jtrie_ty *child[JTRIE_ASCII_SIZE];
 	int EOW;
 	int id;
 	var_ty *fn_args;
+	type_ty *type_node;
 } jtrie_ty;
 
 static jtrie_ty *

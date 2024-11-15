@@ -1,0 +1,7 @@
+/usr/include/limits.h:124:3: warning: #include_next in primary source file
+  124 | # include_next <limits.h>
+      |   ^~~~~~~~~~~~
+
+real	0m4.752s
+user	0m4.560s
+sys	0m0.181s

@@ -1,0 +1,8 @@
+#!/bin/sh
+dirs=$(find . -type d | grep -v '^.$')
+for dir in $dirs; do
+	files=$(find "$dir" -type f | grep -F '.time')
+	for file in $files; do
+		grep 'real	.m' "$file" | sed 's/^.*m//; s/s//' > "$(echo "$file" | sed 's/time/rtime/')"
+	done
+done

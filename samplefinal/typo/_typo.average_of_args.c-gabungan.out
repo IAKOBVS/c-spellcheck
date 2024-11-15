@@ -1,0 +1,8 @@
+"alloc" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "alloca"?
+"strToD" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "strtok"?
+"toArr" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "to_arr"?
+TP: 1
+TN: 3
+FP: 2
+FN: 0
+ACC: 0.666667

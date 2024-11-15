@@ -37,6 +37,7 @@
 
 int VERBOSE = 0;
 int TYPO = 0;
+int TYPO_UNCORRECTABLE = 0;
 
 #define V(x) ((VERBOSE) ? x : (void)0)
 
@@ -87,11 +88,13 @@ typedef struct var_ty {
 
 typedef struct type_ty {
 	var_ty *variables;
+	jtrie_ty *trie_variables;
 	char *value;
 	struct type_ty *next;
 } type_ty;
 
 type_ty *types;
+jtrie_ty *trie_types;
 
 typedef struct fnlist_ty {
 	char *fn_name;
@@ -141,6 +144,21 @@ fn_args_count(var_ty *fn_args)
 	for (var_ty *curr = fn_args; curr->next; curr = curr->next)
 		++i;
 	return i;
+}
+
+int
+fn_args_cmp(var_ty *x, var_ty *y)
+{
+	assert(x);
+	assert(y);
+	if (x->value == NULL && x->value == y->value)
+		return 0;
+	for (; x->next && y->next; x = x->next, y = y->next)
+		if (x->value && y->value && strcmp(x->value, y->value))
+			return 1;
+	if (x->next != y->next)
+		return 1;
+	return 0;
 }
 
 int
@@ -513,6 +531,10 @@ type_insert_tail(type_ty **tail, char *value)
 {
 	(*tail)->value = value;
 	(*tail)->variables = var_alloc();
+	if (ALGO_GABUNGAN || ALGO_TRIE) {
+		type_alloc();
+		jtrie_insert(trie_types, value)->type_node = (*tail);
+	}
 	(*tail)->next = type_alloc();
 	*tail = (*tail)->next;
 }
@@ -520,9 +542,15 @@ type_insert_tail(type_ty **tail, char *value)
 type_ty *
 type_find(type_ty *head, const char *type)
 {
-	for (type_ty *type_node = head; type_node->next; type_node = type_node->next)
-		if (!strcmp(type, type_node->value))
-			return type_node;
+	if (ALGO_GABUNGAN || ALGO_TRIE) {
+		jtrie_ty *node = jtrie_match(trie_types, type);
+		if (node)
+			return node->type_node;
+	} else {
+		for (type_ty *type_node = head; type_node->next; type_node = type_node->next)
+			if (!strcmp(type, type_node->value))
+				return type_node;
+	}
 	return NULL;
 }
 
@@ -1441,12 +1469,17 @@ typedef struct confusion_matrix_ty {
 	int TN;
 	int FP;
 	int FN;
+	/* Correction */
+	int C_TP;
+	int C_TN;
+	int C_FP;
+	int C_FN;
+	/* Syntax */
+	int S_TP;
+	int S_TN;
+	int S_FP;
+	int S_FN;
 } confusion_matrix_ty;
-
-/* TP: typo, correct autocorrection
-   TN: no typo, no correction
-   FP: typo, incorrect autocorrection
-   FN: no typo, incorrect autocorrection */
 
 void
 confusion_make(confusion_matrix_ty *matrix, fnlist_ty *call_head, fnlist_ty *call_target_head)
@@ -1455,14 +1488,49 @@ confusion_make(confusion_matrix_ty *matrix, fnlist_ty *call_head, fnlist_ty *cal
 	matrix->TN = 0;
 	matrix->FP = 0;
 	matrix->FN = 0;
+
+	matrix->C_TP = 0;
+	matrix->C_TN = 0;
+	matrix->C_FP = 0;
+	matrix->C_FN = 0;
+
+	matrix->S_TP = 0;
+	matrix->S_TN = 0;
+	matrix->S_FP = 0;
+	matrix->S_FN = 0;
+
 	for (fnlist_ty *node = call_head, *target_node = call_target_head; node->next && target_node->next; node = node->next, target_node = target_node->next) {
 		if (node->is_typo) {
-			if (node->similar_fn_name && !strcmp(node->similar_fn_name, target_node->fn_name))
-				++matrix->TP;
+			if (strcmp(node->fn_name, target_node->fn_name))
+				++matrix->TP; /* salah ketik, benar */
 			else
-				++matrix->FP;
+				++matrix->FP; /* salah ketik, salah */
 		} else {
-			++matrix->TN;
+			if (!strcmp(node->fn_name, target_node->fn_name))
+				++matrix->TN; /* tidak salah ketik, benar */
+			else
+				++matrix->FN; /* tidak salah ketik, salah */
+		}
+
+		if (node->is_typo) {
+			if (node->similar_fn_name && !strcmp(node->similar_fn_name, target_node->fn_name))
+				++matrix->C_TP; /* autokoreksi benar */
+			else
+				++matrix->C_FP; /* autokoreksi salah */
+		} else {
+			++matrix->C_TN; /* tidak dapat dikoreksi */
+		}
+
+		if (!node->is_typo_syn) {
+			if (!fn_args_cmp(node->fn_args, target_node->fn_args))
+				++matrix->S_TN; /* tidak salah sintaks, benar */
+			else
+				++matrix->S_FN; /* tidak salah sintaks, salah */
+		} else {
+			if (fn_args_cmp(node->fn_args, target_node->fn_args))
+				++matrix->S_TP; /* salah sintaks, benar */
+			else
+				++matrix->S_FP; /* salah sintaks, salah */
 		}
 	}
 }
@@ -1491,7 +1559,7 @@ autocorrect(char *s, fnlist_ty *cal_head)
 }
 
 char *
-add_typos(char *s, fnlist_ty *cal_head)
+add_typos(char *s, fnlist_ty *cal_head, int typo_is_uncorrectable)
 {
 	char *p = s;
 	char *p_next;
@@ -1506,7 +1574,7 @@ add_typos(char *s, fnlist_ty *cal_head)
 		/* 		limit = num_of_fn / 3; */
 		/* } */
 		for (fnlist_ty *node = cal_head; limit-- && node->next; node = node->next) {
-			if (strlen(node->fn_name) > 7)
+			if (!typo_is_uncorrectable && strlen(node->fn_name) > 7)
 				continue;
 			int i;
 			for (i = 0;; ++i, p = p_next) {
@@ -1541,20 +1609,40 @@ add_typos(char *s, fnlist_ty *cal_head)
 			max = MAX(2, strlen(node->fn_name));
 			srand(time(NULL));
 			int num_of_typos = rand() % (max - min + 1) + min;
-			if (num_of_typos >= 1) {
-				/* srand(time(NULL)); */
-				/* if (rand() % 2 == 0) { */
+			if (typo_is_uncorrectable) {
 				*(modified + rand_num) = rand_c2;
-				/* } else { */
-				/* } */
-			}
-			if (num_of_typos >= 2) {
-				/* srand(time(NULL)); */
-				/* if (rand() % 2 == 0) { */
 				*(modified + rand_num2) = rand_c;
-				/* } else { */
-				/* 	*(modified + rand_num) = '\0'; */
-				/* } */
+				if (strlen(node->fn_name) > 2) {
+					*(modified) = 'Z';
+				}
+				if (strlen(modified) > 3) {
+					*(modified + 1) = 'Z';
+				}
+				if (strlen(modified) > 4) {
+					*(modified + 2) = 'Z';
+				}
+				if (strlen(modified) > 4) {
+					*(modified + 3) = 'Z';
+				}
+				if (strlen(modified) > 5) {
+					*(modified + 4) = 'Z';
+				}
+			} else {
+				if (num_of_typos >= 1) {
+					/* srand(time(NULL)); */
+					/* if (rand() % 2 == 0) { */
+					*(modified + rand_num) = rand_c2;
+					/* } else { */
+					/* } */
+				}
+				if (num_of_typos >= 2) {
+					/* srand(time(NULL)); */
+					/* if (rand() % 2 == 0) { */
+					*(modified + rand_num2) = rand_c;
+					/* } else { */
+					/* 	*(modified + rand_num) = '\0'; */
+					/* } */
+				}
 			}
 			V(printf("fn_name:%s.\n", node->fn_name));
 			V(printf("modified:%s.\n", modified));
@@ -1578,12 +1666,12 @@ accuracy(confusion_matrix_ty *confusion_matrix)
 void
 autosuggest(const char *fname)
 {
+	trie_types = jtrie_alloc();
 	char *file = file_preprocess_alloc(fname);
 	char *file_const = file_alloc(fname);
 	char *file_includes = file_preprocess_includes(fname, 1);
 	char *file_and_includes = file_preprocess_includes(fname, 0);
 	char *file_to_modify = xstrdup(file_const);
-
 	jtrie_ty *trie_head = (algo == ALGO_TRIE || algo == ALGO_GABUNGAN) ? jtrie_alloc() : NULL;
 	fnlist_ty *decl_head = fnlist_alloc(), *cal_head = fnlist_alloc(), *notfound_head = fnlist_alloc();
 	if (filename_target) {
@@ -1594,13 +1682,10 @@ autosuggest(const char *fname)
 	var_get(file_and_includes, types);
 	free(file_and_includes);
 	V(var_print(types));
-
-	time_t startTime = (float)clock() / CLOCKS_PER_SEC;
-
+	/* time_t startTime = (float)clock() / CLOCKS_PER_SEC; */
 	int ret = do_autosuggest(&cal_head, decl_head, notfound_head, trie_head, file, file_includes, fname, 1);
-
 	if (TYPO) {
-		file_to_modify = add_typos(file_to_modify, cal_head);
+		file_to_modify = add_typos(file_to_modify, cal_head, TYPO_UNCORRECTABLE);
 		char *new_fname = malloc(strlen(fname) + 1 + strlen("_typo."));
 		strcpy(new_fname, "_typo.");
 		strcpy(new_fname + strlen("_typo."), fname);
@@ -1612,7 +1697,6 @@ autosuggest(const char *fname)
 		free(new_fname);
 		return;
 	}
-
 	free(file);
 	if (0) {
 		/* If we have notfound called functions which do not have similar matches in the input file,
@@ -1666,11 +1750,9 @@ autosuggest(const char *fname)
 				printf("\"%s\" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah \"%s\" yang didefinisikan pada \"%s\"?\n", node->fn_name, node->similar_fn_name, node->found_at);
 		}
 	}
-
 	/* 	time_t endTime = (float)clock()/CLOCKS_PER_SEC; */
 	/* 	time_t timeElapsed = endTime - startTime; */
 	/* 	printf("time_elapsed: %f\n", timeElapsed); */
-
 	if (filename_target) {
 		confusion_matrix_ty confusion_matrix;
 		confusion_make(&confusion_matrix, cal_head, cal_target_head);
@@ -1699,4 +1781,5 @@ autosuggest(const char *fname)
 	fnlist_free(cal_head);
 	fnlist_free(notfound_head);
 	fnlist_free(cal_target_head);
+	jtrie_free(&trie_types);
 }

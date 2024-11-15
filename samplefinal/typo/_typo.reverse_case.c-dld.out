@@ -1,0 +1,9 @@
+"Tolow" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "tolow"?
+"is_low" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "islow"?
+"toUpp" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "toupp"?
+"rvrsCs" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "rvrs_cs"?
+TP: 3
+TN: 2
+FP: 1
+FN: 0
+ACC: 0.833333

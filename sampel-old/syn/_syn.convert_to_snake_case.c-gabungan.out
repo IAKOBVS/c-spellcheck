@@ -1,0 +1,2 @@
+"isupp(*src,*src)" merupakan sebuah pemanggilan fungsi dengan jumlah argumen yang tidak sesuai dengan jumlah parameternya, "isupp(char)".
+"to_snake(input)" merupakan sebuah pemanggilan fungsi dengan jumlah argumen yang tidak sesuai dengan jumlah parameternya, "to_snake(char *,char *)".
