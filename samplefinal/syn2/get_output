@@ -1,2 +1,0 @@
-#!/bin/sh
-grep 'TP:\|FP:\|TN:\|FN:' *.out* > output

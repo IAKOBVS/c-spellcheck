@@ -532,7 +532,6 @@ type_insert_tail(type_ty **tail, char *value)
 	(*tail)->value = value;
 	(*tail)->variables = var_alloc();
 	if (ALGO_GABUNGAN || ALGO_TRIE) {
-		type_alloc();
 		jtrie_insert(trie_types, value)->type_node = (*tail);
 	}
 	(*tail)->next = type_alloc();
@@ -692,10 +691,12 @@ fn_get_type(const char *s, const char *end)
 		V(fwrite(end, 1, MIN(strlen(end), 5), stdout));
 		V(puts(""));
 		char *return_type = xmemdupz(end, end_p - end);
-		int is_type = type_find(types, return_type) != NULL;
-		free(return_type);
-		if (!is_type)
-			return FN_CALLED;
+		if (0) {
+			int is_type = type_find(types, return_type) != NULL;
+			free(return_type);
+			if (!is_type)
+				return FN_CALLED;
+		}
 		return FN_DECLARED;
 	}
 	return FN_CALLED;
@@ -966,13 +967,14 @@ get_most_similar_fn_name_string(fnlist_ty *decl_head, const char *s, int max_lev
 	int min_lev = INT_MAX;
 	int s_len = strlen(s);
 	int lev;
-	for (node = decl_head, min_node = decl_head; node->next; fnlist_next(node)) {
-		int val_len = (int)strlen(node->fn_name);
-		if (val_len == s_len && !memcmp(s, node->fn_name, s_len)) {
-			lev = 0;
-			goto found_similar;
+	if (algo != ALGO_DLD || strlen(s) >= 7)
+		for (node = decl_head, min_node = decl_head; node->next; fnlist_next(node)) {
+			int val_len = (int)strlen(node->fn_name);
+			if (val_len == s_len && !memcmp(s, node->fn_name, s_len)) {
+				lev = 0;
+				goto found_similar;
+			}
 		}
-	}
 	for (node = decl_head, min_node = decl_head; node->next; fnlist_next(node)) {
 		int val_len = (int)strlen(node->fn_name);
 		if (MAX(val_len, s_len) - MIN(val_len, s_len) <= 4) {
@@ -1358,76 +1360,78 @@ calc_dld:
 		} else {
 			if (first_pass) {
 check_args:;
-				int cal_argc = fn_args_count(cal_node->fn_args);
-				int decl_argc = fn_args_count(trie_node->fn_args);
-				int is_variadic = 0;
-				for (var_ty *node = trie_node->fn_args; node->next; node = node->next)
-					/* variadic function */
-					if (node->value && *(node->value) == '.')
-						is_variadic = 1;
-				if (!is_variadic) {
-					if (cal_argc != decl_argc) {
-						printf("\"%s(", cal_node->fn_name);
-						fn_args_print(cal_node->fn_args);
-						printf(")\"");
-						printf(" merupakan sebuah pemanggilan fungsi dengan jumlah argumen yang tidak sesuai dengan jumlah parameternya, \"%s(", cal_node->fn_name);
-						fn_args_print(trie_node->fn_args);
-						printf(")\".\n");
-						cal_node->is_typo_syn = 1;
-						cal_node->status = STATUS_SKIP;
-					} else if (!((*(trie_node->fn_args->value) == '\0' || !strcmp("void", trie_node->fn_args->value))
-					             && *(cal_node->fn_args->value) == '\0')) {
-						for (var_ty *c_n = cal_node->fn_args, *t_n = trie_node->fn_args; c_n->next && t_n->next; c_n = c_n->next, t_n = t_n->next) {
-							if (starts_with(c_n->value, "_")
-							    || !strcmp(c_n->value, "stdin")
-							    || !strcmp(c_n->value, "stdout")
-							    || !strcmp(c_n->value, "stderr")
-							    || !strcmp(c_n->value, "NULL")
-							    || *(c_n->value + strcspn(c_n->value, "*&+-=,.'\"?:()[]0123456789")))
-								continue;
-							type_ty *type_node;
-							var_ty *var_node = var_find(types, c_n->value, &type_node);
-							if (!var_node) {
-								printf("\"%s(", cal_node->fn_name);
-								fn_args_print(cal_node->fn_args);
-								printf(")\"");
-								printf(" merupakan sebuah pemanggilan fungsi dengan variabel argumen, \"%s\", yang belum dideklarasi.\n", c_n->value);
-								cal_node->is_typo_syn = 1;
-								cal_node->status = STATUS_SKIP;
-							} else {
-								int indirection_level_diff = var_node->indirection_level - c_n->indirection_level != t_n->indirection_level;
-								int type_mismatch = !find_keyword(t_n->value, type_node->value);
-								int is_void_ptr = t_n->indirection_level > 0
-								                  && (find_keyword(t_n->value, "void"));
-								int is_number = (find_keyword(type_node->value, "short")
-								                 || find_keyword(type_node->value, "long")
-								                 || find_keyword(type_node->value, "size_t")
-								                 || find_keyword(type_node->value, "int")
-								                 || find_keyword(type_node->value, "double")
-								                 || find_keyword(type_node->value, "float"))
-								                && (find_keyword(t_n->value, "short")
-								                    || find_keyword(t_n->value, "long")
-								                    || find_keyword(t_n->value, "size_t")
-								                    || find_keyword(t_n->value, "int")
-								                    || find_keyword(t_n->value, "double")
-								                    || find_keyword(t_n->value, "float"));
-								int is_char_or_int = t_n->indirection_level == 0
-								                     && (find_keyword(type_node->value, "char")
-								                         || find_keyword(type_node->value, "int"))
-								                     && (find_keyword(t_n->value, "char")
-								                         || find_keyword(t_n->value, "int"));
-								int error = indirection_level_diff
-								            || (type_mismatch && !is_void_ptr && !is_number && !is_char_or_int);
-								if (error) {
+				if (0) {
+					int cal_argc = fn_args_count(cal_node->fn_args);
+					int decl_argc = fn_args_count(trie_node->fn_args);
+					int is_variadic = 0;
+					for (var_ty *node = trie_node->fn_args; node->next; node = node->next)
+						/* variadic function */
+						if (node->value && *(node->value) == '.')
+							is_variadic = 1;
+					if (!is_variadic) {
+						if (cal_argc != decl_argc) {
+							printf("\"%s(", cal_node->fn_name);
+							fn_args_print(cal_node->fn_args);
+							printf(")\"");
+							printf(" merupakan sebuah pemanggilan fungsi dengan jumlah argumen yang tidak sesuai dengan jumlah parameternya, \"%s(", cal_node->fn_name);
+							fn_args_print(trie_node->fn_args);
+							printf(")\".\n");
+							cal_node->is_typo_syn = 1;
+							cal_node->status = STATUS_SKIP;
+						} else if (!((*(trie_node->fn_args->value) == '\0' || !strcmp("void", trie_node->fn_args->value))
+						             && *(cal_node->fn_args->value) == '\0')) {
+							for (var_ty *c_n = cal_node->fn_args, *t_n = trie_node->fn_args; c_n->next && t_n->next; c_n = c_n->next, t_n = t_n->next) {
+								if (starts_with(c_n->value, "_")
+								    || !strcmp(c_n->value, "stdin")
+								    || !strcmp(c_n->value, "stdout")
+								    || !strcmp(c_n->value, "stderr")
+								    || !strcmp(c_n->value, "NULL")
+								    || *(c_n->value + strcspn(c_n->value, "*&+-=,.'\"?:()[]0123456789")))
+									continue;
+								type_ty *type_node;
+								var_ty *var_node = var_find(types, c_n->value, &type_node);
+								if (!var_node) {
 									printf("\"%s(", cal_node->fn_name);
 									fn_args_print(cal_node->fn_args);
 									printf(")\"");
-									printf(" merupakan sebuah pemanggilan fungsi dengan variabel argumen, \"%s\", dengan tipe argumen yang salah (%s", c_n->value, type_node->value);
-									for (int i = 0; i < (var_node->indirection_level - c_n->indirection_level); ++i)
-										putchar('*');
-									printf(", seharusnya %s).\n", t_n->value);
+									printf(" merupakan sebuah pemanggilan fungsi dengan variabel argumen, \"%s\", yang belum dideklarasi.\n", c_n->value);
 									cal_node->is_typo_syn = 1;
 									cal_node->status = STATUS_SKIP;
+								} else {
+									int indirection_level_diff = var_node->indirection_level - c_n->indirection_level != t_n->indirection_level;
+									int type_mismatch = !find_keyword(t_n->value, type_node->value);
+									int is_void_ptr = t_n->indirection_level > 0
+									                  && (find_keyword(t_n->value, "void"));
+									int is_number = (find_keyword(type_node->value, "short")
+									                 || find_keyword(type_node->value, "long")
+									                 || find_keyword(type_node->value, "size_t")
+									                 || find_keyword(type_node->value, "int")
+									                 || find_keyword(type_node->value, "double")
+									                 || find_keyword(type_node->value, "float"))
+									                && (find_keyword(t_n->value, "short")
+									                    || find_keyword(t_n->value, "long")
+									                    || find_keyword(t_n->value, "size_t")
+									                    || find_keyword(t_n->value, "int")
+									                    || find_keyword(t_n->value, "double")
+									                    || find_keyword(t_n->value, "float"));
+									int is_char_or_int = t_n->indirection_level == 0
+									                     && (find_keyword(type_node->value, "char")
+									                         || find_keyword(type_node->value, "int"))
+									                     && (find_keyword(t_n->value, "char")
+									                         || find_keyword(t_n->value, "int"));
+									int error = indirection_level_diff
+									            || (type_mismatch && !is_void_ptr && !is_number && !is_char_or_int);
+									if (error) {
+										printf("\"%s(", cal_node->fn_name);
+										fn_args_print(cal_node->fn_args);
+										printf(")\"");
+										printf(" merupakan sebuah pemanggilan fungsi dengan variabel argumen, \"%s\", dengan tipe argumen yang salah (%s", c_n->value, type_node->value);
+										for (int i = 0; i < (var_node->indirection_level - c_n->indirection_level); ++i)
+											putchar('*');
+										printf(", seharusnya %s).\n", t_n->value);
+										cal_node->is_typo_syn = 1;
+										cal_node->status = STATUS_SKIP;
+									}
 								}
 							}
 						}
@@ -1678,11 +1682,11 @@ autosuggest(const char *fname)
 		file_target = file_preprocess_alloc(filename_target);
 		cal_target_head = fnlist_alloc();
 	}
-	types = type_get(file_and_includes);
-	var_get(file_and_includes, types);
+	/* types = type_get(file_and_includes); */
+	/* var_get(file_and_includes, types); */
 	free(file_and_includes);
 	V(var_print(types));
-	/* time_t startTime = (float)clock() / CLOCKS_PER_SEC; */
+	time_t startTime = clock();
 	int ret = do_autosuggest(&cal_head, decl_head, notfound_head, trie_head, file, file_includes, fname, 1);
 	if (TYPO) {
 		file_to_modify = add_typos(file_to_modify, cal_head, TYPO_UNCORRECTABLE);
@@ -1750,9 +1754,9 @@ autosuggest(const char *fname)
 				printf("\"%s\" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah \"%s\" yang didefinisikan pada \"%s\"?\n", node->fn_name, node->similar_fn_name, node->found_at);
 		}
 	}
-	/* 	time_t endTime = (float)clock()/CLOCKS_PER_SEC; */
-	/* 	time_t timeElapsed = endTime - startTime; */
-	/* 	printf("time_elapsed: %f\n", timeElapsed); */
+	time_t endTime = clock();
+	double timeElapsed = (double)(endTime - startTime) / CLOCKS_PER_SEC;
+	printf("time: %f\n", timeElapsed);
 	if (filename_target) {
 		confusion_matrix_ty confusion_matrix;
 		confusion_make(&confusion_matrix, cal_head, cal_target_head);
@@ -1761,6 +1765,14 @@ autosuggest(const char *fname)
 		printf("TN: %d\n", confusion_matrix.TN);
 		printf("FP: %d\n", confusion_matrix.FP);
 		printf("FN: %d\n", confusion_matrix.FN);
+		printf("TP_C: %d\n", confusion_matrix.C_TP);
+		printf("TN_C: %d\n", confusion_matrix.C_TN);
+		printf("FP_C: %d\n", confusion_matrix.C_FP);
+		printf("FN_C: %d\n", confusion_matrix.C_FN);
+		printf("TP_S: %d\n", confusion_matrix.S_TP);
+		printf("TN_S: %d\n", confusion_matrix.S_TN);
+		printf("FP_S: %d\n", confusion_matrix.S_FP);
+		printf("FN_S: %d\n", confusion_matrix.S_FN);
 		printf("ACC: %f\n", acc);
 		(void)acc;
 	}
