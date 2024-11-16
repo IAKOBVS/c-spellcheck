@@ -1,0 +1,26 @@
+"dtrsup" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "strdup"?
+"ttrsok" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "strtok"?
+"ltrsen" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "strspn"?
+"ltrsen" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "strspn"?
+"lalmoc" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "malloc"?
+"fere" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "free"?
+"spritnf" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "sprintf"?
+"fere" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "free"?
+"ttrsok" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "strtok"?
+"fere" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "free"?
+"fere" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "free"?
+"eetgnv" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "getenv"?
+time: 16.688465
+TP: 12
+TN: 1
+FP: 0
+FN: 0
+TP_C: 10
+TN_C: 1
+FP_C: 2
+FN_C: 0
+TP_S: 0
+TN_S: 12
+FP_S: 0
+FN_S: 1
+ACC: 1.000000

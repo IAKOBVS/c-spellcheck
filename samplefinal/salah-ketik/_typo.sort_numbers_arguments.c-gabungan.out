@@ -1,0 +1,18 @@
+"alloc" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "alloca"?
+"prinf" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "print"?
+"to_array" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "to_arr"?
+"sort" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "qsort"?
+time: 0.618645
+TP: 4
+TN: 2
+FP: 0
+FN: 0
+TP_C: 2
+TN_C: 2
+FP_C: 2
+FN_C: 0
+TP_S: 0
+TN_S: 6
+FP_S: 0
+FN_S: 0
+ACC: 1.000000

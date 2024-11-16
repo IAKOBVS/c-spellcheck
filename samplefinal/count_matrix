@@ -1,6 +1,7 @@
 #!/bin/sh
-dirs=$(find . -type d | grep -v '^.$' | grep $1)
+dirs=$(find . -type d | grep -v '^.$')
 for dir in $dirs; do
+	echo $dir
 	f_dld=$(find "$dir" -type f | grep -F '.out' | sort | grep 'dld')
 	f_gabungan=$(find "$dir" -type f | grep -F '.out' |  sort | grep 'gabungan')
 	f_trie=$(find "$dir" -type f | grep -F '.out' |  sort | grep 'trie')

@@ -1,0 +1,17 @@
+"alloc" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "alloca"?
+"strToD" merupakan sebuah fungsi yang belum dideklarasi.
+"toArr" merupakan sebuah fungsi yang belum dideklarasi.
+time: 0.001272
+TP: 3
+TN: 1
+FP: 0
+FN: 2
+TP_C: 0
+TN_C: 3
+FP_C: 3
+FN_C: 0
+TP_S: 0
+TN_S: 6
+FP_S: 0
+FN_S: 0
+ACC: 0.666667

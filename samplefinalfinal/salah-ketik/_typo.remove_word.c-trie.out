@@ -1,0 +1,17 @@
+"alloc" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "alloca"?
+"strpcy" merupakan sebuah fungsi yang belum dideklarasi.
+"memove" merupakan sebuah fungsi yang belum dideklarasi.
+time: 0.001291
+TP: 3
+TN: 8
+FP: 0
+FN: 0
+TP_C: 0
+TN_C: 8
+FP_C: 3
+FN_C: 0
+TP_S: 0
+TN_S: 11
+FP_S: 0
+FN_S: 0
+ACC: 1.000000

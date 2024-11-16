@@ -1,0 +1,20 @@
+"i_inbt" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "b_init"?
+"eemsmt" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "memset"?
+"i_inbt" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "b_init"?
+"trinpf" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "printf"?
+"i_inbt" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "b_init"?
+"pemcmy" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "memcpy"?
+time: 4.012186
+TP: 6
+TN: 18
+FP: 0
+FN: 0
+TP_C: 6
+TN_C: 18
+FP_C: 0
+FN_C: 0
+TP_S: 0
+TN_S: 24
+FP_S: 0
+FN_S: 0
+ACC: 1.000000

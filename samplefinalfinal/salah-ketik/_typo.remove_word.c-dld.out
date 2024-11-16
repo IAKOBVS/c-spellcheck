@@ -1,0 +1,17 @@
+"alloc" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "malloc"?
+"strpcy" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "strcpy"?
+"memove" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "remove"?
+time: 0.504731
+TP: 3
+TN: 8
+FP: 0
+FN: 0
+TP_C: 2
+TN_C: 8
+FP_C: 1
+FN_C: 0
+TP_S: 0
+TN_S: 11
+FP_S: 0
+FN_S: 0
+ACC: 1.000000

@@ -1,0 +1,21 @@
+"ptus" merupakan sebuah fungsi yang belum dideklarasi.
+"pritnf" merupakan sebuah fungsi yang belum dideklarasi.
+"pritnf" merupakan sebuah fungsi yang belum dideklarasi.
+"ptus" merupakan sebuah fungsi yang belum dideklarasi.
+"ptus" merupakan sebuah fungsi yang belum dideklarasi.
+"pritnf" merupakan sebuah fungsi yang belum dideklarasi.
+"pritnf" merupakan sebuah fungsi yang belum dideklarasi.
+time: 0.000461
+TP: 7
+TN: 2
+FP: 0
+FN: 0
+TP_C: 0
+TN_C: 2
+FP_C: 7
+FN_C: 0
+TP_S: 0
+TN_S: 9
+FP_S: 0
+FN_S: 0
+ACC: 1.000000

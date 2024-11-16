@@ -1,0 +1,30 @@
+"ftlle" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "ftell"?
+"newird" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "rewind"?
+"isxeh" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "ishex"?
+"otrtsl" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "strtol"?
+"fonep" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "fopen"?
+"oallmc" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "malloc"?
+"frdae" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "fread"?
+"newird" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "rewind"?
+"sclofe" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "fclose"?
+"newird" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "rewind"?
+"twrife" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "fwrite"?
+"newird" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "rewind"?
+"frdae" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "fread"?
+"oerrfr" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "ferror"?
+"isxeh" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "ishex"?
+"fgcte" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "fgetc"?
+time: 1.453279
+TP: 16
+TN: 9
+FP: 0
+FN: 0
+TP_C: 16
+TN_C: 9
+FP_C: 0
+FN_C: 0
+TP_S: 0
+TN_S: 25
+FP_S: 0
+FN_S: 0
+ACC: 1.000000

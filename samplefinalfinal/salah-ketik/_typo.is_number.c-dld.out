@@ -1,0 +1,16 @@
+"isNum" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "isnum"?
+"isnumber" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "is_number"?
+time: 12.381907
+TP: 2
+TN: 1
+FP: 0
+FN: 0
+TP_C: 2
+TN_C: 1
+FP_C: 0
+FN_C: 0
+TP_S: 0
+TN_S: 2
+FP_S: 0
+FN_S: 1
+ACC: 1.000000

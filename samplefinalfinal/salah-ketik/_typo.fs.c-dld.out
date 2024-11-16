@@ -1,0 +1,31 @@
+"spnirtf" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "sprintf"?
+"perorr" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "perror"?
+"renmae" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "rename"?
+"filneo" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "fileno"?
+"oepn" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "open"?
+"filneo" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "fileno"?
+"fchwon" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "fchown"?
+"lchwon" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "lchown"?
+"fspo_en" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "fs_open"?
+"fspo_en" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "fs_open"?
+"fclsoe" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "fclose"?
+"fspo_en" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "fs_open"?
+"fwrtie" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "fwrite"?
+"fspo_en" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "fs_open"?
+"fclsoe" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "fclose"?
+"streln" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "strlen"?
+"streln" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "strlen"?
+time: 31.849751
+TP: 17
+TN: 11
+FP: 0
+FN: 0
+TP_C: 17
+TN_C: 11
+FP_C: 0
+FN_C: 0
+TP_S: 0
+TN_S: 26
+FP_S: 0
+FN_S: 2
+ACC: 1.000000

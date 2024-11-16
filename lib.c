@@ -659,6 +659,7 @@ fn_start(const char *start, const char *paren, const char **fn_end)
 	    || starts_with(p, "signed")
 	    || starts_with(p, "unsigned")
 	    || starts_with(p, "case")
+	    || starts_with(p, "main")
 	    || starts_with(p, "sizeof"))
 		return NULL;
 	return (char *)p;
@@ -691,12 +692,10 @@ fn_get_type(const char *s, const char *end)
 		V(fwrite(end, 1, MIN(strlen(end), 5), stdout));
 		V(puts(""));
 		char *return_type = xmemdupz(end, end_p - end);
-		if (0) {
-			int is_type = type_find(types, return_type) != NULL;
-			free(return_type);
-			if (!is_type)
-				return FN_CALLED;
-		}
+		int is_type = type_find(types, return_type) != NULL;
+		free(return_type);
+		if (!is_type)
+			return FN_CALLED;
 		return FN_DECLARED;
 	}
 	return FN_CALLED;
@@ -967,7 +966,7 @@ get_most_similar_fn_name_string(fnlist_ty *decl_head, const char *s, int max_lev
 	int min_lev = INT_MAX;
 	int s_len = strlen(s);
 	int lev;
-	if (algo != ALGO_DLD || strlen(s) >= 7)
+	if (1 || algo != ALGO_DLD || strlen(s) >= 7)
 		for (node = decl_head, min_node = decl_head; node->next; fnlist_next(node)) {
 			int val_len = (int)strlen(node->fn_name);
 			if (val_len == s_len && !memcmp(s, node->fn_name, s_len)) {
@@ -1682,8 +1681,8 @@ autosuggest(const char *fname)
 		file_target = file_preprocess_alloc(filename_target);
 		cal_target_head = fnlist_alloc();
 	}
-	/* types = type_get(file_and_includes); */
-	/* var_get(file_and_includes, types); */
+	types = type_get(file_and_includes);
+	var_get(file_and_includes, types);
 	free(file_and_includes);
 	V(var_print(types));
 	time_t startTime = clock();

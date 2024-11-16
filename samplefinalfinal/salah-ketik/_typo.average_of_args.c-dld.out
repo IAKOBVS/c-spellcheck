@@ -1,0 +1,17 @@
+"alloc" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "malloc"?
+"strToD" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "strtok"?
+"toArr" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "to_arr"?
+time: 0.450752
+TP: 3
+TN: 1
+FP: 0
+FN: 2
+TP_C: 2
+TN_C: 3
+FP_C: 1
+FN_C: 0
+TP_S: 0
+TN_S: 6
+FP_S: 0
+FN_S: 0
+ACC: 0.666667

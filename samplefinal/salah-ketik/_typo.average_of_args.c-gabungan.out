@@ -1,0 +1,19 @@
+"alloc" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "alloca"?
+"strToD" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "strtok"?
+"print" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "print_array"?
+"toArr" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "to_arr"?
+"print" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "print_array"?
+time: 0.417317
+TP: 5
+TN: 1
+FP: 0
+FN: 0
+TP_C: 1
+TN_C: 1
+FP_C: 4
+FN_C: 0
+TP_S: 0
+TN_S: 6
+FP_S: 0
+FN_S: 0
+ACC: 1.000000
