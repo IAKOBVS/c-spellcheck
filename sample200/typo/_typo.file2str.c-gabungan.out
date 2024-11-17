@@ -1,7 +1,0 @@
-"fonep" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "fopen"?
-"oallmc" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "malloc"?
-TP: 2
-TN: 8
-FP: 0
-FN: 0
-ACC: 1.000000

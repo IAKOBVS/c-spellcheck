@@ -1,2 +1,0 @@
-"min(t1,t2,)" merupakan sebuah pemanggilan fungsi dengan jumlah argumen yang tidak sesuai dengan jumlah parameternya, "min(int,int)".
-"freq(input2)" merupakan sebuah pemanggilan fungsi dengan jumlah argumen yang tidak sesuai dengan jumlah parameternya, "freq(const char *,const char *)".

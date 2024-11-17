@@ -1,9 +1,0 @@
-"alloc" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "malloc"?
-"prinf" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "print"?
-"to_array" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "to_arr"?
-"sort" merupakan sebuah fungsi yang belum dideklarasi. Apakah yang dimaksud adalah "qsort"?
-TP: 3
-TN: 2
-FP: 1
-FN: 0
-ACC: 0.833333

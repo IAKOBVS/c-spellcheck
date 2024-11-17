@@ -916,28 +916,6 @@ cfreq_diff(const char *s, const char *t)
 }
 
 int
-old_dld(char *s, char *t, int i, int j)
-{
-#define MIN3(x, y, z) (((x) < (y)) ? ((x) < (z) ? (x) : (z)) : ((y) < (z) ? (y) : (z)))
-	int tbl[j + 1][i + 1];
-	tbl[0][0] = 0;
-	int ii, jj;
-	for (ii = 1; ii <= j; ++ii)
-		tbl[ii][0] = tbl[ii - 1][0] + 1;
-	for (jj = 1; jj <= i; ++jj)
-		tbl[0][jj] = tbl[0][jj - 1] + 1;
-	for (ii = 1; ii <= j; ++ii)
-		for (jj = 1; jj <= i; ++jj) {
-			int sub_cost = s[jj - 1] == t[ii - 1] ? 0 : 1;
-			tbl[ii][jj] = MIN3(tbl[ii - 1][jj] + 1, tbl[ii][jj - 1] + 1, tbl[ii - 1][jj - 1] + sub_cost);
-			/* if (ii > 1 && jj > 1 && s[ii - 1] == t[ii - 2] && s[ii - 2] == t[ii - 1]) */
-			/* 	tbl[ii][jj] = MIN(tbl[ii][jj], tbl[ii - 2][jj - 2] + sub_cost); */
-		}
-	return tbl[j][i];
-#undef MIN3
-}
-
-int
 dld(char *s, char *t, int i, int j)
 {
 	int min = INT_MAX;
@@ -1359,7 +1337,6 @@ calc_dld:
 		} else {
 			if (first_pass) {
 check_args:;
-				if (0) {
 					int cal_argc = fn_args_count(cal_node->fn_args);
 					int decl_argc = fn_args_count(trie_node->fn_args);
 					int is_variadic = 0;
@@ -1435,7 +1412,6 @@ check_args:;
 							}
 						}
 					}
-				}
 			} else {
 				printf("\"%s\" merupakan sebuah fungsi yang belum dideklarasi. Apakah dimaksudkan untuk meng-include header \"%s\"?\n", cal_node->fn_name, fname);
 				/* Mark called functions we found from the linked list */
@@ -1701,7 +1677,7 @@ autosuggest(const char *fname)
 		return;
 	}
 	free(file);
-	if (0) {
+	if (ret) {
 		/* If we have notfound called functions which do not have similar matches in the input file,
 		 * search for them in system headers. */
 		for (int i = 0; i < (int)(sizeof(standard_headers) / sizeof(standard_headers[0])); ++i)
@@ -1711,7 +1687,7 @@ autosuggest(const char *fname)
 				if (!ret)
 					break;
 			}
-		if (0) {
+		if (ret) {
 			/* If the notfound linked list is still not empty, search for similar matches
 			 * in the files in the directory of FNAME. */
 			assert(strlen(fname) < 4096);
