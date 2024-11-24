@@ -944,7 +944,7 @@ get_most_similar_fn_name_string(fnlist_ty *decl_head, const char *s, int max_lev
 	int min_lev = INT_MAX;
 	int s_len = strlen(s);
 	int lev;
-	if (1 || algo != ALGO_DLD || strlen(s) >= 7)
+	if (algo != ALGO_DLD || strlen(s) >= 7)
 		for (node = decl_head, min_node = decl_head; node->next; fnlist_next(node)) {
 			int val_len = (int)strlen(node->fn_name);
 			if (val_len == s_len && !memcmp(s, node->fn_name, s_len)) {
@@ -1336,6 +1336,7 @@ calc_dld:
 			}
 		} else {
 			if (first_pass) {
+				continue;
 check_args:;
 					int cal_argc = fn_args_count(cal_node->fn_args);
 					int decl_argc = fn_args_count(trie_node->fn_args);
