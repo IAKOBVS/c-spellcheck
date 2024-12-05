@@ -1,5 +1,5 @@
 Instalasi:
-./make && ./install
+./make && sudo ./install
 
 Manual program:
 manual-program.pdf
